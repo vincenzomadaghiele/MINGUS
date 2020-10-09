@@ -18,5 +18,6 @@ In the literature different approaches have been tried to reach similar goals, a
 ## References
 
 [1] https://jazzomat.hfm-weimar.de/dbformat/dboverview.html, https://www.kaggle.com/saikayala/jazz-ml- ready-midi
-[2] Junyan Jiang, Gus Xia and Taylor Berg-Kirkpatrick . Discovering Music Relations with Sequential Attention [3] https://openai.com/blog/musenet/#fn2
+[2] Junyan Jiang, Gus Xia and Taylor Berg-Kirkpatrick . Discovering Music Relations with Sequential Attention 
+[3] https://openai.com/blog/musenet/#fn2
 
