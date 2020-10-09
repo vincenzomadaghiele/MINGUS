@@ -1,11 +1,9 @@
 # Automatic-Music-Generation-using-Machine-Learning
 
-#### Supervisor(s): 
-Pasquale Lisena, Raphaël Troncy 
-#### Number of students max.: 
-Vincenzo Madaghiele
+###### Supervisor(s): Pasquale Lisena, Raphaël Troncy 
+###### Number of students max.: Vincenzo Madaghiele
 
-### Project Title : Automatic Music Generation using Machine Learning
+#### Project Title : Automatic Music Generation using Machine Learning
 
 ## Project Description
 
