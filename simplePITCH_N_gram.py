@@ -41,7 +41,7 @@ class ImprovDataset(Dataset):
         import os
         
         #specify the path
-        path='w_jazz/'
+        path='data/w_jazz/'
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
