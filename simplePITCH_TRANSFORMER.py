@@ -211,10 +211,10 @@ def evaluate(eval_model, data_source):
     return total_loss / (len(data_source) - 1)
 
 
-
-
 if __name__ == '__main__':
 
+    #%% DATA PREPARATION
+    
     # LOAD DATASET
     dataset = ImprovDataset()
     X = dataset.getData()
@@ -228,7 +228,7 @@ if __name__ == '__main__':
     val_notes = X[int(len(X)*0.7)+1:int(len(X)*0.7)+1+int(len(X)*0.1)]
     test_notes = X[int(len(X)*0.7)+1+int(len(X)*0.1):]
     
-    # divide into batches of size bsz and converts text into numbers
+    # divide into batches of size bsz and converts notes into numbers
     def batchify(data, bsz):
         new_data = []
         for sequence in data:
@@ -260,6 +260,8 @@ if __name__ == '__main__':
         target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
         return data, target
     
+    #%% MODEL TRAINING
+    
     # HYPERPARAMETERS
     ntokens = len(vocab) # the size of vocabulary
     emsize = 200 # embedding dimension
@@ -269,13 +271,13 @@ if __name__ == '__main__':
     dropout = 0.2 # the dropout value
     model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout).to(device)
     
-    
+    # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss()
     lr = 5.0 # learning rate
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
     
-    
+    # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
     epochs = 10 # The number of epochs
     best_model = None
@@ -295,10 +297,35 @@ if __name__ == '__main__':
             best_model = model
     
         scheduler.step()
-        
+    
+    # TEST THE MODEL
     test_loss = evaluate(best_model, test_data)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
         test_loss, math.exp(test_loss)))
     print('=' * 89)
+    
+    #%% SAMPLES GENERATION
 
+    
+    def getNote(val): 
+        for key, value in word_to_ix.items(): 
+             if val == value: 
+                 return key
+             
+    def generate(model, melody4gen, next_notes):
+        for i in range(0,next_notes):
+            x_pred = torch.tensor([word_to_ix[w] for w in melody4gen], dtype=torch.long)
+            y_pred = model(x_pred)
+            last_word_logits = y_pred[0][-1]
+            p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
+            word_index = np.random.choice(len(last_word_logits), p=p)
+            melody4gen.append(getNote(word_index))
+        return melody4gen
+             
+    melody4gen = test_notes[0][:10]
+    new_melody = generate(model, melody4gen, 10)
+    
+    print(new_melody)
+    
+    
