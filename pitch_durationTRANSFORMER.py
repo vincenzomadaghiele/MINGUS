@@ -304,13 +304,17 @@ if __name__ == '__main__':
         return melody4gen
     
     
-    melody4gen_pitch = test_pitch[0][:10]
-    new_melody_pitch = generate(modelPitch, melody4gen_pitch, pitch_to_ix, 10)
-    melody4gen_duration = test_duration[0][:10]
-    new_melody_duration = generate(modelDuration, melody4gen_duration, duration_to_ix, 10)
- 
+    notes2gen = 40 # number of new notes to generate
+    row_of_test = 10
+    melody4gen_pitch = test_pitch[row_of_test][:80] # pitch of the input for generation
+    melody4gen_duration = test_duration[row_of_test][:80] # duration of the input for generation
+    new_melody_pitch = generate(modelPitch, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    new_melody_duration = generate(modelDuration, melody4gen_duration, duration_to_ix, notes2gen)
 
     convert_to_midi(new_melody_pitch, new_melody_duration)
+    
+    #print(new_melody_pitch)
+    #print(new_melody_duration)
 
     
     
