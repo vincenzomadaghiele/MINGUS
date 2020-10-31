@@ -386,9 +386,9 @@ if __name__ == '__main__':
 
     
     #specify the path
-    f='data/w_jazz/WayneShorter_Dolores_FINAL.mid'
-    melody4gen_pitch = (read_midi_pitch(f))[:40]
-    melody4gen_duration = (read_midi_duration(f))[:40]
+    f='data/w_jazz/ArtPepper_BluesForBlanche_FINAL.mid'
+    melody4gen_pitch = (read_midi_pitch(f))[:80]
+    melody4gen_duration = (read_midi_duration(f))[:80]
     print(melody4gen_pitch)
     print(melody4gen_duration)
     
@@ -407,6 +407,12 @@ if __name__ == '__main__':
     torch.save(modelPitch, savePATH)
     savePATH = 'modelsDuration/modelDuration.pt'
     torch.save(modelDuration, savePATH)
+    
+    
+    #%% MODEL EVALUATION
+    # accuracy, perplexity (paper seq-Attn)
+    # BLEU, MGeval (paper explicitly conditioned melody generation)
+    
     
     
     
