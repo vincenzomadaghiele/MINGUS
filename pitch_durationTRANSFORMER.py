@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import math
-from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, convert_to_midi
+from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, convert_to_midi, read_midi_pitch, read_midi_duration 
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -127,15 +127,18 @@ def evaluate(eval_model, data_source, vocab):
 
 if __name__ == '__main__':
 
-    #%% DATA PREPARATION
+    #%% DATA LOADING
     
     # LOAD PITCH DATASET
     datasetPitch = ImprovPitchDataset()
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
+    vocabPitch.append('<pad>')
+    vocabPitch.append('<sos>')
+    vocabPitch.append('<eos>')
     pitch_to_ix = {word: i for i, word in enumerate(vocabPitch)}
-    print(X_pitch[:3])
+    #print(X_pitch[:3])
     
     # Divide pitch into train, validation and test
     train_pitch = X_pitch[:int(len(X_pitch)*0.7)]
@@ -147,23 +150,62 @@ if __name__ == '__main__':
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
     vocabDuration = datasetDuration.vocab
+    vocabDuration.append('<pad>')
+    vocabDuration.append('<sos>')
+    vocabDuration.append('<eos>')
     duration_to_ix = {word: i for i, word in enumerate(vocabDuration)}
-    print(X_duration[:3])
+    #print(X_duration[:3])
     
     # Divide duration into train, validation and test
     train_duration = X_duration[:int(len(X_duration)*0.7)]
     val_duration = X_duration[int(len(X_duration)*0.7)+1:int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1)]
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
     
+    #%% DATA PREPARATION
+    
+
+    # pad data to max_lenght of sequences, prepend <sos> and append <eos>
+    def pad(data):
+        # from: https://pytorch.org/text/_modules/torchtext/data/field.html
+        data = list(data)
+        # calculate max lenght
+        max_len = max(len(x) for x in data)
+        # Define padding tokens
+        pad_token = '<pad>'
+        init_token = '<sos>'
+        eos_token = '<eos>'
+        # pad each sequence in the data to max_lenght
+        padded, lengths = [], []
+        for x in data:
+            padded.append(
+                ([init_token])
+                + list(x[:max_len])
+                + ([eos_token])
+                + [pad_token] * max(0, max_len - len(x)))
+        lengths.append(len(padded[-1]) - max(0, max_len - len(x)))
+        return padded
+    
+    
     # divide into batches of size bsz and converts notes into numbers
     def batchify(data, bsz, dict_to_ix):
+        
+        """
         new_data = []
         for sequence in data:
             for note in sequence:
                 new_data.append(note)
         new_data = np.array(new_data)
         
+        
         data = torch.tensor([dict_to_ix[w] for w in new_data], dtype=torch.long)
+        """
+        
+        padded = pad(data)
+        padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
+        
+        data = torch.tensor(padded_num, dtype=torch.long)
+        data = data.contiguous()
+        
         # Divide the dataset into bsz parts.
         nbatch = data.size(0) // bsz
         # Trim off any extra elements that wouldn't cleanly fit (remainders).
@@ -174,6 +216,7 @@ if __name__ == '__main__':
     
     batch_size = 20
     eval_batch_size = 10
+    
     train_data_pitch = batchify(train_pitch, batch_size, pitch_to_ix)
     val_data_pitch = batchify(val_pitch, eval_batch_size, pitch_to_ix)
     test_data_pitch = batchify(test_pitch, eval_batch_size, pitch_to_ix)
@@ -184,7 +227,7 @@ if __name__ == '__main__':
     
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
-    bptt = 35
+    bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
@@ -294,6 +337,7 @@ if __name__ == '__main__':
                  return key
 
     def generate(model, melody4gen, dict_to_ix, next_notes=10):
+        melody4gen = melody4gen.tolist()
         for i in range(0,next_notes):
             x_pred = torch.tensor([dict_to_ix[w] for w in melody4gen], dtype=torch.long)
             y_pred = model(x_pred)
@@ -304,17 +348,65 @@ if __name__ == '__main__':
         return melody4gen
     
     
+    #notes2gen = 40 # number of new notes to generate
+    #row_of_test = 0
+    #melody4gen_pitch = test_pitch[row_of_test][:80] # pitch of the input for generation
+    #melody4gen_duration = test_duration[row_of_test][:80] # duration of the input for generation
+    #new_melody_pitch = generate(modelPitch, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    #new_melody_duration = generate(modelDuration, melody4gen_duration, duration_to_ix, notes2gen)
+
+
+    #print(melody4gen_pitch)
+    
+    #convert_to_midi(new_melody_pitch, new_melody_duration)
+
+    
+    # Convert the output of the model to midi
+    def convert_to_midi(new_melody_pitch, new_melody_duration):
+        offset = 0
+        output_notes = []
+        #output_notes = stream.Stream()
+        # create note and chord objects based on the values generated by the model
+        for i in range(len(new_melody_pitch)):
+            if new_melody_pitch[i] == 'R':
+                new_note = note.Rest()
+                new_note.offset = offset
+                #new_note.duration.quarterLength = float(new_melody_duration[i])
+            else: 
+                new_note = note.Note()
+                new_note.pitch.nameWithOctave = new_melody_pitch[i]
+                new_note.offset = offset
+                #new_note.duration.quarterLength = float(new_melody_duration[i])
+                new_note.storedInstrument = instrument.Piano()
+            output_notes.append(new_note)
+            offset += float(new_melody_duration[i])
+            
+        midi_stream = stream.Stream(output_notes)
+        midi_stream.write('midi', fp='output/music.mid')  
+
+    
+    #specify the path
+    f='data/w_jazz/WayneShorter_Dolores_FINAL.mid'
+    melody4gen_pitch = (read_midi_pitch(f))[:40]
+    melody4gen_duration = (read_midi_duration(f))[:40]
+    print(melody4gen_pitch)
+    print(melody4gen_duration)
+    
     notes2gen = 40 # number of new notes to generate
-    row_of_test = 10
-    melody4gen_pitch = test_pitch[row_of_test][:80] # pitch of the input for generation
-    melody4gen_duration = test_duration[row_of_test][:80] # duration of the input for generation
     new_melody_pitch = generate(modelPitch, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration, melody4gen_duration, duration_to_ix, notes2gen)
 
     convert_to_midi(new_melody_pitch, new_melody_duration)
-    
-    #print(new_melody_pitch)
-    #print(new_melody_duration)
 
+    #convert_to_midi(melody4gen_pitch, melody4gen_duration)
+    
+    
+    # SAVE MODELS
+    
+    savePATH = 'modelsPitch/modelPitch.pt'
+    torch.save(modelPitch, savePATH)
+    savePATH = 'modelsDuration/modelDuration.pt'
+    torch.save(modelDuration, savePATH)
+    
     
     
