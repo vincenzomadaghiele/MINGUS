@@ -4,6 +4,26 @@
 Created on Sun Nov  1 09:20:56 2020
 
 @author: vincenzomadaghiele
+
+This code is done for the evaluation of my transformer model.
+Metrics for evaluation:
+    - MGEval (implemented, code below, some measure do not work yet):
+            'total_used_pitch'
+            'total_pitch_class_histogram'
+            'total_used_note'
+            'pitch_class_transition_matrix'
+            'pitch_range'
+            'avg_IOI'
+            'note_length_hist'
+    - Perplexity (calculated using eval function during training)
+    - Cross-Entropy loss (calculated using eval function during training)
+    - Accuracy (how to implement it?)
+    - BLEU score (implemented, but always get zero)
+    
+Use tensorboard with pyTorch to obtain visualization of loss and perplexity
+Understand if BLEU and accuracy are necessary
+Probably need to implement some export function 
+of the different metrics on a .csv or .txt file
 """
 
 from music21 import *
@@ -173,7 +193,7 @@ if __name__ == '__main__':
     convert_to_midi(new_melody_pitch, new_melody_duration)
     
     
-    #%% MGEval 
+    #%% MGEval (paper Explicitly conditioned melody generation)
     
     # Evauluate generation with MGEval
     # look inside the function to add/remove metrics
@@ -248,13 +268,15 @@ if __name__ == '__main__':
             print()
         
         # exhaustive cross-validation for intra-set distances measurement
-        loo = LeaveOneOut()
+        loo = LeaveOneOut() # compare each sequence with all the others in the set
         loo.get_n_splits(np.arange(num_samples))
         set1_intra = np.zeros((num_samples, len(metrics_list), num_samples-1))
         set2_intra = np.zeros((num_samples, len(metrics_list), num_samples-1))
         j = 0
         for metric in metrics_list:
             for train_index, test_index in loo.split(np.arange(num_samples)):
+                # compute the distance between each song in the datasets 
+                # and all the others in the same dataset
                 set1_intra[test_index[0]][j] = utils.c_dist(set1_eval[metric][test_index], set1_eval[metric][train_index])
                 set2_intra[test_index[0]][j] = utils.c_dist(set2_eval[metric][test_index], set2_eval[metric][train_index])
             j += 1
@@ -267,6 +289,8 @@ if __name__ == '__main__':
         j = 0
         for metric in metrics_list:
             for train_index, test_index in loo.split(np.arange(num_samples)):
+                # compute the distance between each song in the training dataset 
+                # and all the samples in the generated dataset
                 sets_inter[test_index[0]][j] = utils.c_dist(set1_eval[metric][test_index], set2_eval[metric])
             j += 1
         
@@ -282,7 +306,7 @@ if __name__ == '__main__':
             plt.title(metrics_list[i])
             plt.xlabel('Euclidean distance')
             plt.show()
-            
+        
         # Calculate divergence between measures
         for i in range(0, len(metrics_list)):
             print(metrics_list[i] + ':')
@@ -315,31 +339,65 @@ if __name__ == '__main__':
     standards = glob.glob(training_path)
     num_of_generations = 10
     j=0
+    # for BLEU score
+    #candidate_corpus_pitch = []
+    #candidate_corpus_duration = []
+    #references_corpus_pitch = []
+    #references_corpus_duration = []
     for i in range(0, num_of_generations):
         
-        print(standards[i])
-        melody4gen_pitch = (read_midi_pitch(standards[i]))[:40]
+        melody4gen_pitch = (read_midi_pitch(standards[i]))
         melody4gen_pitch = onlyDict(melody4gen_pitch, vocabPitch)
-        melody4gen_duration = (read_midi_duration(standards[i]))[:40]
+        melody4gen_duration = (read_midi_duration(standards[i]))
         melody4gen_duration = onlyDict(melody4gen_duration, vocabDuration)
         
-        # in case one sequence has less elements than another one after filtering
-        if len(melody4gen_pitch) > len(melody4gen_duration):
-            diff = len(melody4gen_pitch) - len(melody4gen_duration)
-            melody4gen_pitch = melody4gen_pitch[:diff]
-        elif len(melody4gen_pitch) < len(melody4gen_duration):
-            diff = len(melody4gen_duration) - len(melody4gen_pitch)
-            melody4gen_pitch = melody4gen_duration[:diff]
+        # update reference corpus for BLEU
+        #references_corpus_pitch.append(melody4gen_pitch[:60])
+        #references_corpus_duration.append(melody4gen_duration[:60])
         
+        # select starting sequence
+        melody4gen_pitch = melody4gen_pitch[:40]
+        melody4gen_duration = melody4gen_duration[:40]
+        
+        # generate samples
         notes2gen = 20 # number of new notes to generate
         new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
         new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
     
+        # update candidate corpus for BLEU
+        #candidate_corpus_pitch.append(new_melody_pitch[:60])
+        #candidate_corpus_duration.append(new_melody_pitch[:60])
+    
+        # convert to midi and save
         midi_gen = convert_to_midi(new_melody_pitch, new_melody_duration)
         midi_gen.write('midi', fp='output/gen4eval/music'+str(j)+'.mid') 
         j+=1
         
+        
     generated_path = 'output/gen4eval/*.mid'
 
     MGEval(training_path, generated_path, num_of_generations)
+    
+    #%% MODEL EVALUATION
+    # accuracy, perplexity (paper seq-Attn)
+    # NLL loss, BLEU (paper explicitly conditioned melody generation)
+    
+    """
+    BLEU code: il always gets 0, don't understand why
+    
+    def formatBLEU(corpus, max_n=1):
+        new_corpus = []
+        for song in corpus:
+            for i in range(0, len(song), max_n):
+                new_corpus.append(song[i:i+max_n])
+        return new_corpus
+    max_n = 2
+    weights=[0.5, 0.5]
+    candidate_corpus_pitch_reformat = formatBLEU(candidate_corpus_pitch, max_n)
+    references_corpus_pitch_reformat = formatBLEU(references_corpus_pitch, max_n)
+    from torchtext.data.metrics import bleu_score
+    pitchBLEU = bleu_score(candidate_corpus_pitch, references_corpus_pitch, max_n = max_n, weights = weights)
+    #durationBLEU = bleu_score(candidate_corpus_duration, references_corpus_duration, max_n=4, weights=[0.25, 0.25, 0.25, 0.25])
+    """
+    
     
