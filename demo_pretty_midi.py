@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 import IPython.display
 
 
-
 # We'll load in the example.mid file distributed with pretty_midi
 pm = pretty_midi.PrettyMIDI('data/w_jazz/ArtPepper_Anthropology_FINAL.mid')
 
@@ -82,84 +81,131 @@ plt.figure()
 #%% PRETTY MIDI ON A W_JAZZ SOLO
 
 file = 'data/w_jazz/ArtPepper_Anthropology_FINAL.mid'
-print("Loading Music File:",file)
-pm = pretty_midi.PrettyMIDI(file)
 
-tempo = pm.estimate_tempo()
-# Get and downbeat times
-beats = pm.get_beats()
-downbeats = pm.get_downbeats()
-beat_duration = beats[1] - beats[0]
-measure_duration = downbeats[2] - downbeats[0]
+def readMIDI(file):
+    '''
+    
+    Parameters
+    ----------
+    file : path to a midi file (string)
+        the midi file is read by the function.
 
-# sampling of the measure
-unit = measure_duration / 96.
-# possible note durations in seconds 
-# (it is possible to add representations - include 32nds, quintuplets...):
-# [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
-possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 72, 
-                      unit * 36, unit * 18, unit * 9, unit * 32, unit * 16, unit * 8]
+    Returns
+    -------
+    notes : list of notes in midi number format
+        this list contains all of the notes and the rests in the song.
+        The duration of each note is in the correspondent index of the durations array
+    durations : list of durations in musical terms (string)
+        this list contains the durations of each note and rest in the song.
+        The pitch of each note is in the correspondent index of the durations array
+    dur_dict : python dictionary
+        the keys of this dictionary are the time in seconds 
+        of each possible note/rest duration for this song.
+    song_properties : python dictionary
+        this dictionary contains some basic properties of the midi file.
 
-# Define durations dictionary
-dur_dict = {}
-dur_dict[possible_durations[0]] = 'full'
-dur_dict[possible_durations[1]] = 'half'
-dur_dict[possible_durations[2]] = 'quarter'
-dur_dict[possible_durations[3]] = '8th'
-dur_dict[possible_durations[4]] = '16th'
-dur_dict[possible_durations[5]] = 'dot half'
-dur_dict[possible_durations[6]] = 'dot quarter'
-dur_dict[possible_durations[7]] = 'dot 8th'
-dur_dict[possible_durations[8]] = 'dot 16th'
-dur_dict[possible_durations[9]] = 'half note triplet'
-dur_dict[possible_durations[10]] = 'quarter note triplet'
-dur_dict[possible_durations[11]] = '8th note triplet'
+    '''
 
-# compile the lists of pitchs and durations
-notes = []
-durations = []
-for instrument in range(len(pm.instruments)):
-    for note in range(len(pm.instruments[instrument].notes)-1):
-        # append pitch
-        notes.append(pm.instruments[instrument].notes[note].pitch)
-        # calculate note duration in secods
-        duration_sec = pm.instruments[instrument].notes[note].end - pm.instruments[instrument].notes[note].start
-        # calculate distance from each duration
-        distance = np.abs(np.array(possible_durations) - duration_sec)
-        idx = distance.argmin()
-        durations.append(dur_dict[possible_durations[idx]])
-        
-        # check for rests
-        intra_note_time = pm.instruments[instrument].notes[note+1].start - pm.instruments[instrument].notes[note].end
-        # if the interval between notes is greater than the smallest duration ('16th')
-        # and smaller than the greatest duration ('full') then there is a rest
-        if intra_note_time >= possible_durations[4]:
-            # there is a rest!
+    pm = pretty_midi.PrettyMIDI(file)
+    print("Loading Music File:",file)
+    
+    # Get and downbeat times
+    beats = pm.get_beats()
+    downbeats = pm.get_downbeats()
+    
+    song_properties = {}
+    song_properties['tempo'] = pm.estimate_tempo()
+    song_properties['beat duration'] = beats[1] - beats[0]
+    song_properties['measure duration'] = downbeats[2] - downbeats[0]
+    
+    # sampling of the measure
+    unit = song_properties['measure duration'] / 96.
+    # possible note durations in seconds 
+    # (it is possible to add representations - include 32nds, quintuplets...):
+    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 72, 
+                          unit * 36, unit * 18, unit * 9, unit * 32, unit * 16, unit * 8]
+    
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = 'dot half'
+    dur_dict[possible_durations[6]] = 'dot quarter'
+    dur_dict[possible_durations[7]] = 'dot 8th'
+    dur_dict[possible_durations[8]] = 'dot 16th'
+    dur_dict[possible_durations[9]] = 'half note triplet'
+    dur_dict[possible_durations[10]] = 'quarter note triplet'
+    dur_dict[possible_durations[11]] = '8th note triplet'
+    
+    # compile the lists of pitchs and durations
+    notes = []
+    durations = []
+    for instrument in range(len(pm.instruments)):
+        for note in range(len(pm.instruments[instrument].notes)-1):
+            # append pitch
+            notes.append(pm.instruments[instrument].notes[note].pitch)
+            # calculate note duration in secods
+            duration_sec = pm.instruments[instrument].notes[note].end - pm.instruments[instrument].notes[note].start
+            # calculate distance from each duration
+            distance = np.abs(np.array(possible_durations) - duration_sec)
+            idx = distance.argmin()
+            durations.append(dur_dict[possible_durations[idx]])
             
-            # handle the possibility of pauses longer than a full note
-            while intra_note_time > possible_durations[0]:
+            # check for rests
+            intra_note_time = pm.instruments[instrument].notes[note+1].start - pm.instruments[instrument].notes[note].end
+            # if the interval between notes is greater than the smallest duration ('16th')
+            # and smaller than the greatest duration ('full') then there is a rest
+            if intra_note_time >= possible_durations[4]:
+                # there is a rest!
+                
+                # handle the possibility of pauses longer than a full note
+                while intra_note_time > possible_durations[0]:
+                    notes.append('R')
+                    # calculate distance from each duration
+                    distance = np.abs(np.array(possible_durations) - intra_note_time)
+                    idx = distance.argmin()
+                    durations.append(dur_dict[possible_durations[idx]])
+                    intra_note_time -= possible_durations[idx]
+                
                 notes.append('R')
                 # calculate distance from each duration
                 distance = np.abs(np.array(possible_durations) - intra_note_time)
                 idx = distance.argmin()
                 durations.append(dur_dict[possible_durations[idx]])
-                intra_note_time -= possible_durations[idx]
-            
-            notes.append('R')
-            # calculate distance from each duration
-            distance = np.abs(np.array(possible_durations) - intra_note_time)
-            idx = distance.argmin()
-            durations.append(dur_dict[possible_durations[idx]])
-            
-        
+    return notes, durations, dur_dict, song_properties
+
 
 def getKey(val, dict_to_ix): 
     for key, value in dict_to_ix.items(): 
         if val == value: 
             return key
 
-    
 def convertMIDI(pitches, durations, tempo):
+    '''
+    
+    Parameters
+    ----------
+    pitches : list of pitches
+        a list of all the pitches and the rests in the song to be exported.
+        Each pitch/rest should have its own duration 
+        at the same index of the durations list.
+    durations : list of durations
+        a list of all the durations of the pitches/rests in the song to be exported.
+        Each duration should have its own pitch/rest 
+        at the same index of the pitches list.
+    tempo : integer
+        tempo of the song.
+
+    Returns
+    -------
+    pm : pretty_midi object
+        this pretty midi can be exported to midi and saved.
+
+    '''
     # pitches and durations must be of equal lenght
     # still does not include rests
     
@@ -184,41 +230,7 @@ def convertMIDI(pitches, durations, tempo):
         offset += duration
     return pm
 
-
-converted = convertMIDI(notes, durations, tempo)
+notes, durations, dur_dict, song_properties = readMIDI(file)
+converted = convertMIDI(notes, durations, song_properties['tempo'])
 converted.write('output/out.mid')
-    
-        
 
-
-"""
-#defining function to read MIDI files
-def read_midi_pitch(file):
-    
-    print("Loading Music File:",file)
-    
-    notes=[]
-    notes_to_parse = None
-    
-    #parsing a midi file
-    midi = converter.parse(file)
-    
-    #grouping based on different instruments
-    s2 = instrument.partitionByInstrument(midi)
-
-    #Looping over all the instruments
-    for part in s2.parts:
-        notes_to_parse = part.recurse() 
-        #finding whether a particular element is note or a rest
-        for element in notes_to_parse:        
-            #note
-            if isinstance(element, note.Note):
-                notes.append(str(element.pitch))
-            elif isinstance(element, note.Rest):
-                notes.append('R')
-            #chord
-            #elif isinstance(element, chord.Chord):
-                #notes.append('.'.join(str(n) for n in element.normalOrder))
-                
-    return np.array(notes)
-"""
