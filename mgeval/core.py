@@ -55,7 +55,7 @@ class metrics(object):
         pattern = feature['midi_pattern']
         pattern.make_ticks_abs()
         resolution = pattern.resolution
-        print(len(pattern[track_num]))
+        #print(len(pattern[track_num]))
         for i in range(0, len(pattern[track_num])):
             if type(pattern[track_num][i]) == midi.events.TimeSignatureEvent:
                 time_sig = pattern[track_num][i].data

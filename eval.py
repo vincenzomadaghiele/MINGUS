@@ -26,12 +26,13 @@ Probably need to implement some export function
 of the different metrics on a .csv or .txt file
 """
 
-from music21 import *
+#from music21 import *
+import pretty_midi
 import torch
 import torch.nn as nn
 import numpy as np
 import math
-from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, convert_to_midi, read_midi_pitch, read_midi_duration 
+from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -114,7 +115,7 @@ def generate(model, melody4gen, dict_to_ix, next_notes=10):
 
 if __name__ == '__main__':
     
-    #%% DATA LOADING
+    # DATA LOADING
     
     # LOAD PITCH DATASET
     datasetPitch = ImprovPitchDataset()
@@ -160,7 +161,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_100epochs_padding.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_padding.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration))
     
     # HYPERPARAMETERS
@@ -173,16 +174,33 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_100epochs_padding.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_padding.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch))
     
     
-    #%% SAMPLES GENERATION WITH SAVED MODEL
+    #%% SAMPLES GENERATION WITH PRE-TRAINED MODEL
+
+    # Remove characters who are not in the dictionary
+    def onlyDict(pitchs, durations, vocabPitch, vocabDuration):
+        # takes an array and a dictionary and gives the same array without
+        # the elements who are not in the dictionary
+        new_pitch = []
+        new_duration = []
+        for i in range(len(pitchs)):
+            if pitchs[i] in vocabPitch and durations[i] in vocabDuration:
+                new_pitch.append(pitchs[i]) 
+                new_duration.append(durations[i]) 
+        new_pitch = np.array(new_pitch) # same solos but with only most frequent notes
+        new_duration = np.array(new_duration) # same solos but with only most frequent notes
+        return new_pitch, new_duration
+    
     
     #specify the path
-    f='data/w_jazz/CharlieParker_DonnaLee_FINAL.mid'
-    melody4gen_pitch = (read_midi_pitch(f))[:80]
-    melody4gen_duration = (read_midi_duration(f))[:80]
+    f = 'data/w_jazz/CharlieParker_DonnaLee_FINAL.mid'
+    melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
+    melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+    melody4gen_pitch = melody4gen_pitch[:80]
+    melody4gen_duration = melody4gen_duration[:80]
     #print(melody4gen_pitch)
     #print(melody4gen_duration)
     
@@ -190,7 +208,8 @@ if __name__ == '__main__':
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
 
-    convert_to_midi(new_melody_pitch, new_melody_duration)
+    converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+    converted.write('output/music.mid')
     
     
     #%% MGEval (paper Explicitly conditioned melody generation)
@@ -218,12 +237,12 @@ if __name__ == '__main__':
         set1_eval = {'total_used_pitch':np.zeros((num_samples,1))}
         # Add metrics to the dictionary
         set1_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
-        set1_eval['total_used_note'] = np.zeros((num_samples,1))
+        #set1_eval['total_used_note'] = np.zeros((num_samples,1))
         set1_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
         set1_eval['pitch_range'] = np.zeros((num_samples,1))
         #set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
         set1_eval['avg_IOI'] = np.zeros((num_samples,1))
-        set1_eval['note_length_hist'] = np.zeros((num_samples,12))
+        #set1_eval['note_length_hist'] = np.zeros((num_samples,12))
         
         # Calculate metrics
         metrics_list = list(set1_eval.keys())
@@ -239,12 +258,12 @@ if __name__ == '__main__':
         set2_eval = {'total_used_pitch':np.zeros((num_samples,1))}
         # Add metrics to the dictionary
         set2_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
-        set2_eval['total_used_note'] = np.zeros((num_samples,1))
+        #set2_eval['total_used_note'] = np.zeros((num_samples,1))
         set2_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
         set2_eval['pitch_range'] = np.zeros((num_samples,1))
         #set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
         set2_eval['avg_IOI'] = np.zeros((num_samples,1))
-        set2_eval['note_length_hist'] = np.zeros((num_samples,12))
+        #set2_eval['note_length_hist'] = np.zeros((num_samples,12))
         
         # Calculate metrics
         for j in range(0, len(metrics_list)):
@@ -320,24 +339,13 @@ if __name__ == '__main__':
             print('  Overlap area:', utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]))
             print()
     
-    # Remove characters who are not in the dictionary
-    def onlyDict(array, vocab):
-        # takes an array and a dictionary and gives the same array without
-        # the elements who are not in the dictionary
-        new_array=[]
-        for note in array:
-            if note in vocab:
-                new_array.append(note)            
-        new_array = np.array(new_array) # same solos but with only most frequent notes
-        return new_array
     
+    training_path = 'data/w_jazz/*.mid'
     
-    training_path = 'data/w_jazz_mini/*.mid'
-    
-    # Build a dataset of generated samples
+    # BUILD A DATASET OF GENERATED SEQUENCES
     import glob
     standards = glob.glob(training_path)
-    num_of_generations = 10
+    num_of_generations = 20
     j=0
     # for BLEU score
     #candidate_corpus_pitch = []
@@ -346,36 +354,34 @@ if __name__ == '__main__':
     #references_corpus_duration = []
     for i in range(0, num_of_generations):
         
-        melody4gen_pitch = (read_midi_pitch(standards[i]))
-        melody4gen_pitch = onlyDict(melody4gen_pitch, vocabPitch)
-        melody4gen_duration = (read_midi_duration(standards[i]))
-        melody4gen_duration = onlyDict(melody4gen_duration, vocabDuration)
-        
         # update reference corpus for BLEU
         #references_corpus_pitch.append(melody4gen_pitch[:60])
         #references_corpus_duration.append(melody4gen_duration[:60])
+
+        # update candidate corpus for BLEU
+        #candidate_corpus_pitch.append(new_melody_pitch[:60])
+        #candidate_corpus_duration.append(new_melody_pitch[:60])
         
-        # select starting sequence
+        #specify the path
+        melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(standards[i])
+        melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
         melody4gen_pitch = melody4gen_pitch[:40]
         melody4gen_duration = melody4gen_duration[:40]
+        #print(melody4gen_pitch)
+        #print(melody4gen_duration)
         
-        # generate samples
         notes2gen = 20 # number of new notes to generate
         new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
         new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
     
-        # update candidate corpus for BLEU
-        #candidate_corpus_pitch.append(new_melody_pitch[:60])
-        #candidate_corpus_duration.append(new_melody_pitch[:60])
-    
-        # convert to midi and save
-        midi_gen = convert_to_midi(new_melody_pitch, new_melody_duration)
-        midi_gen.write('midi', fp='output/gen4eval/music'+str(j)+'.mid') 
+        converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+        converted.write('output/gen4eval/music'+str(j)+'.mid')
+        
         j+=1
         
-        
+    
     generated_path = 'output/gen4eval/*.mid'
-
+    
     MGEval(training_path, generated_path, num_of_generations)
     
     #%% MODEL EVALUATION

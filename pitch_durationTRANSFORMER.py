@@ -14,8 +14,6 @@ and with a different dataset
 This code is used for training and generation of samples
 
 Things to do:
-    - fix conversion function 
-        (pretty_midi?--> see how duration conversion is done in MGEval: note_length_hist)
     - verify training time
     - data augmentation
     - grid search for model optimization
@@ -24,12 +22,13 @@ Things to do:
 """
 
 # library for understanding music
-from music21 import *
+#from music21 import *
+import pretty_midi
 import torch
 import torch.nn as nn
 import numpy as np
 import math
-from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, convert_to_midi, read_midi_pitch, read_midi_duration 
+from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -138,7 +137,7 @@ def evaluate(eval_model, data_source, vocab):
 
 if __name__ == '__main__':
 
-    #%% DATA LOADING
+    # DATA LOADING
     
     # LOAD PITCH DATASET
     datasetPitch = ImprovPitchDataset()
@@ -236,6 +235,7 @@ if __name__ == '__main__':
         target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
         return data, target
     
+    
     #%% PITCH MODEL TRAINING
     
     # HYPERPARAMETERS
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     print('=' * 89)
     
     savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_padding.pt'
-    state_dictPitch = modelPitch.state_dict()
+    state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
 
@@ -306,7 +306,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
@@ -334,7 +334,7 @@ if __name__ == '__main__':
     print('=' * 89)
     
     savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_padding.pt'
-    state_dictDuration = modelDuration.state_dict()
+    state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
 
@@ -356,27 +356,49 @@ if __name__ == '__main__':
             melody4gen.append(getNote(word_index, dict_to_ix))
         return melody4gen
     
+    # Remove characters who are not in the dictionary
+    def onlyDict(pitchs, durations, vocabPitch, vocabDuration):
+        # takes an array and a dictionary and gives the same array without
+        # the elements who are not in the dictionary
+        new_pitch = []
+        new_duration = []
+        for i in range(len(pitchs)):
+            if pitchs[i] in vocabPitch and durations[i] in vocabDuration:
+                new_pitch.append(pitchs[i]) 
+                new_duration.append(durations[i]) 
+        new_pitch = np.array(new_pitch) # same solos but with only most frequent notes
+        new_duration = np.array(new_duration) # same solos but with only most frequent notes
+        return new_pitch, new_duration
+    
+    
     #specify the path
-    f='data/w_jazz/CharlieParker_DonnaLee_FINAL.mid'
-    melody4gen_pitch = (read_midi_pitch(f))[:80]
-    melody4gen_duration = (read_midi_duration(f))[:80]
+    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
+    melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
+    melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+    melody4gen_pitch = melody4gen_pitch[:80]
+    melody4gen_duration = melody4gen_duration[:80]
+    #print(melody4gen_pitch)
+    #print(melody4gen_duration)
     
     notes2gen = 40 # number of new notes to generate
     new_melody_pitch = generate(modelPitch, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration, melody4gen_duration, duration_to_ix, notes2gen)
 
-    midi_gen = convert_to_midi(new_melody_pitch, new_melody_duration)
-    midi_gen.write('midi', fp='output/gen4eval/music.mid') 
+    converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+    converted.write('output/music.mid')
     
+    # For plotting
+    import mir_eval.display
+    import librosa.display
+    import matplotlib.pyplot as plt
+    def plot_piano_roll(pm, start_pitch, end_pitch, fs=100):
+        # Use librosa's specshow function for displaying the piano roll
+        librosa.display.specshow(pm.get_piano_roll(fs)[start_pitch:end_pitch],
+                                 hop_length=1, sr=fs, x_axis='time', y_axis='cqt_note',
+                                 fmin=pretty_midi.note_number_to_hz(start_pitch))
     
-    # SAVE MODELS (should not be needed) - eliminate at next run
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_padding.pt'
-    state_dictPitch = modelPitch.state_dict()
-    torch.save(state_dictPitch, savePATHpitch)
+    plt.figure(figsize=(8, 4))
+    plot_piano_roll(converted, 0, 127)    
 
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_padding.pt'
-    state_dictDuration = modelDuration.state_dict()
-    torch.save(state_dictDuration, savePATHduration)
-    
 
     

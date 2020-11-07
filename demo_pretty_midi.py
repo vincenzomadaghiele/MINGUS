@@ -178,13 +178,12 @@ def readMIDI(file):
                 durations.append(dur_dict[possible_durations[idx]])
     return notes, durations, dur_dict, song_properties
 
-
 def getKey(val, dict_to_ix): 
     for key, value in dict_to_ix.items(): 
         if val == value: 
             return key
 
-def convertMIDI(pitches, durations, tempo):
+def convertMIDI(notes, durations, tempo, dur_dict):
     '''
     
     Parameters
@@ -231,6 +230,7 @@ def convertMIDI(pitches, durations, tempo):
     return pm
 
 notes, durations, dur_dict, song_properties = readMIDI(file)
-converted = convertMIDI(notes, durations, song_properties['tempo'])
+converted = convertMIDI(notes, durations, song_properties['tempo'], dur_dict)
 converted.write('output/out.mid')
 
+booh = readMIDI(file)[0]
