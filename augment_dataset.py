@@ -53,18 +53,23 @@ def transposeFile(file, transpose_value = 8, transposeUp = True):
     
     return transposed
 
-
+# make +-4
 if __name__ == '__main__':
     # Initialize dataset1 (training data)
     source_path = 'data/w_jazz/*.mid'
     transpose_path = 'data/w_jazz_augmented/'
     source_songs = glob.glob(source_path)
-        
-    transpose_value = 8
-    for i in range(len(source_songs)):
-        song_name = source_songs[i][12:]
-        transposed = transposeFile(source_songs[i], transpose_value)
-        # save file 
-        transposed.write(transpose_path + song_name + 'transposedBy' + str(transpose_value) + '.mid')
+    
+    #transpose_value = 8 # number of semitones to transpose
+    for transpose_value in range (1,5):
+        for i in range(len(source_songs)):
+            song_name = source_songs[i][12:]
+            transposedUp = transposeFile(source_songs[i], transpose_value, transposeUp = True)
+            # save file 
+            transposedUp.write(transpose_path + song_name + 'transposedUpBy' + str(transpose_value) + '.mid')
+            
+            transposedDown = transposeFile(source_songs[i], transpose_value, transposeUp = False)
+            # save file 
+            transposedDown.write(transpose_path + song_name + 'transposedDownBy' + str(transpose_value) + '.mid')
     
 

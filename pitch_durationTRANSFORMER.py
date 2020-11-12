@@ -15,14 +15,21 @@ This code is used for training and generation of samples
 
 Things to do:
     - verify training time
-    - data augmentation
     - grid search for model optimization
     - conditioning on chords and inter-conditioning between pitch and duration
-    - order the code
+    
+For next meeting:
+    - ask for computation time on EURECOM machines (colab has many strange problems)
+    - how many times to transpose?
+    - are accuracy and BLEU necessary?
+    - how to augment duration (double duration of the songs)?
+    - how to generate dataset for MGE evaluation (how many songs, how many notes...)?
+    
+
+- runnare con altri dataset
+- fare schema della rete
 """
 
-# library for understanding music
-#from music21 import *
 import pretty_midi
 import torch
 import torch.nn as nn
@@ -257,9 +264,11 @@ if __name__ == '__main__':
     best_val_loss = float("inf")
     epochs = 10 # The number of epochs
     best_model = None
+
     
     # TRAINING LOOP
     for epoch in range(1, epochs + 1):
+        
         epoch_start_time = time.time()
         train(modelPitch, vocabPitch, train_data_pitch, criterion, optimizer)
         val_loss = evaluate(modelPitch, val_data_pitch, vocabPitch)
@@ -274,6 +283,7 @@ if __name__ == '__main__':
             best_model_pitch = modelPitch
     
         scheduler.step()
+    
     
     # TEST THE MODEL
     test_loss = evaluate(best_model_pitch, test_data_pitch, vocabPitch)
@@ -306,7 +316,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 1 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
@@ -388,7 +398,6 @@ if __name__ == '__main__':
     converted.write('output/music.mid')
     
     # For plotting
-    import mir_eval.display
     import librosa.display
     import matplotlib.pyplot as plt
     def plot_piano_roll(pm, start_pitch, end_pitch, fs=100):
