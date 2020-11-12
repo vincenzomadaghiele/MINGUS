@@ -6,8 +6,6 @@ Created on Mon Oct 26 11:44:03 2020
 @author: vincenzomadaghiele
 """
 
-# library for understanding music
-#from music21 import *
 from torch.utils.data import Dataset
 import numpy as np
 import pretty_midi
@@ -33,7 +31,7 @@ class ImprovPitchDataset(Dataset):
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
-        notes_array = np.array([np.array(readMIDI(path+i)[0]) for i in files])
+        notes_array = np.array([np.array(readMIDI(path+i)[0], dtype=object) for i in files], dtype=object)
         
         #converting 2D array into 1D array
         notes_ = [element for note_ in notes_array for element in note_]
@@ -60,7 +58,7 @@ class ImprovPitchDataset(Dataset):
                 if note_ in frequent_notes:
                     temp.append(note_)            
             new_music.append(temp)
-        new_music = np.array(new_music) # same solos but with only most frequent notes
+        new_music = np.array(new_music, dtype=object) # same solos but with only most frequent notes
 
         self.x = new_music
 
@@ -74,7 +72,6 @@ class ImprovPitchDataset(Dataset):
     
     def getData(self):
         return self.x
-
 
 # define the Duration Dataset object for Pytorch
 class ImprovDurationDataset(Dataset):
@@ -96,7 +93,7 @@ class ImprovDurationDataset(Dataset):
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
-        notes_array = np.array([np.array(readMIDI(path+i)[1]) for i in files])
+        notes_array = np.array([np.array(readMIDI(path+i)[1], dtype=object) for i in files], dtype=object)
         
         #converting 2D array into 1D array
         notes_ = [element for note_ in notes_array for element in note_]
@@ -123,7 +120,7 @@ class ImprovDurationDataset(Dataset):
                 if note_ in frequent_notes:
                     temp.append(note_)            
             new_music.append(temp)
-        new_music = np.array(new_music) # same solos but with only most frequent notes
+        new_music = np.array(new_music, dtype=object) # same solos but with only most frequent notes
 
         self.x = new_music
 
@@ -137,7 +134,6 @@ class ImprovDurationDataset(Dataset):
     
     def getData(self):
         return self.x
-
 
 def readMIDI(file):
     '''

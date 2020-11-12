@@ -26,7 +26,6 @@ Probably need to implement some export function
 of the different metrics on a .csv or .txt file
 """
 
-#from music21 import *
 import pretty_midi
 import torch
 import torch.nn as nn
@@ -162,7 +161,7 @@ if __name__ == '__main__':
 
     # Import model
     savePATHduration = 'modelsDuration/modelDuration_10epochs_padding.pt'
-    modelDuration_loaded.load_state_dict(torch.load(savePATHduration))
+    modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
     
     # HYPERPARAMETERS
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
@@ -175,10 +174,10 @@ if __name__ == '__main__':
 
     # Import model
     savePATHpitch = 'modelsPitch/modelPitch_10epochs_padding.pt'
-    modelPitch_loaded.load_state_dict(torch.load(savePATHpitch))
+    modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
-    #%% SAMPLES GENERATION WITH PRE-TRAINED MODEL
+    #%% SAMPLES GENERATION WITH PRE-TRAINED MODELS
 
     # Remove characters who are not in the dictionary
     def onlyDict(pitchs, durations, vocabPitch, vocabDuration):
@@ -196,7 +195,7 @@ if __name__ == '__main__':
     
     
     #specify the path
-    f = 'data/w_jazz/CharlieParker_DonnaLee_FINAL.mid'
+    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
     melody4gen_pitch = melody4gen_pitch[:80]
@@ -270,7 +269,7 @@ if __name__ == '__main__':
             for i in range(0, num_samples):
                 feature = core.extract_feature(set2[i])
                 set2_eval[metrics_list[j]][i] = getattr(core.metrics(), metrics_list[j])(feature)
-            
+        
         # Print the results
         for i in range(0, len(metrics_list)):
             print( metrics_list[i] + ':')
@@ -375,7 +374,10 @@ if __name__ == '__main__':
         new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
     
         converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-        converted.write('output/gen4eval/music'+str(j)+'.mid')
+        
+        song_name = standards[i][12:]
+        #converted.write('output/gen4eval/music'+str(j)+'.mid')
+        converted.write('output/gen4eval/'+ song_name + '_gen.mid')
         
         j+=1
         
@@ -387,6 +389,11 @@ if __name__ == '__main__':
     #%% MODEL EVALUATION
     # accuracy, perplexity (paper seq-Attn)
     # NLL loss, BLEU (paper explicitly conditioned melody generation)
+    
+    parameters = []
+    for param in modelDuration_loaded.parameters():
+        parameters.append(param.data.numpy())
+        #print(param.data)
     
     """
     BLEU code: il always gets 0, don't understand why
