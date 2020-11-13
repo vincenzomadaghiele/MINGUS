@@ -260,6 +260,16 @@ if __name__ == '__main__':
     
     #%% MGEval (paper Explicitly conditioned melody generation)
     
+    import json
+    from json import JSONEncoder
+    
+    # Convert numpy ndarray to json
+    class NumpyArrayEncoder(JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return JSONEncoder.default(self, obj)
+    
     # Evauluate generation with MGEval
     # look inside the function to add/remove metrics
     def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
@@ -327,11 +337,11 @@ if __name__ == '__main__':
         for i in range(0, len(metrics_list)):
             
             # mean and std of the reference set
-            results[metrics_list[i]]['ref_mean'] = np.mean(set1_eval[metrics_list[i]], axis=0)
-            results[metrics_list[i]]['ref_std'] = np.std(set1_eval[metrics_list[i]], axis=0)
+            results[metrics_list[i]]['ref_mean'] = json.dumps(np.mean(set1_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
+            results[metrics_list[i]]['ref_std'] = json.dumps(np.std(set1_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
             # mean and std of the generated set
-            results[metrics_list[i]]['gen_mean'] = np.mean(set2_eval[metrics_list[i]], axis=0)
-            results[metrics_list[i]]['gen_std'] = np.std(set2_eval[metrics_list[i]], axis=0)
+            results[metrics_list[i]]['gen_mean'] = json.dumps(np.mean(set2_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
+            results[metrics_list[i]]['gen_std'] = json.dumps(np.std(set2_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
             
             # print the results
             print( metrics_list[i] + ':')
@@ -410,15 +420,89 @@ if __name__ == '__main__':
         
         return results
     
+
+
+    #%% Perplexity, Test Loss
     
-    #%% Accuracy
+    #DATA PREPARATION
+
+    # pad data to max_lenght of sequences, prepend <sos> and append <eos>
+    def pad(data):
+        # from: https://pytorch.org/text/_modules/torchtext/data/field.html
+        data = list(data)
+        # calculate max lenght
+        max_len = max(len(x) for x in data)
+        # Define padding tokens
+        pad_token = '<pad>'
+        init_token = '<sos>'
+        eos_token = '<eos>'
+        # pad each sequence in the data to max_lenght
+        padded, lengths = [], []
+        for x in data:
+            padded.append(
+                ([init_token])
+                + list(x[:max_len])
+                + ([eos_token])
+                + [pad_token] * max(0, max_len - len(x)))
+        lengths.append(len(padded[-1]) - max(0, max_len - len(x)))
+        return padded
     
-    def accuracy():
-        pass
+    # divide into batches of size bsz and converts notes into numbers
+    def batchify(data, bsz, dict_to_ix):
+        
+        padded = pad(data)
+        padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
+        
+        data = torch.tensor(padded_num, dtype=torch.long)
+        data = data.contiguous()
+        
+        # Divide the dataset into bsz parts.
+        nbatch = data.size(0) // bsz
+        # Trim off any extra elements that wouldn't cleanly fit (remainders).
+        data = data.narrow(0, 0, nbatch * bsz)
+        # Evenly divide the data across the bsz batches.
+        data = data.view(bsz, -1).t().contiguous()
+        return data.to(device)
+    
+    batch_size = 20
+    eval_batch_size = 10
+    
+    train_data_pitch = batchify(train_pitch, batch_size, pitch_to_ix)
+    val_data_pitch = batchify(val_pitch, eval_batch_size, pitch_to_ix)
+    test_data_pitch = batchify(test_pitch, eval_batch_size, pitch_to_ix)
+    
+    train_data_duration = batchify(train_duration, batch_size, duration_to_ix)
+    val_data_duration = batchify(val_duration, eval_batch_size, duration_to_ix)
+    test_data_duration = batchify(test_duration, eval_batch_size, duration_to_ix)
+    
+    # divide into target and input sequence of lenght bptt
+    # --> obtain matrices of size bptt x batch_size
+    bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
+    def get_batch(source, i):
+        seq_len = min(bptt, len(source) - 1 - i)
+        data = source[i:i+seq_len] # input 
+        target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
+        return data, target
+    
+    def lossPerplexity(eval_model, data_source, vocab, criterion):
+        eval_model.eval() # Turn on the evaluation mode
+        total_loss = 0.
+        ntokens = len(vocab)
+        with torch.no_grad():
+            for i in range(0, data_source.size(0) - 1, bptt):
+                data, targets = get_batch(data_source, i)
+                output = eval_model(data)
+                output_flat = output.view(-1, ntokens)
+                total_loss += len(data) * criterion(output_flat, targets).item()
+        
+        loss = total_loss / (len(data_source) - 1)
+        perplexity = math.exp(loss)
+        return loss, perplexity #, accuracy!!!
+
     
     #%% Perplexity
     
-    def perplexity():
+    def accuracy():
         pass
     
     #%% Test Loss
@@ -432,9 +516,12 @@ if __name__ == '__main__':
     metrics_result = {}
     metrics_result['MGEval'] = {}
     metrics_result['BLEU'] = {}
-    metrics_result['Accuracy'] = {}
-    metrics_result['Perplexity'] = {}
-    metrics_result['Test_loss'] = {}
+    metrics_result['Pitch_accuracy'] = {}
+    metrics_result['Pitch_perplexity'] = {}
+    metrics_result['Pitch_test-loss'] = {}
+    metrics_result['Duration_accuracy'] = {}
+    metrics_result['Duration_perplexity'] = {}
+    metrics_result['Duration_test-loss'] = {}
     
     
     generated_path = 'output/gen4eval/*.mid'
@@ -442,16 +529,21 @@ if __name__ == '__main__':
     MGEresults = MGEval(training_path, generated_path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
+    criterion = nn.CrossEntropyLoss()
     #accuracy_results = accuracy()
     #metrics_result['Accuracy'] = accuracy_results
     
-    #perplexity_results = perplexity()
-    #metrics_result['Perplexity'] = perplexity_results
+    perplexity_results_pitch, testLoss_results_pitch  = lossPerplexity(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
+    metrics_result['Pitch_perplexity'] = perplexity_results_pitch
+    metrics_result['Pitch_test-loss'] = testLoss_results_pitch
     
-    #testLoss_results = testLoss()
-    #metrics_result['Test_loss'] = testLoss_results
+    perplexity_results_duration, testLoss_results_duration  = lossPerplexity(modelDuration_loaded, test_data_duration, vocabDuration, criterion)
+    metrics_result['Duration_perplexity'] = perplexity_results_duration
+    metrics_result['Duration_test-loss'] = testLoss_results_duration
     
-    # Convert metrics dict to JSON and SAVE IT
+    # Convert metrics dict to JSON and SAVE IT    
+    with open('metrics/metrics_result.json', 'w') as fp:
+        json.dump(metrics_result, fp)
     
     #%% MODEL EVALUATION
     # accuracy, perplexity (paper seq-Attn)
