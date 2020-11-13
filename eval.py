@@ -375,7 +375,10 @@ if __name__ == '__main__':
     
         converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
         
-        song_name = standards[i][12:]
+        song_name = standards[i][12:][:-4]
+        print('-'*30)
+        print('Generating over song: '+ song_name)
+        print('-'*30)
         #converted.write('output/gen4eval/music'+str(j)+'.mid')
         converted.write('output/gen4eval/'+ song_name + '_gen.mid')
         
@@ -390,9 +393,9 @@ if __name__ == '__main__':
     # accuracy, perplexity (paper seq-Attn)
     # NLL loss, BLEU (paper explicitly conditioned melody generation)
     
-    parameters = []
-    for param in modelDuration_loaded.parameters():
-        parameters.append(param.data.numpy())
+    #parameters = []
+    #for param in modelDuration_loaded.parameters():
+        #parameters.append(param.data.numpy())
         #print(param.data)
     
     """
