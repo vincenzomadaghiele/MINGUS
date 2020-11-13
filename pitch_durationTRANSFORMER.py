@@ -14,20 +14,17 @@ and with a different dataset
 This code is used for training and generation of samples
 
 Things to do:
-    - verify training time
+    - implement remaining metrics
+    - make metrics result export function
+    - run model with other datasets and compare metrics
+    - run model with very augmented data and 100 epochs
+    - make net scheme and find name
     - grid search for model optimization
     - conditioning on chords and inter-conditioning between pitch and duration
     
 For next meeting:
-    - ask for computation time on EURECOM machines (colab has many strange problems)
-    - how many times to transpose?
-    - are accuracy and BLEU necessary?
-    - how to augment duration (double duration of the songs)?
+    - are accuracy and BLEU necessary? YES
     - how to generate dataset for MGE evaluation (how many songs, how many notes...)?
-    
-
-- runnare con altri dataset
-- fare schema della rete
 """
 
 import pretty_midi
@@ -262,7 +259,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 100 # The number of epochs
     best_model = None
 
     
@@ -292,7 +289,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_padding.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_EURECOM.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -316,7 +313,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 1 # The number of epochs
+    epochs = 100 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
@@ -343,7 +340,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_padding.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_EURECOM.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
