@@ -14,20 +14,20 @@ and with a different dataset
 This code is used for training and generation of samples
 
 Things to do:
-    - implement remaining metrics (BLEU, accuracy, MGEval)
-    - make metrics result export function
-    - run model with other datasets (folkDB, seAttn data) and compare metrics
-    - run model with very augmented data and 100 epochs
-    - make net scheme and find name
+    - verify training time
     - grid search for model optimization
     - conditioning on chords and inter-conditioning between pitch and duration
-    - move all constants to an external .py file
     
 For next meeting:
-    - it is NOT USEFUL to train the duration model on the augmented data, 
-        might as well train it on the not augumented data!
-    - are accuracy and BLEU necessary? YES
+    - ask for computation time on EURECOM machines (colab has many strange problems)
+    - how many times to transpose?
+    - are accuracy and BLEU necessary?
+    - how to augment duration (double duration of the songs)?
     - how to generate dataset for MGE evaluation (how many songs, how many notes...)?
+    
+
+- runnare con altri dataset
+- fare schema della rete
 """
 
 import pretty_midi
@@ -292,7 +292,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_EURECOM.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_padding.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 1 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
@@ -343,15 +343,13 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_EURECOM.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_padding.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
 
-    
     #%% SAMPLES GENERATION
 
-    '''
     def getNote(val, dict_to_ix): 
         for key, value in dict_to_ix.items(): 
              if val == value: 
@@ -411,6 +409,5 @@ if __name__ == '__main__':
     plt.figure(figsize=(8, 4))
     plot_piano_roll(converted, 0, 127)    
 
-    '''
 
     
