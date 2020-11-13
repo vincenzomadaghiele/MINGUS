@@ -16,7 +16,7 @@ This code is used for training and generation of samples
 Things to do:
     - implement remaining metrics
     - make metrics result export function
-    - run model with other datasets and compare metrics
+    - run model with other datasets (folkDB, seAttn data) and compare metrics
     - run model with very augmented data and 100 epochs
     - make net scheme and find name
     - grid search for model optimization
@@ -345,8 +345,10 @@ if __name__ == '__main__':
     torch.save(state_dictDuration, savePATHduration)
     
 
+    
     #%% SAMPLES GENERATION
 
+    '''
     def getNote(val, dict_to_ix): 
         for key, value in dict_to_ix.items(): 
              if val == value: 
@@ -406,5 +408,6 @@ if __name__ == '__main__':
     plt.figure(figsize=(8, 4))
     plot_piano_roll(converted, 0, 127)    
 
+    '''
 
     

@@ -177,7 +177,7 @@ if __name__ == '__main__':
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
-    #%% SAMPLES GENERATION WITH PRE-TRAINED MODELS
+    #%% ONE SONG GENERATION WITH PRE-TRAINED MODELS
 
     # Remove characters who are not in the dictionary
     def onlyDict(pitchs, durations, vocabPitch, vocabDuration):
@@ -208,7 +208,54 @@ if __name__ == '__main__':
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
 
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    converted.write('output/music.mid')
+    converted.write('output/generated_music.mid')
+    
+    
+    #%% BUILD A DATASET OF GENERATED SEQUENCES
+    
+    training_path = 'data/w_jazz/*.mid'
+    
+    import glob
+    standards = glob.glob(training_path)
+    num_of_generations = 20
+    j=0
+    # for BLEU score
+    #candidate_corpus_pitch = []
+    #candidate_corpus_duration = []
+    #references_corpus_pitch = []
+    #references_corpus_duration = []
+    for i in range(0, num_of_generations):
+        
+        # update reference corpus for BLEU
+        #references_corpus_pitch.append(melody4gen_pitch[:60])
+        #references_corpus_duration.append(melody4gen_duration[:60])
+
+        # update candidate corpus for BLEU
+        #candidate_corpus_pitch.append(new_melody_pitch[:60])
+        #candidate_corpus_duration.append(new_melody_pitch[:60])
+        
+        #specify the path
+        melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(standards[i])
+        melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+        melody4gen_pitch = melody4gen_pitch[:40]
+        melody4gen_duration = melody4gen_duration[:40]
+        #print(melody4gen_pitch)
+        #print(melody4gen_duration)
+        
+        notes2gen = 20 # number of new notes to generate
+        new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+        new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
+    
+        converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+        
+        song_name = standards[i][12:][:-4]
+        print('-'*30)
+        print('Generating over song: '+ song_name)
+        print('-'*30)
+        #converted.write('output/gen4eval/music'+str(j)+'.mid')
+        converted.write('output/gen4eval/'+ song_name + '_gen.mid')
+        
+        j+=1
     
     
     #%% MGEval (paper Explicitly conditioned melody generation)
@@ -230,6 +277,9 @@ if __name__ == '__main__':
         from mgeval import core, utils
         from sklearn.model_selection import LeaveOneOut
         
+        # Initalize results dictionary
+        results = {}
+        
         # Initialize dataset1 (training data)
         set1 = glob.glob(training_midi_path)
         # Dictionary of metrics
@@ -245,6 +295,9 @@ if __name__ == '__main__':
         
         # Calculate metrics
         metrics_list = list(set1_eval.keys())
+        for metric in metrics_list:
+            results[metric] = {}
+        
         for j in range(0, len(metrics_list)):
             for i in range(0, num_samples):
                 feature = core.extract_feature(set1[i])
@@ -272,14 +325,23 @@ if __name__ == '__main__':
         
         # Print the results
         for i in range(0, len(metrics_list)):
+            
+            # mean and std of the reference set
+            results[metrics_list[i]]['ref_mean'] = np.mean(set1_eval[metrics_list[i]], axis=0)
+            results[metrics_list[i]]['ref_std'] = np.std(set1_eval[metrics_list[i]], axis=0)
+            # mean and std of the generated set
+            results[metrics_list[i]]['gen_mean'] = np.mean(set2_eval[metrics_list[i]], axis=0)
+            results[metrics_list[i]]['gen_std'] = np.std(set2_eval[metrics_list[i]], axis=0)
+            
+            # print the results
             print( metrics_list[i] + ':')
             print('------------------------')
-            print(' demo_set')
+            print(' Reference set')
             print('  mean: ', np.mean(set1_eval[metrics_list[i]], axis=0))
             print('  std: ', np.std(set1_eval[metrics_list[i]], axis=0))
         
             print('------------------------')
-            print(' demo_set')
+            print(' Generated set')
             print('  mean: ', np.mean(set2_eval[metrics_list[i]], axis=0))
             print('  std: ', np.std(set2_eval[metrics_list[i]], axis=0))
             
@@ -327,67 +389,69 @@ if __name__ == '__main__':
         
         # Calculate divergence between measures
         for i in range(0, len(metrics_list)):
+            
+            # mean and std of the reference set
+            results[metrics_list[i]]['ref_KL-div'] = utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i])
+            results[metrics_list[i]]['ref_overlap-area'] = utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i])
+            # mean and std of the generated set
+            results[metrics_list[i]]['gen_KL-div'] = utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i])
+            results[metrics_list[i]]['gen_overlap-area'] = utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i])
+            
             print(metrics_list[i] + ':')
             print('------------------------')
-            print(' demo_set1')
+            print(' Reference set')
             print('  Kullback–Leibler divergence:',utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i]))
             print('  Overlap area:', utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i]))
             
-            print(' demo_set2')
+            print(' Generated set')
             print('  Kullback–Leibler divergence:',utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i]))
             print('  Overlap area:', utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]))
             print()
+        
+        return results
     
     
-    training_path = 'data/w_jazz/*.mid'
+    #%% Accuracy
     
-    # BUILD A DATASET OF GENERATED SEQUENCES
-    import glob
-    standards = glob.glob(training_path)
-    num_of_generations = 20
-    j=0
-    # for BLEU score
-    #candidate_corpus_pitch = []
-    #candidate_corpus_duration = []
-    #references_corpus_pitch = []
-    #references_corpus_duration = []
-    for i in range(0, num_of_generations):
-        
-        # update reference corpus for BLEU
-        #references_corpus_pitch.append(melody4gen_pitch[:60])
-        #references_corpus_duration.append(melody4gen_duration[:60])
-
-        # update candidate corpus for BLEU
-        #candidate_corpus_pitch.append(new_melody_pitch[:60])
-        #candidate_corpus_duration.append(new_melody_pitch[:60])
-        
-        #specify the path
-        melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(standards[i])
-        melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
-        melody4gen_pitch = melody4gen_pitch[:40]
-        melody4gen_duration = melody4gen_duration[:40]
-        #print(melody4gen_pitch)
-        #print(melody4gen_duration)
-        
-        notes2gen = 20 # number of new notes to generate
-        new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-        new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
+    def accuracy():
+        pass
     
-        converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-        
-        song_name = standards[i][12:][:-4]
-        print('-'*30)
-        print('Generating over song: '+ song_name)
-        print('-'*30)
-        #converted.write('output/gen4eval/music'+str(j)+'.mid')
-        converted.write('output/gen4eval/'+ song_name + '_gen.mid')
-        
-        j+=1
-        
+    #%% Perplexity
+    
+    def perplexity():
+        pass
+    
+    #%% Test Loss
+    
+    def testLoss():
+        pass
+    
+    #%% INSTANCIATE METRICS DICTIONARY
+    
+    # Instanciate dictionary
+    metrics_result = {}
+    metrics_result['MGEval'] = {}
+    metrics_result['BLEU'] = {}
+    metrics_result['Accuracy'] = {}
+    metrics_result['Perplexity'] = {}
+    metrics_result['Test_loss'] = {}
+    
     
     generated_path = 'output/gen4eval/*.mid'
     
-    MGEval(training_path, generated_path, num_of_generations)
+    MGEresults = MGEval(training_path, generated_path, num_of_generations)
+    metrics_result['MGEval'] = MGEresults
+    
+    #accuracy_results = accuracy()
+    #metrics_result['Accuracy'] = accuracy_results
+    
+    #perplexity_results = perplexity()
+    #metrics_result['Perplexity'] = perplexity_results
+    
+    #testLoss_results = testLoss()
+    #metrics_result['Test_loss'] = testLoss_results
+    
+    # Convert metrics dict to JSON and SAVE IT
     
     #%% MODEL EVALUATION
     # accuracy, perplexity (paper seq-Attn)
@@ -399,7 +463,7 @@ if __name__ == '__main__':
         #print(param.data)
     
     """
-    BLEU code: il always gets 0, don't understand why
+    BLEU code: it always gets 0, don't understand why
     
     def formatBLEU(corpus, max_n=1):
         new_corpus = []
