@@ -160,7 +160,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_padding.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
     
     # HYPERPARAMETERS
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_padding.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -424,7 +424,7 @@ if __name__ == '__main__':
 
     #%% Perplexity, Test Loss
     
-    #DATA PREPARATION
+    #DATA PREPARATION FOR TEST 
 
     # pad data to max_lenght of sequences, prepend <sos> and append <eos>
     def pad(data):
@@ -484,6 +484,8 @@ if __name__ == '__main__':
         target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
         return data, target
     
+    
+    # Calculate loss and perplexity on a test set
     def lossPerplexity(eval_model, data_source, vocab, criterion):
         eval_model.eval() # Turn on the evaluation mode
         total_loss = 0.
@@ -500,14 +502,9 @@ if __name__ == '__main__':
         return loss, perplexity #, accuracy!!!
 
     
-    #%% Perplexity
+    #%% Accuracy
     
     def accuracy():
-        pass
-    
-    #%% Test Loss
-    
-    def testLoss():
         pass
     
     #%% INSTANCIATE METRICS DICTIONARY
@@ -529,10 +526,10 @@ if __name__ == '__main__':
     MGEresults = MGEval(training_path, generated_path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
-    criterion = nn.CrossEntropyLoss()
     #accuracy_results = accuracy()
     #metrics_result['Accuracy'] = accuracy_results
     
+    criterion = nn.CrossEntropyLoss()
     perplexity_results_pitch, testLoss_results_pitch  = lossPerplexity(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
     metrics_result['Pitch_perplexity'] = perplexity_results_pitch
     metrics_result['Pitch_test-loss'] = testLoss_results_pitch
@@ -541,9 +538,11 @@ if __name__ == '__main__':
     metrics_result['Duration_perplexity'] = perplexity_results_duration
     metrics_result['Duration_test-loss'] = testLoss_results_duration
     
+    
     # Convert metrics dict to JSON and SAVE IT    
     with open('metrics/metrics_result.json', 'w') as fp:
         json.dump(metrics_result, fp)
+    
     
     #%% MODEL EVALUATION
     # accuracy, perplexity (paper seq-Attn)
