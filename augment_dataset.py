@@ -63,7 +63,7 @@ if __name__ == '__main__':
     #transpose_value = 8 # number of semitones to transpose
     for transpose_value in range (1,5):
         for i in range(len(source_songs)):
-            song_name = source_songs[i][12:]
+            song_name = source_songs[i][12:-4]
             transposedUp = transposeFile(source_songs[i], transpose_value, transposeUp = True)
             # save file 
             transposedUp.write(transpose_path + song_name + 'transposedUpBy' + str(transpose_value) + '.mid')
