@@ -14,10 +14,10 @@ and with a different dataset
 This code is used for training and generation of samples
 
 Things to do:
-    - implement remaining metrics (BLEU, accuracy, MGEval)
-    - make metrics result export function
+    - look at "generate subsequent mask" in tutorial
+    - tell the model to identify '<pad>' tokens!
+    - implement remaining metrics (BLEU, MGEval)
     - run model with other datasets (folkDB, seAttn data) and compare metrics
-    - run model with very augmented data and 100 epochs
     - make net scheme and find name
     - grid search for model optimization
     - conditioning on chords and inter-conditioning between pitch and duration
@@ -28,6 +28,11 @@ For next meeting:
         might as well train it on the not augumented data!
     - are accuracy and BLEU necessary? YES
     - how to generate dataset for MGE evaluation (how many songs, how many notes...)?
+    
+Next training:
+    - include pad tokens as in translation tutorial
+    - modify network as in tutorial modification
+    - make system to name different trained net
 """
 
 import pretty_midi

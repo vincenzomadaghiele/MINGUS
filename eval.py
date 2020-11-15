@@ -160,7 +160,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM.pt'
+    savePATHduration = 'modelsDuration/modelDuration_100epochs_EURECOM.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
     
     # HYPERPARAMETERS
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_100epochs_EURECOM.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -422,7 +422,7 @@ if __name__ == '__main__':
     
 
 
-    #%% Perplexity, Test Loss
+    #%% Perplexity, Test Loss, Accuracy
     
     #DATA PREPARATION FOR TEST 
 
@@ -481,33 +481,75 @@ if __name__ == '__main__':
     def get_batch(source, i):
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
-        target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
-        return data, target
+        target = source[i+1:i+1+seq_len].reshape(-1) # target (same as input but shifted by 1)
+        targets_no_reshape = source[i+1:i+1+seq_len]
+        return data, target, targets_no_reshape
     
     
     # Calculate loss and perplexity on a test set
-    def lossPerplexity(eval_model, data_source, vocab, criterion):
+    def lossPerplexityAccuracy(eval_model, data_source, vocab, criterion):
         eval_model.eval() # Turn on the evaluation mode
         total_loss = 0.
         ntokens = len(vocab)
+        # accuracy is calculated token-by-token
+        tot_tokens = data_source.shape[0]*data_source.shape[1]
+        correct = 0
         with torch.no_grad():
             for i in range(0, data_source.size(0) - 1, bptt):
-                data, targets = get_batch(data_source, i)
+                # get batch
+                data, targets, targets_no_reshape = get_batch(data_source, i)
                 output = eval_model(data)
                 output_flat = output.view(-1, ntokens)
+                # calculate loss function
                 total_loss += len(data) * criterion(output_flat, targets).item()
-        
+                
+                # get accuracy for each element of the batch (very inefficent)
+                for k in range(output.shape[1]):
+                    word_logits = output[:,k]
+                    for j in range(len(word_logits)):
+                        logit = word_logits[j]
+                        p = torch.nn.functional.softmax(logit, dim=0).detach().numpy()
+                        word_index = np.random.choice(len(logit), p=p)
+                        #predicted_sequence.append(word_index)
+                        correct += (word_index == targets_no_reshape[j,k]).sum().item()
+                
+        accuracy = correct / tot_tokens *100
         loss = total_loss / (len(data_source) - 1)
         perplexity = math.exp(loss)
-        return loss, perplexity #, accuracy!!!
+        return loss, perplexity, accuracy
 
     
     #%% Accuracy
     
-    def accuracy():
-        pass
+        
+    data, _, targets_no_reshape  = get_batch(test_data_duration, 0)
+    print(data[:,0])
+    print(targets_no_reshape[:,0])
     
-    #%% INSTANCIATE METRICS DICTIONARY
+    # HOW TO INPUT JUST ONE SEQUENCE?
+    modelDuration_loaded.eval()
+    with torch.no_grad():
+        
+        #if data[0].size(0) != bptt:
+            #src_mask = modelDuration_loaded.generate_square_subsequent_mask(data[0].size(0)).to(device)
+        
+        print(data.shape)
+        
+        output = modelDuration_loaded(data[:,0])
+        
+        print(output[:,0].shape)
+        #print(output.view(-1,ntokens_duration).shape)
+        
+        tot_tokens = output.shape[0]*output.shape[1]
+
+        # WHERE ARE THE LAST WORD LOGITS?
+        last_word_logits = output[:,0]
+        p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
+        word_index = np.random.choice(len(last_word_logits), p=p)
+        
+        
+    
+    #%% METRICS DICTIONARY
     
     # Instanciate dictionary
     metrics_result = {}
@@ -526,17 +568,16 @@ if __name__ == '__main__':
     MGEresults = MGEval(training_path, generated_path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
-    #accuracy_results = accuracy()
-    #metrics_result['Accuracy'] = accuracy_results
-    
     criterion = nn.CrossEntropyLoss()
-    perplexity_results_pitch, testLoss_results_pitch  = lossPerplexity(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
+    perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
     metrics_result['Pitch_perplexity'] = perplexity_results_pitch
     metrics_result['Pitch_test-loss'] = testLoss_results_pitch
+    metrics_result['Pitch_accuracy'] = accuracy_results_pitch
     
-    perplexity_results_duration, testLoss_results_duration  = lossPerplexity(modelDuration_loaded, test_data_duration, vocabDuration, criterion)
+    perplexity_results_duration, testLoss_results_duration, accuracy_results_duration  = lossPerplexityAccuracy(modelDuration_loaded, test_data_duration, vocabDuration, criterion)
     metrics_result['Duration_perplexity'] = perplexity_results_duration
     metrics_result['Duration_test-loss'] = testLoss_results_duration
+    metrics_result['Duration_accuracy'] = accuracy_results_duration
     
     
     # Convert metrics dict to JSON and SAVE IT    
