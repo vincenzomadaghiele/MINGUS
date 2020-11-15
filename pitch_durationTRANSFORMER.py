@@ -33,6 +33,8 @@ Next training:
     - include pad tokens as in translation tutorial
     - modify network as in tutorial modification
     - make system to name different trained net
+    - first with 10, then with 100
+    - print loss into .csv
 """
 
 import pretty_midi
@@ -63,7 +65,7 @@ class TransformerModel(nn.Module):
 
         self.init_weights()
 
-    def _generate_square_subsequent_mask(self, sz):
+    def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
@@ -74,15 +76,10 @@ class TransformerModel(nn.Module):
         self.decoder.bias.data.zero_()
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src):
-        if self.src_mask is None or self.src_mask.size(0) != src.size(0):
-            device = src.device
-            mask = self._generate_square_subsequent_mask(src.size(0)).to(device)
-            self.src_mask = mask
-
+    def forward(self, src, src_mask):
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, self.src_mask)
+        output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
         return output
 
@@ -111,10 +108,13 @@ def train(model, vocab, train_data, criterion, optimizer):
     total_loss = 0.
     start_time = time.time()
     ntokens = len(vocab)
+    src_mask = model.generate_square_subsequent_mask(bptt).to(device)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
         data, targets = get_batch(train_data, i)
         optimizer.zero_grad()
-        output = model(data)
+        if data.size(0) != bptt:
+            src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
+        output = model(data, src_mask)
         loss = criterion(output.view(-1, ntokens), targets)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
@@ -138,10 +138,13 @@ def evaluate(eval_model, data_source, vocab):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
     ntokens = len(vocab)
+    src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
         for i in range(0, data_source.size(0) - 1, bptt):
             data, targets = get_batch(data_source, i)
-            output = eval_model(data)
+            if data.size(0) != bptt:
+                src_mask = eval_model.generate_square_subsequent_mask(data.size(0)).to(device)
+            output = eval_model(data, src_mask)
             output_flat = output.view(-1, ntokens)
             total_loss += len(data) * criterion(output_flat, targets).item()
     return total_loss / (len(data_source) - 1)
@@ -267,7 +270,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
 
     
@@ -321,7 +324,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
