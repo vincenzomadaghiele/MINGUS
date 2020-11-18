@@ -54,7 +54,7 @@ class TransformerModel(nn.Module):
 
         self.init_weights()
 
-    def _generate_square_subsequent_mask(self, sz):
+    def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
@@ -65,15 +65,10 @@ class TransformerModel(nn.Module):
         self.decoder.bias.data.zero_()
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, src):
-        if self.src_mask is None or self.src_mask.size(0) != src.size(0):
-            device = src.device
-            mask = self._generate_square_subsequent_mask(src.size(0)).to(device)
-            self.src_mask = mask
-
+    def forward(self, src, src_mask):
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, self.src_mask)
+        output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
         return output
 
@@ -102,15 +97,25 @@ def getNote(val, dict_to_ix):
              return key
 
 def generate(model, melody4gen, dict_to_ix, next_notes=10):
-    melody4gen = melody4gen.tolist()
-    for i in range(0,next_notes):
-        x_pred = torch.tensor([dict_to_ix[w] for w in melody4gen], dtype=torch.long)
-        y_pred = model(x_pred)
-        last_word_logits = y_pred[0][-1]
-        p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-        word_index = np.random.choice(len(last_word_logits), p=p)
-        melody4gen.append(getNote(word_index, dict_to_ix))
-    return melody4gen
+    model.eval()
+    melody4gen_list = melody4gen.tolist()
+    src_mask = model.generate_square_subsequent_mask(35).to(device)
+    with torch.no_grad():
+        for i in range(0,next_notes):
+            # prepare input to the model
+            melody4gen_batch = batch4gen(np.array(melody4gen_list), len(melody4gen_list), dict_to_ix)
+                
+            if melody4gen_batch.size(0) != 35:
+                src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
+                
+            y_pred = model(melody4gen_batch, src_mask)
+            last_word_logits = y_pred[-1,-1]
+            p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
+            word_index = np.random.choice(len(last_word_logits), p=p)
+                
+            melody4gen_list.append(getNote(word_index, dict_to_ix))
+    return melody4gen_list
+
 
 if __name__ == '__main__':
     
@@ -160,7 +165,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_100epochs_EURECOM.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
     
     # HYPERPARAMETERS
@@ -173,7 +178,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_100epochs_EURECOM.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -194,19 +199,36 @@ if __name__ == '__main__':
         return new_pitch, new_duration
     
     
+    # divide into batches of size bsz and converts notes into numbers
+    def batch4gen(data, bsz, dict_to_ix):
+        
+        #padded = pad(data)
+        padded_num = [dict_to_ix[x] for x in data]
+        
+        data = torch.tensor(padded_num, dtype=torch.long)
+        data = data.contiguous()
+        
+        # Divide the dataset into bsz parts.
+        nbatch = data.size(0) // bsz
+        # Trim off any extra elements that wouldn't cleanly fit (remainders).
+        data = data.narrow(0, 0, nbatch * bsz)
+        # Evenly divide the data across the bsz batches.
+        data = data.view(bsz, -1).t().contiguous()
+        return data.to(device)
+    
+    
     #specify the path
     f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
     melody4gen_pitch = melody4gen_pitch[:80]
     melody4gen_duration = melody4gen_duration[:80]
-    #print(melody4gen_pitch)
-    #print(melody4gen_duration)
     
     notes2gen = 40 # number of new notes to generate
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
-
+    
+    # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
     converted.write('output/generated_music.mid')
     
@@ -494,11 +516,14 @@ if __name__ == '__main__':
         # accuracy is calculated token-by-token
         tot_tokens = data_source.shape[0]*data_source.shape[1]
         correct = 0
+        src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
         with torch.no_grad():
             for i in range(0, data_source.size(0) - 1, bptt):
                 # get batch
                 data, targets, targets_no_reshape = get_batch(data_source, i)
-                output = eval_model(data)
+                if data.size(0) != bptt:
+                    src_mask = eval_model.generate_square_subsequent_mask(data.size(0)).to(device)
+                output = eval_model(data, src_mask)
                 output_flat = output.view(-1, ntokens)
                 # calculate loss function
                 total_loss += len(data) * criterion(output_flat, targets).item()
@@ -512,42 +537,12 @@ if __name__ == '__main__':
                         word_index = np.random.choice(len(logit), p=p)
                         #predicted_sequence.append(word_index)
                         correct += (word_index == targets_no_reshape[j,k]).sum().item()
-                
+        
         accuracy = correct / tot_tokens *100
         loss = total_loss / (len(data_source) - 1)
         perplexity = math.exp(loss)
         return loss, perplexity, accuracy
 
-    
-    #%% Accuracy
-    
-        
-    data, _, targets_no_reshape  = get_batch(test_data_duration, 0)
-    print(data[:,0])
-    print(targets_no_reshape[:,0])
-    
-    # HOW TO INPUT JUST ONE SEQUENCE?
-    modelDuration_loaded.eval()
-    with torch.no_grad():
-        
-        #if data[0].size(0) != bptt:
-            #src_mask = modelDuration_loaded.generate_square_subsequent_mask(data[0].size(0)).to(device)
-        
-        print(data.shape)
-        
-        output = modelDuration_loaded(data[:,0])
-        
-        print(output[:,0].shape)
-        #print(output.view(-1,ntokens_duration).shape)
-        
-        tot_tokens = output.shape[0]*output.shape[1]
-
-        # WHERE ARE THE LAST WORD LOGITS?
-        last_word_logits = output[:,0]
-        p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-        word_index = np.random.choice(len(last_word_logits), p=p)
-        
-        
     
     #%% METRICS DICTIONARY
     
