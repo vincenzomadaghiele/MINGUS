@@ -27,7 +27,7 @@ class ImprovPitchDataset(Dataset):
         import os
         
         #specify the path
-        path='data/w_jazz/'
+        path='data/w_jazz_less_augmented/'
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
@@ -89,7 +89,7 @@ class ImprovDurationDataset(Dataset):
         import os
         
         #specify the path
-        path='data/w_jazz/'
+        path='data/w_jazz_less_augmented/'
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
