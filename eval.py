@@ -165,7 +165,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM_folkDB.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
     
     # HYPERPARAMETERS
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM_folkDB.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    training_path = 'data/w_jazz/*.mid'
+    training_path = 'data/folkDB/*.mid'
     
     import glob
     standards = glob.glob(training_path)
