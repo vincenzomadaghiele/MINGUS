@@ -14,17 +14,14 @@ and with a different dataset
 This code is used for training and generation of samples
 
 Things to do:
-    - tell the model to identify '<pad>' tokens!
+    - Solve <pad> masking problem
     - implement remaining metrics (BLEU, MGEval)
-    - run model with other datasets (folkDB, seAttn data) and compare metrics
+    - run model with other datasets (seAttn data) and compare metrics
     - make net scheme
     - grid search for model optimization
     - conditioning on chords and inter-conditioning between pitch and duration
     - move all constants to an external .py file
 
-Next training:
-    - include pad tokens as in translation tutorial
-    - make system to name different trained net
 """
 
 import pretty_midi
@@ -72,10 +69,13 @@ class TransformerModel(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, src, src_mask):
-        src_padding_mask = self.make_src_pad_mask(src)
+        #src_padding_mask = self.make_src_pad_mask(src)
+        #print(src_padding_mask)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, src_mask, src_padding_mask)
+        #output = self.transformer_encoder(src, src_mask, src_padding_mask)
+        #print(output)
+        output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
         return output
 
@@ -124,7 +124,7 @@ def train(model, vocab, train_data, criterion, optimizer):
             print('| epoch {:3d} | {:5d}/{:5d} batches | '
                   'lr {:02.2f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
-                    epoch, batch, len(train_data) // bptt, scheduler.get_lr()[0],
+                    epoch, batch, len(train_data) // bptt, scheduler.get_last_lr()[0],
                     elapsed * 1000 / log_interval,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
