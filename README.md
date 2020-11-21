@@ -1,4 +1,4 @@
-# Automatic Music Generation using Machine Learning
+# MINGUS - Melodic Improvisation Neural Generator Using Seq2seq
 
 ##### Supervisor(s): Pasquale Lisena, Raphaël Troncy 
 ##### Student: Vincenzo Madaghiele
@@ -14,6 +14,14 @@ The goal of the developed model should be, therefore, to generate a melodic line
 As the project concerns symbolic music generation, the dataset will be composed of jazz improvisation transcriptions in .midi format [1].
 
 In the literature different approaches have been tried to reach similar goals, as for example using Natural Language Processing techniques, for example Jiang, Xia, Berg-Kirkpatrick, “Discovering Music Relations with Sequential Attention” [2] and OpenAI’s MuseNet [3], which both aim at generating melodic lines from a starting melody.
+
+## Running the code
+
+The libraries necessary to running this code are listed in the requirement.txt file. 
+After downloading this repository, it is necessary to run the following code in the terminal:
+```
+$ conda install -n <env_name> requirements.txt
+```
 
 ## References
 

@@ -33,9 +33,6 @@ Next training:
     - include pad tokens as in translation tutorial
     - make system to name different trained net
     
-Name proposals:
-    - MINGUS (Melodic Improvisation Generator Net Using Seq2seq)
-    - MINGUS (MIdi Generator Net Using Seq2seq)
 """
 
 import pretty_midi
@@ -47,7 +44,7 @@ import torch.optim as optim
 
 import numpy as np
 import math
-from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
+from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -187,18 +184,16 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    datasetPitch = ImprovPitchDataset()
+    dataset_path = 'data/w_jazz/'
+    datasetPitch = ImprovPitchDataset(dataset_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
     # Add padding tokens to vocab
-    #vocabPitch.append('<pad>')
-    #vocabPitch.append('<sos>')
-    #vocabPitch.append('<eos>')
+    vocabPitch.append('<pad>')
+    vocabPitch.append('<sos>')
+    vocabPitch.append('<eos>')
     pitch_to_ix = {word: i for i, word in enumerate(vocabPitch)}
-    pitch_to_ix['<pad>'] = '<pad>'
-    pitch_to_ix['<eos>'] = '<eos>'
-    pitch_to_ix['<sos>'] = '<sos>'
     #print(X_pitch[:3])
     
     # Divide pitch into train, validation and test
@@ -207,18 +202,15 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    datasetDuration = ImprovDurationDataset()
+    datasetDuration = ImprovDurationDataset(dataset_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
     vocabDuration = datasetDuration.vocab
     # Add padding tokens to vocab
-    #vocabDuration.append('<pad>')
-    #vocabDuration.append('<sos>')
-    #vocabDuration.append('<eos>')
+    vocabDuration.append('<pad>')
+    vocabDuration.append('<sos>')
+    vocabDuration.append('<eos>')
     duration_to_ix = {word: i for i, word in enumerate(vocabDuration)}
-    duration_to_ix['<pad>'] = '<pad>'
-    duration_to_ix['<eos>'] = '<eos>'
-    duration_to_ix['<sos>'] = '<sos>'
     #print(X_duration[:3])
     
     # Divide duration into train, validation and test
@@ -280,8 +272,8 @@ if __name__ == '__main__':
     test_data_duration = batchify(test_duration, eval_batch_size, duration_to_ix)
     
     # divide into target and input sequence of lenght bptt
-    # --> obtain matrices of size bptt x batch_size
-    bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
+    # --> obtain matrices of size bptt x batch_size 
+    bptt = 35 
     def get_batch(source, i):
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
@@ -293,7 +285,7 @@ if __name__ == '__main__':
     
     # Training hyperparameters
     num_epochs = 10
-    learning_rate = 3e-4
+    learning_rate = 5.0
     batch_size = 32
     
     # Model hyperparameters
@@ -306,25 +298,25 @@ if __name__ == '__main__':
     dropout = 0.10
     max_len = 100
     forward_expansion = 4
-    src_pad_idx = '<pad>'
+    src_pad_idx = pitch_to_ix['<pad>']
     
     modelPitch = Transformer(embedding_size, src_vocab_size, trg_vocab_size, 
                         src_pad_idx, num_heads, num_encoder_layers,
                         num_decoder_layers, forward_expansion, dropout, 
                         max_len, device).to(device)
     
-    
     optimizer = optim.Adam(modelPitch.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.1, patience=10, verbose=True)
     
-    pad_idx = "<pad>"
+    pad_idx = pitch_to_ix['<pad>']
     criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
     
     # Tensorboard to get nice loss plot
     #writer = SummaryWriter("runs/loss_plot")
     step = 0
-    
+    start_time = time.time()
+    total_loss = 0.
     for epoch in range(num_epochs):
         print(f"[Epoch {epoch} / {num_epochs}]")
         
@@ -339,7 +331,7 @@ if __name__ == '__main__':
             #target = batch.trg.to(device)
     
             # Forward prop
-            output = modelPitch(data, targets[:-1, :])
+            output = modelPitch(data, targets)
     
             # Output is of shape (trg_len, batch_size, output_dim) but Cross Entropy Loss
             # doesn't take input in that form. For example if we have MNIST we want to have
@@ -348,7 +340,7 @@ if __name__ == '__main__':
             # our cost function, so we need to do some reshapin.
             # Let's also remove the start token while we're at it
             output = output.reshape(-1, output.shape[2])
-            targets = targets[1:].reshape(-1)
+            targets = targets.reshape(-1)
     
             optimizer.zero_grad()
     
@@ -363,7 +355,22 @@ if __name__ == '__main__':
     
             # Gradient descent step
             optimizer.step()
-    
+            
+            # Print training information
+            total_loss += loss.item()
+            log_interval = 200
+            if batch % log_interval == 0 and batch > 0:
+                cur_loss = total_loss / log_interval
+                elapsed = time.time() - start_time
+                print('| epoch {:3d} | {:5d}/{:5d} batches | '
+                      ' ms/batch {:5.2f} | '
+                      'loss {:5.2f} | ppl {:8.2f}'.format(
+                        epoch, batch, len(train_data_pitch) // bptt,
+                        elapsed * 1000 / log_interval,
+                        cur_loss, math.exp(cur_loss)))
+                total_loss = 0
+                start_time = time.time()
+            
             # plot to tensorboard
             #writer.add_scalar("Training loss", loss, global_step=step)
             step += 1
@@ -381,7 +388,7 @@ if __name__ == '__main__':
     
     # Training hyperparameters
     num_epochs = 10
-    learning_rate = 3e-4
+    learning_rate = 5.0
     batch_size = 32
     
     # Model hyperparameters
@@ -394,7 +401,7 @@ if __name__ == '__main__':
     dropout = 0.10
     max_len = 100
     forward_expansion = 4
-    src_pad_idx = '<pad>'
+    src_pad_idx = duration_to_ix['<pad>']
     
     modelDuration = Transformer(embedding_size, src_vocab_size, trg_vocab_size, 
                         src_pad_idx, num_heads, num_encoder_layers,
@@ -406,13 +413,14 @@ if __name__ == '__main__':
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, factor=0.1, patience=10, verbose=True)
     
-    pad_idx = "<pad>"
+    pad_idx = duration_to_ix['<pad>']
     criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
     
     # Tensorboard to get nice loss plot
     #writer = SummaryWriter("runs/loss_plot")
     step = 0
-    
+    start_time = time.time()
+    total_loss = 0.
     for epoch in range(num_epochs):
         print(f"[Epoch {epoch} / {num_epochs}]")
         
@@ -427,7 +435,7 @@ if __name__ == '__main__':
             #target = batch.trg.to(device)
     
             # Forward prop
-            output = modelDuration(data, targets[:-1, :])
+            output = modelDuration(data, targets)
     
             # Output is of shape (trg_len, batch_size, output_dim) but Cross Entropy Loss
             # doesn't take input in that form. For example if we have MNIST we want to have
@@ -436,7 +444,7 @@ if __name__ == '__main__':
             # our cost function, so we need to do some reshapin.
             # Let's also remove the start token while we're at it
             output = output.reshape(-1, output.shape[2])
-            targets = targets[1:].reshape(-1)
+            targets = targets.reshape(-1)
     
             optimizer.zero_grad()
     
@@ -451,6 +459,21 @@ if __name__ == '__main__':
     
             # Gradient descent step
             optimizer.step()
+            
+            # Print training information
+            total_loss += loss.item()
+            log_interval = 200
+            if batch % log_interval == 0 and batch > 0:
+                cur_loss = total_loss / log_interval
+                elapsed = time.time() - start_time
+                print('| epoch {:3d} | {:5d}/{:5d} batches | '
+                  ' ms/batch {:5.2f} | '
+                  'loss {:5.2f} | ppl {:8.2f}'.format(
+                    epoch, batch, len(train_data_duration) // bptt, 
+                    elapsed * 1000 / log_interval,
+                    cur_loss, math.exp(cur_loss)))
+                total_loss = 0
+                start_time = time.time()
     
             # plot to tensorboard
             #writer.add_scalar("Training loss", loss, global_step=step)
@@ -458,10 +481,6 @@ if __name__ == '__main__':
     
         mean_loss = sum(losses) / len(losses)
         scheduler.step(mean_loss)
-
-    #modelDuration = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
-    
-
     
     savePATHduration = 'modelsDuration/MINGUSduration'+ str(num_epochs) + 'epochs.pt'
     state_dictDuration = modelDuration.state_dict()
