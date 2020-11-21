@@ -171,7 +171,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_100epochs_padding.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM_augmented.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
     
     # HYPERPARAMETERS
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_100epochs_padding.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM_augmented.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     
     import glob
     standards = glob.glob(training_path)
-    num_of_generations = 20
+    num_of_generations = 100
     j=0
     # for BLEU score
     #candidate_corpus_pitch = []
@@ -289,14 +289,6 @@ if __name__ == '__main__':
     #%% MGEval (paper Explicitly conditioned melody generation)
     
     import json
-    from json import JSONEncoder
-    
-    # Convert numpy ndarray to json
-    class NumpyArrayEncoder(JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return JSONEncoder.default(self, obj)
     
     # Evauluate generation with MGEval
     # look inside the function to add/remove metrics
@@ -326,6 +318,7 @@ if __name__ == '__main__':
         set1_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
         #set1_eval['total_used_note'] = np.zeros((num_samples,1))
         set1_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
+        #set1_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12))
         set1_eval['pitch_range'] = np.zeros((num_samples,1))
         #set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
         set1_eval['avg_IOI'] = np.zeros((num_samples,1))
@@ -350,6 +343,7 @@ if __name__ == '__main__':
         set2_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
         #set2_eval['total_used_note'] = np.zeros((num_samples,1))
         set2_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
+        #set2_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12)) # problem: note enough generation make the mean 0
         set2_eval['pitch_range'] = np.zeros((num_samples,1))
         #set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
         set2_eval['avg_IOI'] = np.zeros((num_samples,1))
@@ -365,23 +359,23 @@ if __name__ == '__main__':
         for i in range(0, len(metrics_list)):
             
             # mean and std of the reference set
-            results[metrics_list[i]]['ref_mean'] = np.mean(set1_eval[metrics_list[i]], axis=0).tolist()
-            results[metrics_list[i]]['ref_std'] = np.std(set1_eval[metrics_list[i]], axis=0).tolist()
+            results[metrics_list[i]]['ref_mean'] = np.mean(set1_eval[metrics_list[i]]).tolist()
+            results[metrics_list[i]]['ref_std'] = np.std(set1_eval[metrics_list[i]]).tolist()
             # mean and std of the generated set
-            results[metrics_list[i]]['gen_mean'] = np.mean(set2_eval[metrics_list[i]], axis=0).tolist()
-            results[metrics_list[i]]['gen_std'] = np.std(set2_eval[metrics_list[i]], axis=0).tolist()
+            results[metrics_list[i]]['gen_mean'] = np.mean(set2_eval[metrics_list[i]]).tolist()
+            results[metrics_list[i]]['gen_std'] = np.std(set2_eval[metrics_list[i]]).tolist()
             
             # print the results
             print( metrics_list[i] + ':')
             print('------------------------')
             print(' Reference set')
-            print('  mean: ', np.mean(set1_eval[metrics_list[i]], axis=0))
-            print('  std: ', np.std(set1_eval[metrics_list[i]], axis=0))
+            print('  mean: ', np.mean(set1_eval[metrics_list[i]]))
+            print('  std: ', np.std(set1_eval[metrics_list[i]]))
         
             print('------------------------')
             print(' Generated set')
-            print('  mean: ', np.mean(set2_eval[metrics_list[i]], axis=0))
-            print('  std: ', np.std(set2_eval[metrics_list[i]], axis=0))
+            print('  mean: ', np.mean(set2_eval[metrics_list[i]]))
+            print('  std: ', np.std(set2_eval[metrics_list[i]]))
             
             print()
         
@@ -448,7 +442,8 @@ if __name__ == '__main__':
         
         return results
     
-
+    generated_path = 'output/gen4eval/*.mid'
+    MGEresults = MGEval(training_path, generated_path, num_of_generations)
 
     #%% Perplexity, Test Loss, Accuracy
     

@@ -414,10 +414,10 @@ class metrics(object):
             return note_length_hist
 
         elif normalize is True:
-
+            np.seterr(divide='ignore', invalid='ignore')
             return note_length_hist / np.sum(note_length_hist)
 
-    def note_length_transition_matrix(self, feature, track_num=1, normalize=0, pause_event=False):
+    def note_length_transition_matrix(self, feature, track_num=0, normalize=0, pause_event=False):
         """
         note_length_transition_matrix (Note length transition matrix):
         Similar to the pitch class transition matrix, the note length tran- sition matrix provides useful information for rhythm description.

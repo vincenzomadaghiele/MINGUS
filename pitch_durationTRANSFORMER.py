@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz_augmented/'
+    pitch_path = 'data/folkDB/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz/'
+    duration_path = 'data/folkDB/'
     datasetDuration = ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 100 # The number of epochs
     best_model = None
 
     
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 100 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
