@@ -29,13 +29,15 @@ set1 = glob.glob('data/w_jazz_mini/*.mid')
 # Dictionary of metrics
 set1_eval = {'total_used_pitch':np.zeros((num_samples,1))}
 # Add metrics to the dictionary
-set1_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
 set1_eval['total_used_note'] = np.zeros((num_samples,1))
-set1_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
-set1_eval['pitch_range'] = np.zeros((num_samples,1))
-#set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
-set1_eval['avg_IOI'] = np.zeros((num_samples,1))
+set1_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
 set1_eval['note_length_hist'] = np.zeros((num_samples,12))
+set1_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
+set1_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12))
+set1_eval['pitch_range'] = np.zeros((num_samples,1))
+set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
+set1_eval['avg_IOI'] = np.zeros((num_samples,1))
+
 
 metrics_list = list(set1_eval.keys())
 for j in range(0, len(metrics_list)):
@@ -49,13 +51,15 @@ set2 = glob.glob('data/w_jazz_mini2/*.mid')
 # Dictionary of metrics
 set2_eval = {'total_used_pitch':np.zeros((num_samples,1))}
 # Add metrics to the dictionary
-set2_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
 set2_eval['total_used_note'] = np.zeros((num_samples,1))
-set2_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
-set2_eval['pitch_range'] = np.zeros((num_samples,1))
-#set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
-set2_eval['avg_IOI'] = np.zeros((num_samples,1))
+set2_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
 set2_eval['note_length_hist'] = np.zeros((num_samples,12))
+set2_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
+set2_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12))
+set2_eval['pitch_range'] = np.zeros((num_samples,1))
+set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
+set2_eval['avg_IOI'] = np.zeros((num_samples,1))
+
 
 for j in range(0, len(metrics_list)):
     for i in range(0, num_samples):

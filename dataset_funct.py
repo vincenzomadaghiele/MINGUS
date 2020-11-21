@@ -14,12 +14,12 @@ import pretty_midi
 # define the Pitch Dataset object for Pytorch
 class ImprovPitchDataset(Dataset):
 
-    def __init__(self, dataset_path):
+    def __init__(self):
         #for listing down the file names
         import os
         
         #specify the path
-        path='data/w_jazz_less_augmented/'
+        path='data/w_jazz_augmented/'
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
@@ -81,7 +81,7 @@ class ImprovDurationDataset(Dataset):
         import os
         
         #specify the path
-        path='data/w_jazz_less_augmented/'
+        path='data/w_jazz/'
         #read all the filenames
         files=[i for i in os.listdir(path) if i.endswith(".mid")]
         #reading each midi file
