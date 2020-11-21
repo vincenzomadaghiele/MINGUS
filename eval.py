@@ -40,11 +40,12 @@ torch.manual_seed(1)
 # TRANSFORMER MODEL
 class TransformerModel(nn.Module):
 
-    def __init__(self, ntoken, ninp, nhead, nhid, nlayers, dropout=0.5):
+    def __init__(self, ntoken, ninp, nhead, nhid, nlayers, src_pad_idx, dropout=0.5):
         super(TransformerModel, self).__init__()
         from torch.nn import TransformerEncoder, TransformerEncoderLayer
         self.model_type = 'Transformer'
         self.src_mask = None
+        self.src_pad_idx = src_pad_idx
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
@@ -59,6 +60,10 @@ class TransformerModel(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
+    def make_src_pad_mask(self, src):
+        pad_mask = src.transpose(0, 1) == self.src_pad_idx
+        return pad_mask
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
@@ -66,9 +71,10 @@ class TransformerModel(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, src, src_mask):
+        src_padding_mask = self.make_src_pad_mask(src)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, src_mask)
+        output = self.transformer_encoder(src, src_mask, src_padding_mask)
         output = self.decoder(output)
         return output
 
@@ -359,11 +365,11 @@ if __name__ == '__main__':
         for i in range(0, len(metrics_list)):
             
             # mean and std of the reference set
-            results[metrics_list[i]]['ref_mean'] = json.dumps(np.mean(set1_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
-            results[metrics_list[i]]['ref_std'] = json.dumps(np.std(set1_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
+            results[metrics_list[i]]['ref_mean'] = np.mean(set1_eval[metrics_list[i]], axis=0).tolist()
+            results[metrics_list[i]]['ref_std'] = np.std(set1_eval[metrics_list[i]], axis=0).tolist()
             # mean and std of the generated set
-            results[metrics_list[i]]['gen_mean'] = json.dumps(np.mean(set2_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
-            results[metrics_list[i]]['gen_std'] = json.dumps(np.std(set2_eval[metrics_list[i]], axis=0), cls=NumpyArrayEncoder)
+            results[metrics_list[i]]['gen_mean'] = np.mean(set2_eval[metrics_list[i]], axis=0).tolist()
+            results[metrics_list[i]]['gen_std'] = np.std(set2_eval[metrics_list[i]], axis=0).tolist()
             
             # print the results
             print( metrics_list[i] + ':')
