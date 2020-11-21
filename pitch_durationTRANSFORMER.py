@@ -21,18 +21,10 @@ Things to do:
     - grid search for model optimization
     - conditioning on chords and inter-conditioning between pitch and duration
     - move all constants to an external .py file
-    
-For next meeting:
-    - it is NOT USEFUL to train the duration model on the augmented data, 
-        might as well train it on the not augumented data!
-    
+
 Next training:
     - include pad tokens as in translation tutorial
     - make system to name different trained net
-    
-Name proposals:
-    - MINGUS (Melodic Improvisation Generator Net Using Seq2seq)
-    - MINGUS (MIdi Generator Net Using Seq2seq)
 """
 
 import pretty_midi
@@ -40,7 +32,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import math
-from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
+from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -49,11 +41,12 @@ torch.manual_seed(1)
 # TRANSFORMER MODEL
 class TransformerModel(nn.Module):
 
-    def __init__(self, ntoken, ninp, nhead, nhid, nlayers, dropout=0.5):
+    def __init__(self, ntoken, ninp, nhead, nhid, nlayers, src_pad_idx, dropout=0.5):
         super(TransformerModel, self).__init__()
         from torch.nn import TransformerEncoder, TransformerEncoderLayer
         self.model_type = 'Transformer'
         self.src_mask = None
+        self.src_pad_idx = src_pad_idx
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
@@ -68,6 +61,10 @@ class TransformerModel(nn.Module):
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
+    def make_src_pad_mask(self, src):
+        pad_mask = src.transpose(0, 1) == self.src_pad_idx
+        return pad_mask
+
     def init_weights(self):
         initrange = 0.1
         self.encoder.weight.data.uniform_(-initrange, initrange)
@@ -75,9 +72,10 @@ class TransformerModel(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, src, src_mask):
+        src_padding_mask = self.make_src_pad_mask(src)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, src_mask)
+        output = self.transformer_encoder(src, src_mask, src_padding_mask)
         output = self.decoder(output)
         return output
 
@@ -153,7 +151,8 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    datasetPitch = ImprovPitchDataset()
+    dataset_path = 'data/w_jazz/'
+    datasetPitch = ImprovPitchDataset(dataset_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
@@ -170,7 +169,7 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    datasetDuration = ImprovDurationDataset()
+    datasetDuration = ImprovDurationDataset(dataset_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
     vocabDuration = datasetDuration.vocab
@@ -258,7 +257,8 @@ if __name__ == '__main__':
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    modelPitch = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
+    src_pad_idx = pitch_to_ix['<pad>']
+    modelPitch = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss()
@@ -312,7 +312,8 @@ if __name__ == '__main__':
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    modelDuration = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
+    src_pad_idx = duration_to_ix['<pad>']
+    modelDuration = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss()
