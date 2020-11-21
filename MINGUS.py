@@ -286,7 +286,6 @@ if __name__ == '__main__':
     # Training hyperparameters
     num_epochs = 10
     learning_rate = 5.0
-    batch_size = 32
     
     # Model hyperparameters
     src_vocab_size = len(vocabPitch)
@@ -389,7 +388,6 @@ if __name__ == '__main__':
     # Training hyperparameters
     num_epochs = 10
     learning_rate = 5.0
-    batch_size = 32
     
     # Model hyperparameters
     src_vocab_size = len(vocabDuration)
@@ -482,7 +480,7 @@ if __name__ == '__main__':
         mean_loss = sum(losses) / len(losses)
         scheduler.step(mean_loss)
     
-    savePATHduration = 'modelsDuration/MINGUSduration'+ str(num_epochs) + 'epochs.pt'
+    savePATHduration = 'modelsDuration/MINGUSduration_'+ str(num_epochs) + 'epochs.pt'
     state_dictDuration = modelDuration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
