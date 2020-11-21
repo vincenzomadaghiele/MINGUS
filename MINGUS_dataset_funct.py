@@ -9,38 +9,33 @@ Created on Mon Oct 26 11:44:03 2020
 from torch.utils.data import Dataset
 import numpy as np
 import pretty_midi
+import os
+from collections import Counter
+
 
 
 # define the Pitch Dataset object for Pytorch
 class ImprovPitchDataset(Dataset):
-
-    def __init__(self, dataset_path):
-        #for listing down the file names
-        import os
+    
+    def __init__(self, root_dir, freq_threshold = 5):
         
-        #specify the path
-        path='data/w_jazz_less_augmented/'
+        # Root directory of the dataset
+        self.root_dir = root_dir        
+        
         #read all the filenames
-        files=[i for i in os.listdir(path) if i.endswith(".mid")]
+        files=[i for i in os.listdir(self.root_dir) if i.endswith(".mid")]
         #reading each midi file
-        notes_array = np.array([np.array(readMIDI(path+i)[0], dtype=object) for i in files], dtype=object)
+        notes_array = np.array([np.array(readMIDI(self.root_dir+i)[0], dtype=object) for i in files], dtype=object)
         
         #converting 2D array into 1D array
         notes_ = [element for note_ in notes_array for element in note_]
-        #No. of unique notes
         unique_notes = list(set(notes_))
-        print("number of unique pithces: " + str(len(unique_notes)))
+        print("number of unique pitches: " + str(len(unique_notes)))
         
-        from collections import Counter
         #computing frequency of each note
         freq = dict(Counter(notes_))
-              
-        # the threshold for frequent notes can change 
-        threshold = 20 # this threshold is the number of classes that have to be predicted
-        frequent_notes = [note_ for note_, count in freq.items() if count>=threshold]
-        print("number of frequent pithces (more than 50 times): " + str(len(frequent_notes)))
-        self.num_frequent_notes = len(frequent_notes)
-        self.vocab = frequent_notes
+        frequent_notes = [note_ for note_, count in freq.items() if count>=freq_threshold]
+        print("number of frequent pithces (more than ", freq_threshold, " times): ", (len(frequent_notes)))
         
         # prepare new musical files which contain only the top frequent notes
         new_music=[]
@@ -50,9 +45,12 @@ class ImprovPitchDataset(Dataset):
                 if note_ in frequent_notes:
                     temp.append(note_)            
             new_music.append(temp)
-        new_music = np.array(new_music, dtype=object) # same solos but with only most frequent notes
+        # same solos but with only most frequent notes
+        new_music = np.array(new_music, dtype=object) 
 
         self.x = new_music
+        self.num_frequent_notes = len(frequent_notes)
+        self.vocab = frequent_notes
 
     # support indexing such that dataset[i] can be used to get i-th sample
     def __getitem__(self, index):
@@ -68,41 +66,25 @@ class ImprovPitchDataset(Dataset):
 # define the Duration Dataset object for Pytorch
 class ImprovDurationDataset(Dataset):
     
-    """
-    --> DataLoader can do the batch computation for us
-
-    Implement a custom Dataset:
-    inherit Dataset
-    implement __init__ , __getitem__ , and __len__
-    """
-    
-    def __init__(self):
-        #for listing down the file names
-        import os
+    def __init__(self, root_dir, freq_threshold = 5):
         
-        #specify the path
-        path='data/w_jazz_less_augmented/'
+        # Root directory of the dataset
+        self.root_dir = root_dir 
+        
         #read all the filenames
-        files=[i for i in os.listdir(path) if i.endswith(".mid")]
+        files=[i for i in os.listdir(self.root_dir) if i.endswith(".mid")]
         #reading each midi file
-        notes_array = np.array([np.array(readMIDI(path+i)[1], dtype=object) for i in files], dtype=object)
+        notes_array = np.array([np.array(readMIDI(self.root_dir+i)[1], dtype=object) for i in files], dtype=object)
         
         #converting 2D array into 1D array
         notes_ = [element for note_ in notes_array for element in note_]
-        #No. of unique notes
         unique_notes = list(set(notes_))
         print("number of unique durations: " + str(len(unique_notes)))
         
-        from collections import Counter
         #computing frequency of each note
         freq = dict(Counter(notes_))
-              
-        # the threshold for frequent notes can change 
-        threshold = 10 
-        frequent_notes = [note_ for note_, count in freq.items() if count>=threshold]
+        frequent_notes = [note_ for note_, count in freq.items() if count>=freq_threshold]
         print("number of frequent durations (more than 10 times): " + str(len(frequent_notes)))
-        self.num_frequent_notes = len(frequent_notes)
-        self.vocab = frequent_notes
         
         # prepare new musical files which contain only the top frequent notes
         new_music=[]
@@ -112,9 +94,12 @@ class ImprovDurationDataset(Dataset):
                 if note_ in frequent_notes:
                     temp.append(note_)            
             new_music.append(temp)
-        new_music = np.array(new_music, dtype=object) # same solos but with only most frequent notes
+        # same solos but with only most frequent notes
+        new_music = np.array(new_music, dtype=object) 
 
         self.x = new_music
+        self.num_frequent_notes = len(frequent_notes)
+        self.vocab = frequent_notes
 
     # support indexing such that dataset[i] can be used to get i-th sample
     def __getitem__(self, index):
