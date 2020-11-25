@@ -458,7 +458,7 @@ if __name__ == '__main__':
             return sklearn.metrics.accuracy_score(y_true.flatten(), y_pred.flatten())
     
     trainer = Trainer(
-        criterion=torch.nn.NLLLoss,
+        criterion=torch.nn.CrossEntropyLoss,
         
         # We extended the trainer to support two optimizers
         # but to get the behavior of one optimizer we can 
@@ -467,15 +467,15 @@ if __name__ == '__main__':
         optimizer__lr = 5.0,
         
         module=TransformerModel,
-        module__ntokens_duration = len(vocabDuration), 
-        module__emsize = 200, 
+        module__ntoken = len(vocabDuration), 
+        module__ninp = 200, 
+        module__nhead = 2, 
         module__nhid = 200, 
         module__nlayers = 2, 
-        module__nhead = 2, 
-        module__dropout = 0.2, 
         module__src_pad_idx = duration_to_ix['<pad>'],
-
+        module__dropout = 0.2, 
         
+
         # We have no internal validation.
         train_split=None,
         
@@ -526,8 +526,8 @@ if __name__ == '__main__':
     from sklearn.model_selection import GridSearchCV
     # change these parameters to good ones
     params = {
-        'nhead': [4, 8],
-        'nlayers': [4, 8],
+        'module__nhead': [4, 8],
+        'module__nlayers': [4, 8],
     }
     gs = GridSearchCV(trainer, params)
     gs.fit(X, y)
