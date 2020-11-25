@@ -381,6 +381,12 @@ if __name__ == '__main__':
             self.optimizer_.zero_grad()
             
             ntokens = len(vocabDuration) # Change with Pitch
+            src_mask = self.module_.generate_square_subsequent_mask(bptt).to(device)
+            
+            # somehow skorch messes up the dimension of the data so a reshape is necessary
+            data = data.reshape(data.shape[1],data.shape[2])
+            targets = targets.reshape(targets.shape[1],targets.shape[2])
+            
             if data.size(0) != bptt:
                 src_mask = self.module_.generate_square_subsequent_mask(data.size(0)).to(device)
     
@@ -521,6 +527,9 @@ if __name__ == '__main__':
     # array of tensors
     X = np.array(X, dtype=object)
     y = np.array(y, dtype=object)
+    
+    src_mask = modelDuration.generate_square_subsequent_mask(bptt).to(device)
+    output = modelDuration(X[0], src_mask)
     
     
     from sklearn.model_selection import GridSearchCV
