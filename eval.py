@@ -31,7 +31,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import math
-from dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
+from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -110,10 +110,10 @@ def generate(model, melody4gen, dict_to_ix, next_notes=10):
         for i in range(0,next_notes):
             # prepare input to the model
             melody4gen_batch = batch4gen(np.array(melody4gen_list), len(melody4gen_list), dict_to_ix)
-                
+            
             if melody4gen_batch.size(0) != 35:
                 src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
-                
+            
             y_pred = model(melody4gen_batch, src_mask)
             last_word_logits = y_pred[-1,-1]
             p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
@@ -127,8 +127,10 @@ if __name__ == '__main__':
     
     # DATA LOADING
     
+    
     # LOAD PITCH DATASET
-    datasetPitch = ImprovPitchDataset()
+    pitch_path = 'data/folkDB/'
+    datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
@@ -137,6 +139,7 @@ if __name__ == '__main__':
     vocabPitch.append('<sos>')
     vocabPitch.append('<eos>')
     pitch_to_ix = {word: i for i, word in enumerate(vocabPitch)}
+    #print(X_pitch[:3])
     
     # Divide pitch into train, validation and test
     train_pitch = X_pitch[:int(len(X_pitch)*0.7)]
@@ -144,7 +147,8 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    datasetDuration = ImprovDurationDataset()
+    duration_path = 'data/folkDB/'
+    datasetDuration = ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
     vocabDuration = datasetDuration.vocab
@@ -153,26 +157,16 @@ if __name__ == '__main__':
     vocabDuration.append('<sos>')
     vocabDuration.append('<eos>')
     duration_to_ix = {word: i for i, word in enumerate(vocabDuration)}
+    #print(X_duration[:3])
     
     # Divide duration into train, validation and test
     train_duration = X_duration[:int(len(X_duration)*0.7)]
     val_duration = X_duration[int(len(X_duration)*0.7)+1:int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1)]
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
     
-    #%% IMPORT PRE-TRAINED MODEL
     
-    # HYPERPARAMETERS
-    ntokens_duration = len(vocabDuration) # the size of vocabulary
-    emsize = 200 # embedding dimension
-    nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 2 # the number of heads in the multiheadattention models
-    dropout = 0.2 # the dropout value
-    modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
-
-    # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_EURECOM_augmented.pt'
-    modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
+    
+    #%% IMPORT PRE-TRAINED MODEL
     
     # HYPERPARAMETERS
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
@@ -184,9 +178,23 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_EURECOM_augmented.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_100epochs_folkDB.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
+    
+    # HYPERPARAMETERS
+    ntokens_duration = len(vocabDuration) # the size of vocabulary
+    emsize = 200 # embedding dimension
+    nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
+    dropout = 0.2 # the dropout value
+    modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
+
+    # Import model
+    savePATHduration = 'modelsDuration/modelDuration_100epochs_folkDB.pt'
+    modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
+
     
     #%% ONE SONG GENERATION WITH PRE-TRAINED MODELS
 
@@ -241,7 +249,7 @@ if __name__ == '__main__':
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    training_path = 'data/w_jazz/*.mid'
+    training_path = 'data/folkDB/*.mid'
     
     import glob
     standards = glob.glob(training_path)
