@@ -467,7 +467,9 @@ if __name__ == '__main__':
                         flat_y.append(batch[j,k])
             y_true = np.array(flat_y)
             
-            return sklearn.metrics.accuracy_score(y_true.flatten(), y_pred.flatten())
+            accuracy = [(y_true.flatten()[i] == y_pred.flatten()[i]) for i in range(len(y_true))].sum().item() / len(y_true)
+            #return sklearn.metrics.accuracy_score(y_true.flatten(), y_pred.flatten())
+            return accuracy
     
     trainer = Trainer(
         criterion=torch.nn.CrossEntropyLoss,
