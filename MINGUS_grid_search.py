@@ -274,7 +274,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 2 # The number of epochs
+    epochs = 1 # The number of epochs
     best_model = None
 
     
@@ -304,9 +304,9 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_EURECOM_augmented.pt'
-    state_dictPitch = best_model_pitch.state_dict()
-    torch.save(state_dictPitch, savePATHpitch)
+    #savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_EURECOM_augmented.pt'
+    #state_dictPitch = best_model_pitch.state_dict()
+    #torch.save(state_dictPitch, savePATHpitch)
     
 
     #%% DURATION MODEL TRAINING
@@ -329,7 +329,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 2 # The number of epochs
+    epochs = 1 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
@@ -356,9 +356,9 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_EURECOM_augmented.pt'
-    state_dictDuration = best_model_duration.state_dict()
-    torch.save(state_dictDuration, savePATHduration)
+    #savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_EURECOM_augmented.pt'
+    #state_dictDuration = best_model_duration.state_dict()
+    #torch.save(state_dictDuration, savePATHduration)
     
     
     #%% Grid Search
@@ -381,16 +381,16 @@ if __name__ == '__main__':
             self.optimizer_.zero_grad()
             
             ntokens = len(vocabDuration) # Change with Pitch
-            src_mask = self.module_.generate_square_subsequent_mask(bptt).to(device)
+            #src_mask = self.module_.generate_square_subsequent_mask(bptt).to(device)
             
             # somehow skorch messes up the dimension of the data so a reshape is necessary
-            data = data.reshape(data.shape[1],data.shape[2])
+            #data = data.reshape(data.shape[1],data.shape[2])
             targets = targets.reshape(targets.shape[1],targets.shape[2])
             
-            if data.size(0) != bptt:
-                src_mask = self.module_.generate_square_subsequent_mask(data.size(0)).to(device)
+            #if data.size(0) != bptt:
+                #src_mask = self.module_.generate_square_subsequent_mask(data.size(0)).to(device)
     
-            output = self.infer(data, src_mask)
+            output = self.infer(data)
             loss = self.get_loss(output.view(-1, ntokens), targets.reshape(-1), X=data, training=True)
             loss.backward()
             
@@ -399,10 +399,16 @@ if __name__ == '__main__':
             
             return {'loss': loss, 'y_pred': output}
     
-        def infer(self, Xi, yi=None):
+        def infer(self, data, yi=None):
             # Xi and yi are already tensors in my implementation 
             # (should work ??)
-            return self.module_(Xi, yi)
+            
+            src_mask = self.module_.generate_square_subsequent_mask(bptt).to(device)
+            data = data.reshape(data.shape[1],data.shape[2])
+            if data.size(0) != bptt:
+                src_mask = self.module_.generate_square_subsequent_mask(data.size(0)).to(device)
+            
+            return self.module_(data, src_mask)
         
         def get_loss(self, y_pred, y_true, **kwargs):
             #y_true = y_true[:, :y_pred.size(1)]        
