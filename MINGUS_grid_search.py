@@ -500,7 +500,7 @@ if __name__ == '__main__':
         iterator_valid__batch_size=1,
         
         # We are training only one large epoch.
-        max_epochs=1,
+        max_epochs=10,
         
         # Training takes a long time, add a progress bar
         # to see how far in we are. Since we are doing 
@@ -536,8 +536,8 @@ if __name__ == '__main__':
     X = np.array(X, dtype=object)
     y = np.array(y, dtype=object)
     
-    src_mask = modelDuration.generate_square_subsequent_mask(bptt).to(device)
-    output = modelDuration(X[0], src_mask)
+    #src_mask = modelDuration.generate_square_subsequent_mask(bptt).to(device)
+    #output = modelDuration(X[0], src_mask)
     
     
     from sklearn.model_selection import GridSearchCV
@@ -545,10 +545,17 @@ if __name__ == '__main__':
     params = {
         'module__nhead': [4, 8],
         'module__nlayers': [4, 8],
+        'module__ninp' : [100, 200, 400], 
+        'module__nhid' : [100, 200, 400], 
     }
     gs = GridSearchCV(trainer, params)
     gs.fit(X, y)
 
+    print(gs.best_params_)
+    ef = gs.best_estimator_
+    
+    ef.save_params(f_params='modelsDuration/grid_search/modelDuration_w_jazz_grid.pt')
+    
 
 
     
