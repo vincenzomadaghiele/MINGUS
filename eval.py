@@ -75,7 +75,7 @@ class TransformerModel(nn.Module):
         src_padding_mask = self.make_src_pad_mask(src)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, src_mask, src_padding_mask)
+        output = self.transformer_encoder(src, src_mask, src_padding_mask.to(device))
         #print(output)
         #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_4heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_2heads.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_4heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_2heads.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     

@@ -77,7 +77,7 @@ class TransformerModel(nn.Module):
         src_padding_mask = self.make_src_pad_mask(src)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, src_mask, src_padding_mask)
+        output = self.transformer_encoder(src, src_mask, src_padding_mask.to(device))
         #print(output)
         #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
