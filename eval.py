@@ -102,24 +102,26 @@ def getNote(val, dict_to_ix):
          if val == value: 
              return key
 
-def generate(model, melody4gen, dict_to_ix, next_notes=10):
+def generate(model, melody4gen, dict_to_ix, bptt, next_notes=10):
     model.eval()
     melody4gen_list = melody4gen.tolist()
-    src_mask = model.generate_square_subsequent_mask(35).to(device)
+    src_mask = model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
         for i in range(0,next_notes):
             # prepare input to the model
             melody4gen_batch = batch4gen(np.array(melody4gen_list), len(melody4gen_list), dict_to_ix)
             
-            if melody4gen_batch.size(0) != 35:
-                src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
+            # reshape to column vector
+            melody4gen_batch = melody4gen_batch.reshape(melody4gen_batch.shape[1], melody4gen_batch.shape[0])
             
+            if melody4gen_batch.size(0) != bptt:
+                src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
+
             y_pred = model(melody4gen_batch, src_mask)
-            last_word_logits = y_pred[-1,-1]
-            p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-            word_index = np.random.choice(len(last_word_logits), p=p)
-                
-            melody4gen_list.append(getNote(word_index, dict_to_ix))
+            last_note_logits = y_pred[-1,-1]
+            _, max_idx = torch.max(last_note_logits, dim=0)
+            melody4gen_list.append(getNote(max_idx, dict_to_ix))
+
     return melody4gen_list
 
 
@@ -231,6 +233,7 @@ if __name__ == '__main__':
         return data.to(device)
     
     
+    bptt = 35
     #specify the path
     f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
@@ -238,7 +241,7 @@ if __name__ == '__main__':
     melody4gen_pitch = melody4gen_pitch[:80]
     melody4gen_duration = melody4gen_duration[:80]
     
-    notes2gen = 40 # number of new notes to generate
+    notes2gen = 1 # number of new notes to generate
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
     
@@ -450,8 +453,8 @@ if __name__ == '__main__':
         
         return results
     
-    generated_path = 'output/gen4eval/*.mid'
-    MGEresults = MGEval(training_path, generated_path, num_of_generations)
+    #generated_path = 'output/gen4eval/*.mid'
+    #MGEresults = MGEval(training_path, generated_path, num_of_generations)
 
     #%% Perplexity, Test Loss, Accuracy
     

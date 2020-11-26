@@ -533,8 +533,8 @@ if __name__ == '__main__':
         y.append(target)
     
     # array of tensors
-    X = np.array(X, dtype=object)
-    y = np.array(y, dtype=object)
+    X = np.array(X, dtype=object) 
+    y = np.array(y, dtype=object) # same as X but sequences shifted by 1
     
     #src_mask = modelDuration.generate_square_subsequent_mask(bptt).to(device)
     #output = modelDuration(X[0], src_mask)
