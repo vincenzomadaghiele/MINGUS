@@ -32,6 +32,7 @@ $ conda install -n <env_name> requirements.txt
 * MINGUS_eval.py : code for evaluation of the model
 * MINGUS_eval_funct.py : functions for model evaluation
 * MINGUS_const.py : constants needed for model training
+* MINGUS_generate.py : generate over a single sample
 
 ## References
 
