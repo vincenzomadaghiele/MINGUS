@@ -104,6 +104,26 @@ class PositionalEncoding(nn.Module):
 
 import time
 def train(model, vocab, train_data, criterion, optimizer):
+    '''
+
+    Parameters
+    ----------
+    model : pytorch Model
+        Model to be trained.
+    vocab : python dictionary
+        dictionary of the tokens used in training.
+    train_data : pytorch Tensor
+        batched data to be used in training.
+    criterion : pytorch Criterion
+        criterion to be used for otimization.
+    optimizer : pytorch Optimizer
+        optimizer used in training.
+
+    Returns
+    -------
+    None.
+
+    '''
     model.train() # Turn on the train mode
     total_loss = 0.
     start_time = time.time()
@@ -135,6 +155,23 @@ def train(model, vocab, train_data, criterion, optimizer):
             start_time = time.time()
 
 def evaluate(eval_model, data_source, vocab):
+    '''
+
+    Parameters
+    ----------
+    eval_model : pytorch Model
+        Model, already trained to be evaluated.
+    data_source : pytorch Tensor
+        Evaluation dataset.
+    vocab : python dictionary
+        dictionary used for tokenization.
+
+    Returns
+    -------
+    float
+        total loss of the model on validation/test data.
+
+    '''
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
     ntokens = len(vocab)
@@ -196,6 +233,19 @@ if __name__ == '__main__':
 
     # pad data to max_lenght of sequences, prepend <sos> and append <eos>
     def pad(data):
+        '''
+
+        Parameters
+        ----------
+        data : numpy ndarray or list
+            list of sequences to be padded.
+
+        Returns
+        -------
+        padded : numpy ndarray or list
+            list of padded sequences.
+
+        '''
         # from: https://pytorch.org/text/_modules/torchtext/data/field.html
         data = list(data)
         # calculate max lenght
@@ -217,6 +267,23 @@ if __name__ == '__main__':
     
     # divide into batches of size bsz and converts notes into numbers
     def batchify(data, bsz, dict_to_ix):
+        '''
+
+        Parameters
+        ----------
+        data : numpy ndarray or list
+            data to be batched.
+        bsz : int
+            size of a batch.
+        dict_to_ix : python dictionary
+            dictionary for tokenization of the notes.
+
+        Returns
+        -------
+        pytorch Tensor
+            Data tokenized and divided in batches of bsz elements.
+
+        '''
         
         padded = pad(data)
         padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
@@ -247,6 +314,24 @@ if __name__ == '__main__':
     # --> obtain matrices of size bptt x batch_size
     bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
+        '''
+
+        Parameters
+        ----------
+        source : pytorch Tensor
+            source of batched data.
+        i : integer
+            number of the batch to be selected.
+
+        Returns
+        -------
+        data : pytorch Tensor
+            batch of data of size [bptt x bsz].
+        target : pytorch Tensor
+            same as data but sequences are shifted by one token, 
+            of size [bptt x bsz].
+
+        '''
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
         target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
@@ -259,8 +344,8 @@ if __name__ == '__main__':
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 4 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     src_pad_idx = pitch_to_ix['<pad>']
     modelPitch = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
@@ -303,7 +388,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_w_jazz_4heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_w_jazz_2heads.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -314,8 +399,8 @@ if __name__ == '__main__':
     ntokens_duration = len(vocabDuration) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 4 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     src_pad_idx = duration_to_ix['<pad>']
     modelDuration = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
@@ -355,7 +440,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_w_jazz_4heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_w_jazz_2heads.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     

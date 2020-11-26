@@ -62,6 +62,7 @@ class TransformerModel(nn.Module):
 
     def make_src_pad_mask(self, src):
         pad_mask = src.transpose(0, 1) == self.src_pad_idx
+        pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
         return pad_mask
 
     def init_weights(self):
@@ -75,6 +76,8 @@ class TransformerModel(nn.Module):
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask, src_padding_mask)
+        #print(output)
+        #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
         return output
 
@@ -102,7 +105,28 @@ def getNote(val, dict_to_ix):
          if val == value: 
              return key
 
-def generate(model, melody4gen, dict_to_ix, bptt, next_notes=10):
+def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
+    '''
+
+    Parameters
+    ----------
+    model : pytorch Model
+        Model to be used for generation.
+    melody4gen : numpy ndarray
+        melody to be used as a generation starting point.
+    dict_to_ix : python dictionary
+        dictionary used for model training.
+    bptt : integer, optional
+        standard lenght of the sequence used for training. The default is 35.
+    next_notes : integer, optional
+        Number of notes to be generated. The default is 10.
+
+    Returns
+    -------
+    melody4gen_list : list
+        original melody with generated notes appended at the end.
+
+    '''
     model.eval()
     melody4gen_list = melody4gen.tolist()
     src_mask = model.generate_square_subsequent_mask(bptt).to(device)
@@ -174,13 +198,13 @@ if __name__ == '__main__':
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 8 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 8 # the number of heads in the multiheadattention models
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_8heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_4heads.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -188,13 +212,13 @@ if __name__ == '__main__':
     ntokens_duration = len(vocabDuration) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 8 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 8 # the number of heads in the multiheadattention models
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_8heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_4heads.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -202,8 +226,29 @@ if __name__ == '__main__':
 
     # Remove characters who are not in the dictionary
     def onlyDict(pitchs, durations, vocabPitch, vocabDuration):
-        # takes an array and a dictionary and gives the same array without
-        # the elements who are not in the dictionary
+        '''
+
+        Parameters
+        ----------
+        pitchs : numpy ndarray
+            array of pitch of the melody.
+        durations : numpy ndarray
+            array of duration of the melody.
+        vocabPitch : python dictionary
+            dictionary used for pitch training.
+        vocabDuration : python dictionary
+            dictionary used for duration training.
+
+        Returns
+        -------
+        new_pitch : numpy ndarray
+            pitch of the melody. 
+            The ones who were not in the dictionary have been removed.
+        new_duration : numpy ndarray
+            duration of the melody. 
+            The ones who were not in the dictionary have been removed.
+
+        '''
         new_pitch = []
         new_duration = []
         for i in range(len(pitchs)):
@@ -215,8 +260,25 @@ if __name__ == '__main__':
         return new_pitch, new_duration
     
     
-    # divide into batches of size bsz and converts notes into numbers
+    # This is used in the generate() function
     def batch4gen(data, bsz, dict_to_ix):
+        '''
+
+        Parameters
+        ----------
+        data : numpy ndarray or list
+            data to be batched.
+        bsz : integer
+            batch size for generation.
+        dict_to_ix : python dictionary
+            dictionary used for model training.
+
+        Returns
+        -------
+        pytorch Tensor
+            tensor of data tokenized and batched for generation.
+
+        '''
         
         #padded = pad(data)
         padded_num = [dict_to_ix[x] for x in data]
@@ -241,7 +303,7 @@ if __name__ == '__main__':
     melody4gen_pitch = melody4gen_pitch[:80]
     melody4gen_duration = melody4gen_duration[:80]
     
-    notes2gen = 1 # number of new notes to generate
+    notes2gen = 20 # number of new notes to generate
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
     
@@ -304,6 +366,23 @@ if __name__ == '__main__':
     # Evauluate generation with MGEval
     # look inside the function to add/remove metrics
     def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
+        '''
+
+        Parameters
+        ----------
+        training_midi_path : TYPE
+            DESCRIPTION.
+        generated_midi_path : TYPE
+            DESCRIPTION.
+        num_samples : TYPE, optional
+            DESCRIPTION. The default is 20.
+
+        Returns
+        -------
+        results : TYPE
+            DESCRIPTION.
+
+        '''
         
         # Build a dataset of generated sequences (coherent with training data)
         # How to build the dataset of generated sequences? 

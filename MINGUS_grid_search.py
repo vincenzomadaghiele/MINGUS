@@ -531,7 +531,7 @@ if __name__ == '__main__':
         'module__nhead': [4, 8],
         'module__nlayers': [4, 8],
         'module__ninp' :  [200, 400, 800], # ninp must be divisible by nhead
-        'module__nhid' : [ 200, 400, 800], 
+        'module__nhid' : [200, 400, 800], 
     }
     gs = GridSearchCV(trainer, params)
     gs.fit(X, y)
