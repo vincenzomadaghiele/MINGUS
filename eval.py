@@ -199,13 +199,13 @@ if __name__ == '__main__':
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 4 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_4heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_2heads.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -213,13 +213,13 @@ if __name__ == '__main__':
     ntokens_duration = len(vocabDuration) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 4 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_4heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_2heads.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -625,10 +625,12 @@ if __name__ == '__main__':
                     word_logits = output[:,k]
                     for j in range(len(word_logits)):
                         logit = word_logits[j]
-                        p = torch.nn.functional.softmax(logit, dim=0).detach().numpy()
-                        word_index = np.random.choice(len(logit), p=p)
+                        _, max_idx = torch.max(logit, dim=0)
+                        
+                        #p = torch.nn.functional.softmax(logit, dim=0).detach().numpy()
+                        #word_index = np.random.choice(len(logit), p=p)
                         #predicted_sequence.append(word_index)
-                        correct += (word_index == targets_no_reshape[j,k]).sum().item()
+                        correct += (max_idx == targets_no_reshape[j,k]).sum().item()
         
         accuracy = correct / tot_tokens *100
         loss = total_loss / (len(data_source) - 1)
