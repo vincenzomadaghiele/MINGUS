@@ -64,6 +64,7 @@ class TransformerModel(nn.Module):
 
     def make_src_pad_mask(self, src):
         pad_mask = src.transpose(0, 1) == self.src_pad_idx
+        pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
         return pad_mask
 
     def init_weights(self):
@@ -73,13 +74,12 @@ class TransformerModel(nn.Module):
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, src, src_mask):
-        #src_padding_mask = self.make_src_pad_mask(src)
-        #print(src_padding_mask)
+        src_padding_mask = self.make_src_pad_mask(src)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        #output = self.transformer_encoder(src, src_mask, src_padding_mask)
+        output = self.transformer_encoder(src, src_mask, src_padding_mask)
         #print(output)
-        output = self.transformer_encoder(src, src_mask)
+        #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
         return output
 
@@ -355,7 +355,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_w_jazz_8heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_w_jazz_4heads.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
