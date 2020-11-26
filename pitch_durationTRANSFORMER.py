@@ -64,8 +64,8 @@ class TransformerModel(nn.Module):
 
     def make_src_pad_mask(self, src):
         pad_mask = src.transpose(0, 1) == self.src_pad_idx
-        #pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
-        return pad_mask
+        pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
+        return pad_mask.to(device)
 
     def init_weights(self):
         initrange = 0.1
@@ -77,7 +77,7 @@ class TransformerModel(nn.Module):
         src_padding_mask = self.make_src_pad_mask(src)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
-        output = self.transformer_encoder(src, src_mask, src_padding_mask.to(device))
+        output = self.transformer_encoder(src, src_mask, src_padding_mask)
         #print(output)
         #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
