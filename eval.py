@@ -31,6 +31,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import math
+import json
 from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 
 # Device configuration
@@ -306,7 +307,7 @@ if __name__ == '__main__':
     
     notes2gen = 40 # number of new notes to generate
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
+    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
     # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
@@ -346,7 +347,7 @@ if __name__ == '__main__':
         
         notes2gen = 20 # number of new notes to generate
         new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-        new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
+        new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
         converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
         
@@ -362,7 +363,6 @@ if __name__ == '__main__':
     
     #%% MGEval (paper Explicitly conditioned melody generation)
     
-    import json
     
     # Evauluate generation with MGEval
     # look inside the function to add/remove metrics
