@@ -73,6 +73,7 @@ class TransformerModel(nn.Module):
 
     def forward(self, src, src_mask):
         src_padding_mask = self.make_src_pad_mask(src)
+        #print(src_padding_mask)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask, src_padding_mask.to(device))
@@ -198,13 +199,13 @@ if __name__ == '__main__':
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 2 # the number of heads in the multiheadattention models
+    nlayers = 4 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 4 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_2heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_4heads.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -212,13 +213,13 @@ if __name__ == '__main__':
     ntokens_duration = len(vocabDuration) # the size of vocabulary
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 2 # the number of heads in the multiheadattention models
+    nlayers = 4 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+    nhead = 4 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_2heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_4heads.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -303,7 +304,7 @@ if __name__ == '__main__':
     melody4gen_pitch = melody4gen_pitch[:80]
     melody4gen_duration = melody4gen_duration[:80]
     
-    notes2gen = 20 # number of new notes to generate
+    notes2gen = 40 # number of new notes to generate
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, notes2gen)
     
@@ -664,7 +665,6 @@ if __name__ == '__main__':
     metrics_result['Duration_perplexity'] = perplexity_results_duration
     metrics_result['Duration_test-loss'] = testLoss_results_duration
     metrics_result['Duration_accuracy'] = accuracy_results_duration
-    
     
     # Convert metrics dict to JSON and SAVE IT    
     with open('metrics/metrics_result.json', 'w') as fp:

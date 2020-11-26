@@ -247,7 +247,7 @@ def convertMIDI(notes, durations, tempo, dur_dict):
     velocity = 100
     offset = 0
     # for each note
-    for i in range(len(notes)):
+    for i in range(min(len(notes),len(durations))):
         if notes[i] != '<pad>' and notes[i] != '<sos>' and notes[i] != '<eos>' and durations[i] != '<pad>' and durations[i] != '<sos>' and durations[i] != '<eos>':
             if notes[i] == 'R':
                 duration = getKey(durations[i],dur_dict)
