@@ -250,8 +250,9 @@ if __name__ == '__main__':
     def get_batch(source, i):
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
-        target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
-        return data, target
+        target = source[i+1:i+1+seq_len].reshape(-1) # target (same as input but shifted by 1)
+        targets_no_reshape = source[i+1:i+1+seq_len]
+        return data, target, targets_no_reshape
     
     
     #%% PITCH MODEL TRAINING
@@ -471,12 +472,11 @@ if __name__ == '__main__':
             #return sklearn.metrics.accuracy_score(y_true.flatten(), y_pred.flatten())
             return accuracy
     
+    
     trainer = Trainer(
         criterion=torch.nn.CrossEntropyLoss,
         
-        # We extended the trainer to support two optimizers
-        # but to get the behavior of one optimizer we can 
-        # simply use SGD for both, just like in the tutorial.
+        # Define the optimizer for the model
         optimizer_ = torch.optim.SGD,
         optimizer__lr = 5.0,
         
@@ -493,35 +493,20 @@ if __name__ == '__main__':
         # We have no internal validation.
         train_split=None,
         
-        # The decoding code is not meant to be batched
-        # so we have to deal with a batch size of 1 for
-        # both training and validation/prediction.
+        # The data is already batched as inputed to the model
         iterator_train__batch_size=1,
         iterator_valid__batch_size=1,
         
-        # We are training only one large epoch.
         max_epochs=10,
         
         # Training takes a long time, add a progress bar
-        # to see how far in we are. Since we are doing 
-        # grid search with cross-validation splits and the
-        # total amount of batches_per_epoch varies, we set
-        # the batches_per_epoch method to 'auto', instead 
-        # of the default, 'count'.
+        # to see how far in we are. 
         callbacks=[
             skorch.callbacks.ProgressBar(batches_per_epoch='auto'),
         ],
         
         device=device,
     )
-    
-    bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
-    def get_batch(source, i):
-        seq_len = min(bptt, len(source) - 1 - i)
-        data = source[i:i+seq_len] # input 
-        target = source[i+1:i+1+seq_len].reshape(-1) # target (same as input but shifted by 1)
-        targets_no_reshape = source[i+1:i+1+seq_len]
-        return data, target, targets_no_reshape
     
     # list of tensors
     X = []
