@@ -23,6 +23,16 @@ After downloading this repository, it is necessary to run the following code in 
 $ conda install -n <env_name> requirements.txt
 ```
 
+## Code description
+
+MINGUS_dataset_funct.py : functions for data processing
+MINGUS_model.py : functions for model definition, training and validation evaluation 
+MINGUS_train.py : code used for training
+MINGUS_grid_search.py : code for grid search
+MINGUS_eval.py : code for evaluation of the model
+MINGUS_eval_funct.py : functions for model evaluation
+MINGUS_const.py : constants needed for model training
+
 ## References
 
 [1] https://jazzomat.hfm-weimar.de/dbformat/dboverview.html, https://www.kaggle.com/saikayala/jazz-ml-ready-midi
