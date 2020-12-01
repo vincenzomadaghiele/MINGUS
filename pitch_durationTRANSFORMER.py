@@ -192,7 +192,7 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz_less_augmented/'
+    pitch_path = 'data/w_jazz_augmented/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -388,7 +388,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_folkDB_2heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_augmented_2heads.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -440,7 +440,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_folkDB_2heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_2heads.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
