@@ -257,11 +257,11 @@ if __name__ == '__main__':
                 counter = 0
         return tot_pitch, tot_duration
     
-    def segmentDataset(pitch_data, duration_data):
+    def segmentDataset(pitch_data, duration_data, segment_value = 35):
         pitch_segmented = []
         duration_segmented = []
         for i in range(min(len(pitch_data), len(duration_data))):
-            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i])
+            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i], segment_value)
             for seq in train_pitch_sep:
                 pitch_segmented.append(seq)
             for seq in train_duration_sep:
