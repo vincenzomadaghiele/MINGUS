@@ -157,7 +157,7 @@ if __name__ == '__main__':
     
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz/'
+    pitch_path = 'data/w_jazz_augmented/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_w_jazz_2heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_wjazz_augmented_2heads.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_w_jazz_2heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_2heads.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -296,22 +296,83 @@ if __name__ == '__main__':
         data = data.view(bsz, -1).t().contiguous()
         return data.to(device)
     
+    def generateEqual(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
+        '''
+    
+        Parameters
+        ----------
+        model : pytorch Model
+            Model to be used for generation.
+        melody4gen : numpy ndarray
+            melody to be used as a generation starting point.
+        dict_to_ix : python dictionary
+            dictionary used for model training.
+        bptt : integer, optional
+            standard lenght of the sequence used for training. The default is 35.
+        next_notes : integer, optional
+            Number of notes to be generated. The default is 10.
+    
+        Returns
+        -------
+        melody4gen_list : list
+            original melody with generated notes appended at the end.
+    
+        '''
+        model.eval()
+        melody4gen_list = melody4gen.tolist()
+        new_melody = []
+        src_mask = model.generate_square_subsequent_mask(bptt).to(device)
+        with torch.no_grad():
+            
+            # prepare input to the model
+            melody4gen_batch = batch4gen(np.array(melody4gen_list), len(melody4gen_list), dict_to_ix)
+            
+            # reshape to column vector
+            melody4gen_batch = melody4gen_batch.reshape(melody4gen_batch.shape[1], melody4gen_batch.shape[0])
+                
+            if melody4gen_batch.size(0) != bptt:
+                src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
+    
+            y_pred = model(melody4gen_batch, src_mask)
+            #print(y_pred.size(0))
+            for j in range(y_pred.size(0)):
+                note_logits = y_pred[j,0,:]
+                _, max_idx = torch.max(note_logits, dim=0)
+                #print(max_idx)
+                new_melody.append(getNote(max_idx, dict_to_ix))
+            
+            #print(new_melody)
+            #print(melody4gen_list)
+            
+            ac = 0
+            for k in range(1,len(new_melody)):
+                #print(new_melody[k])
+                #print(melody4gen_list[k-1])
+                if new_melody[k] == melody4gen_list[k-1]:
+                    ac += 1
+            print(ac)
+            
+            # last_note_logits = y_pred[-1,-1,:]
+            #_, max_idx = torch.max(last_note_logits, dim=0)
+            #melody4gen_list.append(getNote(max_idx, dict_to_ix))
+    
+        return new_melody
     
     bptt = 35
     #specify the path
-    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
+    f = 'data/w_jazz/CharlieParker_YardbirdSuite_FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
-    melody4gen_pitch = melody4gen_pitch[:80]
-    melody4gen_duration = melody4gen_duration[:80]
+    melody4gen_pitch = melody4gen_pitch[:40]
+    melody4gen_duration = melody4gen_duration[:40]
     
-    notes2gen = 40 # number of new notes to generate
-    new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+    notes2gen = 20 # number of new notes to generate
+    new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
     # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    converted.write('output/generated_music.mid')
+    converted.write('output/equal.mid')
     
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES

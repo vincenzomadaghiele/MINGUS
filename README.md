@@ -20,7 +20,7 @@ In the literature different approaches have been tried to reach similar goals, a
 The libraries necessary to running this code are listed in the requirement.txt file. 
 After downloading this repository, it is necessary to run the following code in the terminal:
 ```
-$ conda install -n <env_name> requirements.txt
+$ conda create --name <env> --file requirements.txt
 ```
 
 ## Code description
