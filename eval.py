@@ -63,7 +63,7 @@ class TransformerModel(nn.Module):
 
     def make_src_pad_mask(self, src):
         pad_mask = src.transpose(0, 1) == self.src_pad_idx
-        pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
+        #pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
         return pad_mask
 
     def init_weights(self):
@@ -358,9 +358,9 @@ if __name__ == '__main__':
     
         return new_melody
     
-    bptt = 35
+    bptt = 50
     #specify the path
-    f = 'data/w_jazz/CharlieParker_ScrappleFromTheApple_FINAL.mid'
+    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
     melody4gen_pitch = melody4gen_pitch[:80]

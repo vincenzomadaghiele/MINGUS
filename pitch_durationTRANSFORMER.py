@@ -74,6 +74,7 @@ class TransformerModel(nn.Module):
 
     def forward(self, src, src_mask):
         src_padding_mask = self.make_src_pad_mask(src)
+        #print(src_padding_mask)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask, src_padding_mask)
@@ -228,7 +229,7 @@ if __name__ == '__main__':
     
     #%% Melody Segmentation
     
-    def separateSeqs(seq_pitch, seq_duration, segment_value = 35):
+    def separateSeqs(seq_pitch, seq_duration, segment_length = 35):
         # Separate the songs into single melodies in order to avoid 
         # full batches of pad tokens
         
@@ -249,7 +250,7 @@ if __name__ == '__main__':
                 new_pitch = []
                 new_duration = []
                 counter = 0
-            elif counter == segment_value:
+            elif counter == segment_length:
                 tot_pitch.append(np.array(new_pitch, dtype=object))
                 tot_duration.append(np.array(new_duration, dtype=object))
                 new_pitch = []
@@ -257,11 +258,11 @@ if __name__ == '__main__':
                 counter = 0
         return tot_pitch, tot_duration
     
-    def segmentDataset(pitch_data, duration_data, segment_value = 35):
+    def segmentDataset(pitch_data, duration_data, segment_length = 35):
         pitch_segmented = []
         duration_segmented = []
         for i in range(min(len(pitch_data), len(duration_data))):
-            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i], segment_value)
+            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i], segment_length)
             for seq in train_pitch_sep:
                 pitch_segmented.append(seq)
             for seq in train_duration_sep:
@@ -271,10 +272,11 @@ if __name__ == '__main__':
         
         return pitch_segmented, duration_segmented
     
-    segment_value = 100
-    train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_value)
-    val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_value)
-    test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_value)
+    # Maximum value of a sequence
+    segment_length = 50
+    train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_length)
+    val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_length)
+    test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_length)
     
     
     
@@ -361,7 +363,8 @@ if __name__ == '__main__':
     
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
-    bptt = 100 # lenght of a sequence of data (IMPROVEMENT HERE!!)
+    # a padded sequence is of length segment_value+2 (sos and eos tokens)
+    bptt = segment_length + 2 # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
         '''
 
