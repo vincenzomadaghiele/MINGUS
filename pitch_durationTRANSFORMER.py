@@ -23,9 +23,8 @@ Things to do:
     - move all constants to an external .py file
     
 Next meeting:
-    - padding problem
-    - grid search
-    - 100 epochs folkDB results
+    - eurecom server problem with lengths of batches and pad mask
+    - discuss real accuracy of the model
 """
 
 import pretty_midi
@@ -192,7 +191,7 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz_augmented/'
+    pitch_path = 'data/w_jazz/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -226,6 +225,56 @@ if __name__ == '__main__':
     train_duration = X_duration[:int(len(X_duration)*0.7)]
     val_duration = X_duration[int(len(X_duration)*0.7)+1:int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1)]
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
+    
+    #%% Melody Segmentation
+    
+    def separateSeqs(seq_pitch, seq_duration, segment_value = 35):
+        # Separate the songs into single melodies in order to avoid 
+        # full batches of pad tokens
+        
+        tot_pitch = []
+        tot_duration = []
+        new_pitch = []
+        new_duration = []
+        long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
+                    'dot 8th', 'half note triplet', 'quarter note triplet']
+        counter = 0
+        for i in range(min(len(seq_pitch), len(seq_duration))):
+            new_pitch.append(seq_pitch[i])
+            new_duration.append(seq_duration[i])
+            counter += 1
+            if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
+                tot_pitch.append(np.array(new_pitch, dtype=object))
+                tot_duration.append(np.array(new_duration, dtype=object))
+                new_pitch = []
+                new_duration = []
+                counter = 0
+            elif counter == segment_value:
+                tot_pitch.append(np.array(new_pitch, dtype=object))
+                tot_duration.append(np.array(new_duration, dtype=object))
+                new_pitch = []
+                new_duration = []
+                counter = 0
+        return tot_pitch, tot_duration
+    
+    def segmentDataset(pitch_data, duration_data):
+        pitch_segmented = []
+        duration_segmented = []
+        for i in range(min(len(pitch_data), len(duration_data))):
+            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i])
+            for seq in train_pitch_sep:
+                pitch_segmented.append(seq)
+            for seq in train_duration_sep:
+                duration_segmented.append(seq)
+        pitch_segmented = np.array(pitch_segmented, dtype=object)
+        duration_segmented = np.array(duration_segmented, dtype=object)
+        
+        return pitch_segmented, duration_segmented
+    
+    segment_value = 100
+    train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_value)
+    val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_value)
+    test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_value)
     
     
     
@@ -302,17 +351,17 @@ if __name__ == '__main__':
     batch_size = 20
     eval_batch_size = 10
     
-    train_data_pitch = batchify(train_pitch, batch_size, pitch_to_ix)
-    val_data_pitch = batchify(val_pitch, eval_batch_size, pitch_to_ix)
-    test_data_pitch = batchify(test_pitch, eval_batch_size, pitch_to_ix)
+    train_data_pitch = batchify(train_pitch_segmented, batch_size, pitch_to_ix)
+    val_data_pitch = batchify(val_pitch_segmented, eval_batch_size, pitch_to_ix)
+    test_data_pitch = batchify(test_pitch_segmented, eval_batch_size, pitch_to_ix)
     
-    train_data_duration = batchify(train_duration, batch_size, duration_to_ix)
-    val_data_duration = batchify(val_duration, eval_batch_size, duration_to_ix)
-    test_data_duration = batchify(test_duration, eval_batch_size, duration_to_ix)
+    train_data_duration = batchify(train_duration_segmented, batch_size, duration_to_ix)
+    val_data_duration = batchify(val_duration_segmented, eval_batch_size, duration_to_ix)
+    test_data_duration = batchify(test_duration_segmented, eval_batch_size, duration_to_ix)
     
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
-    bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
+    bptt = 100 # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
         '''
 
@@ -388,7 +437,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_augmented_2heads.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -440,7 +489,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_2heads.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
