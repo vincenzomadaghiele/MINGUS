@@ -58,7 +58,7 @@ class TransformerModel(nn.Module):
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        #mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
     def make_src_pad_mask(self, src):
@@ -409,6 +409,9 @@ if __name__ == '__main__':
         notes2gen = 20 # number of new notes to generate
         new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
         new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+        
+        print('length of gen melody: ', len(new_melody_pitch))
+        print('generated pitches: ', np.array(new_melody_pitch[40:]) )
     
         converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
         
