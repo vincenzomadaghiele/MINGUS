@@ -157,7 +157,7 @@ if __name__ == '__main__':
     
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz_augmented/'
+    pitch_path = 'data/w_jazz/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz_augmented/'
+    duration_path = 'data/w_jazz/'
     datasetDuration = ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
