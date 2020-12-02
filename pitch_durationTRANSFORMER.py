@@ -58,7 +58,7 @@ class TransformerModel(nn.Module):
 
     def generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        #mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
     def make_src_pad_mask(self, src):
@@ -74,13 +74,13 @@ class TransformerModel(nn.Module):
 
     def forward(self, src, src_mask):
         src_padding_mask = self.make_src_pad_mask(src)
-        #print(src_padding_mask)
+        print(src_padding_mask)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask, src_padding_mask)
-        #print(output)
         #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
+        print(output)
         return output
 
 # POSITIONAL ENCODING
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
-    # a padded sequence is of length segment_value+2 (sos and eos tokens)
+    # a padded sequence is of length segment_value + 2 (sos and eos tokens)
     bptt = segment_length + 2 # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
         '''
