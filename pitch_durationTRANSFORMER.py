@@ -74,13 +74,13 @@ class TransformerModel(nn.Module):
 
     def forward(self, src, src_mask):
         src_padding_mask = self.make_src_pad_mask(src)
-        print(src_padding_mask)
+        #print(src_padding_mask)
         src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, src_mask, src_padding_mask)
         #output = self.transformer_encoder(src, src_mask)
         output = self.decoder(output)
-        print(output)
+        #print(output)
         return output
 
 # POSITIONAL ENCODING
