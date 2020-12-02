@@ -365,7 +365,7 @@ if __name__ == '__main__':
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
     # a padded sequence is of length segment_value + 2 (sos and eos tokens)
-    bptt = segment_length + 2 # lenght of a sequence of data (IMPROVEMENT HERE!!)
+    bptt = segment_length #+ 2 # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
         '''
 
