@@ -192,7 +192,7 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz/'
+    pitch_path = 'data/folkDB/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz/'
+    duration_path = 'data/folkDB/'
     datasetDuration = ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
@@ -441,7 +441,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_folkDB_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -493,7 +493,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
+    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_folkDB_segmented.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
