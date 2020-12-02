@@ -157,7 +157,7 @@ if __name__ == '__main__':
     
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz/'
+    pitch_path = 'data/w_jazz_augmented/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz/'
+    duration_path = 'data/w_jazz_augmented/'
     datasetDuration = ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
@@ -329,7 +329,8 @@ if __name__ == '__main__':
             
             # reshape to column vector
             melody4gen_batch = melody4gen_batch.reshape(melody4gen_batch.shape[1], melody4gen_batch.shape[0])
-                
+            print(melody4gen_batch.shape)
+            
             if melody4gen_batch.size(0) != bptt:
                 src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
     
@@ -350,7 +351,7 @@ if __name__ == '__main__':
                 #print(melody4gen_list[k-1])
                 if new_melody[k] == melody4gen_list[k-1]:
                     ac += 1
-            print(ac)
+            print("Accuracy", ac,'/',len(melody4gen_list))
             
             # last_note_logits = y_pred[-1,-1,:]
             #_, max_idx = torch.max(last_note_logits, dim=0)
@@ -363,16 +364,16 @@ if __name__ == '__main__':
     f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
-    melody4gen_pitch = melody4gen_pitch[:80]
-    melody4gen_duration = melody4gen_duration[:80]
+    melody4gen_pitch = melody4gen_pitch#[:80]
+    melody4gen_duration = melody4gen_duration#[:80]
     
     notes2gen = 40 # number of new notes to generate
-    new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+    new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
     # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    converted.write('output/generated_music.mid')
+    converted.write('output/equal.mid')
     
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
