@@ -62,7 +62,7 @@ class TransformerModel(nn.Module):
         return mask
 
     def make_src_pad_mask(self, src):
-        pad_mask = src.transpose(0, 1) != self.src_pad_idx
+        pad_mask = src.transpose(0, 1) == self.src_pad_idx
         #pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
         return pad_mask
 
@@ -164,8 +164,8 @@ if __name__ == '__main__':
     vocabPitch = datasetPitch.vocab
     # Add padding tokens to vocab
     vocabPitch.append('<pad>')
-    vocabPitch.append('<sos>')
-    vocabPitch.append('<eos>')
+    #vocabPitch.append('<sos>')
+    #vocabPitch.append('<eos>')
     pitch_to_ix = {word: i for i, word in enumerate(vocabPitch)}
     #print(X_pitch[:3])
     
@@ -182,8 +182,8 @@ if __name__ == '__main__':
     vocabDuration = datasetDuration.vocab
     # Add padding tokens to vocab
     vocabDuration.append('<pad>')
-    vocabDuration.append('<sos>')
-    vocabDuration.append('<eos>')
+    #vocabDuration.append('<sos>')
+    #vocabDuration.append('<eos>')
     duration_to_ix = {word: i for i, word in enumerate(vocabDuration)}
     #print(X_duration[:3])
     
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
@@ -375,12 +375,12 @@ if __name__ == '__main__':
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
     converted.write('output/generated_music.mid')
     
-    #new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    #new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+    new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
     # convert to midi
-    #converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    #converted.write('output/equal.mid')
+    converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+    converted.write('output/equal.mid')
     
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
@@ -679,9 +679,10 @@ if __name__ == '__main__':
         padded, lengths = [], []
         for x in data:
             padded.append(
-                ([init_token])
-                + list(x[:max_len])
-                + ([eos_token])
+                #([init_token])
+                #+ 
+                list(x[:max_len])
+                #+ ([eos_token])
                 + [pad_token] * max(0, max_len - len(x)))
         lengths.append(len(padded[-1]) - max(0, max_len - len(x)))
         return padded
@@ -756,7 +757,7 @@ if __name__ == '__main__':
                         _, max_idx = torch.max(logit, dim=0)
                         
                         # exclude pad tokens for pitch and duration
-                        if targets_no_reshape[j,k] != 0 and targets_no_reshape[j,k] != 12: # REMOVE
+                        if targets_no_reshape[j,k] != 49 and targets_no_reshape[j,k] != 12: # REMOVE
                             correct += (max_idx == targets_no_reshape[j,k]).sum().item()
                             tot_tokens += 1
         

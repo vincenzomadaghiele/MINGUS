@@ -1,1 +1,1 @@
-{"MGEval": {}, "BLEU": {}, "Pitch_accuracy": 38.83672074717153, "Pitch_perplexity": 3.817879877933067, "Pitch_test-loss": 45.507624253626936, "Duration_accuracy": 0.43037196434060865, "Duration_perplexity": 1.1853918624821378, "Duration_test-loss": 3.271968732072039}
+{"MGEval": {}, "BLEU": {}, "Pitch_accuracy": 4.281199373223913, "Pitch_perplexity": 3.2700752604673995, "Pitch_test-loss": 26.313319621480172, "Duration_accuracy": 68.56262532400841, "Duration_perplexity": 0.7022655684902349, "Duration_test-loss": 2.0183201741522865}
