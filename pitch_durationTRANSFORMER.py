@@ -198,7 +198,7 @@ if __name__ == '__main__':
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
     # Add padding tokens to vocab
-    #vocabPitch.append('<pad>')
+    vocabPitch.append('<pad>')
     #vocabPitch.append('<sos>')
     #vocabPitch.append('<eos>')
     pitch_to_ix = {word: i for i, word in enumerate(vocabPitch)}
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     # set vocabulary for conversion
     vocabDuration = datasetDuration.vocab
     # Add padding tokens to vocab
-    #vocabDuration.append('<pad>')
+    vocabDuration.append('<pad>')
     #vocabDuration.append('<sos>')
     #vocabDuration.append('<eos>')
     duration_to_ix = {word: i for i, word in enumerate(vocabDuration)}
@@ -399,7 +399,7 @@ if __name__ == '__main__':
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     src_pad_idx = pitch_to_ix['<pad>']
     modelPitch = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
@@ -454,7 +454,7 @@ if __name__ == '__main__':
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 4 # the number of heads in the multiheadattention models
+    nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     src_pad_idx = duration_to_ix['<pad>']
     modelDuration = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
