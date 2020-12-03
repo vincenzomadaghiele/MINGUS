@@ -655,7 +655,7 @@ if __name__ == '__main__':
         return pitch_segmented, duration_segmented
     
     # Maximum value of a sequence
-    segment_length = 50
+    segment_length = 100
     train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_length)
