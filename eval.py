@@ -361,7 +361,7 @@ if __name__ == '__main__':
     
     bptt = 50
     #specify the path
-    f = 'data/folkDB/sessiontune2.mid'
+    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
     melody4gen_pitch = melody4gen_pitch[:80]
@@ -373,7 +373,7 @@ if __name__ == '__main__':
     
     # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    converted.write('output/generated_song.mid')
+    converted.write('output/generated_music.mid')
     
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
