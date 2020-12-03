@@ -157,7 +157,7 @@ if __name__ == '__main__':
     
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz/'
+    pitch_path = 'data/folkDB/'
     datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz/'
+    duration_path = 'data/folkDB/'
     datasetDuration = ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_wjazz_segmented.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_folkDB_segmented.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_segmented.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_folkDB_segmented.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -361,24 +361,24 @@ if __name__ == '__main__':
     
     bptt = 50
     #specify the path
-    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
+    f = 'data/folkDB/sessiontune2.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
-    melody4gen_pitch = melody4gen_pitch#[:80]
-    melody4gen_duration = melody4gen_duration#[:80]
+    melody4gen_pitch = melody4gen_pitch[:80]
+    melody4gen_duration = melody4gen_duration[:80]
     
     notes2gen = 40 # number of new notes to generate
-    new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+    new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
     # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    converted.write('output/equal.mid')
+    converted.write('output/generated_song.mid')
     
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    training_path = 'data/w_jazz/*.mid'
+    training_path = 'data/folkDB/*.mid'
     
     import glob
     standards = glob.glob(training_path)
