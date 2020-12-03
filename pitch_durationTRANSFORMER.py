@@ -193,7 +193,7 @@ if __name__ == '__main__':
     
     # LOAD PITCH DATASET
     pitch_path = 'data/w_jazz/'
-    datasetPitch = ImprovPitchDataset(pitch_path, 20)
+    datasetPitch = ImprovPitchDataset(pitch_path, 200)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
@@ -226,6 +226,7 @@ if __name__ == '__main__':
     train_duration = X_duration[:int(len(X_duration)*0.7)]
     val_duration = X_duration[int(len(X_duration)*0.7)+1:int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1)]
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
+    
     
     #%% Melody Segmentation
     
@@ -277,7 +278,7 @@ if __name__ == '__main__':
     train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_length)
-    
+
     
     
     #%% DATA PREPARATION

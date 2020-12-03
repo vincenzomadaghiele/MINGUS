@@ -779,8 +779,8 @@ if __name__ == '__main__':
     
     generated_path = 'output/gen4eval/*.mid'
     
-    #MGEresults = MGEval(training_path, generated_path, num_of_generations)
-    #metrics_result['MGEval'] = MGEresults
+    MGEresults = MGEval(training_path, generated_path, num_of_generations)
+    metrics_result['MGEval'] = MGEresults
     
     criterion = nn.CrossEntropyLoss()
     perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
