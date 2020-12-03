@@ -206,7 +206,7 @@ if __name__ == '__main__':
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_wjazz_segmented.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_50epochs_wjazz_segmented.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_segmented.pt'
+    savePATHduration = 'modelsDuration/modelDuration_50epochs_wjazz_segmented.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -611,7 +611,7 @@ if __name__ == '__main__':
 
     #%% Melody Segmentation
     
-    def separateSeqs(seq_pitch, seq_duration):
+    def separateSeqs(seq_pitch, seq_duration, segment_length = 35):
         # Separate the songs into single melodies in order to avoid 
         # full batches of pad tokens
         
@@ -632,7 +632,7 @@ if __name__ == '__main__':
                 new_pitch = []
                 new_duration = []
                 counter = 0
-            elif counter == 35:
+            elif counter == segment_length:
                 tot_pitch.append(np.array(new_pitch, dtype=object))
                 tot_duration.append(np.array(new_duration, dtype=object))
                 new_pitch = []
@@ -640,11 +640,11 @@ if __name__ == '__main__':
                 counter = 0
         return tot_pitch, tot_duration
     
-    def segmentDataset(pitch_data, duration_data):
+    def segmentDataset(pitch_data, duration_data, segment_length = 35):
         pitch_segmented = []
         duration_segmented = []
         for i in range(min(len(pitch_data), len(duration_data))):
-            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i])
+            train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i], segment_length)
             for seq in train_pitch_sep:
                 pitch_segmented.append(seq)
             for seq in train_duration_sep:
@@ -654,9 +654,11 @@ if __name__ == '__main__':
         
         return pitch_segmented, duration_segmented
     
-    train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration)
-    val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration)
-    test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration)
+    # Maximum value of a sequence
+    segment_length = 100
+    train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_length)
+    val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_length)
+    test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_length)
 
 
     #%% Perplexity, Test Loss, Accuracy
@@ -714,7 +716,7 @@ if __name__ == '__main__':
     
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
-    bptt = 35 # lenght of a sequence of data (IMPROVEMENT HERE!!)
+    bptt = segment_length # lenght of a sequence of data (IMPROVEMENT HERE!!)
     def get_batch(source, i):
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
@@ -777,8 +779,8 @@ if __name__ == '__main__':
     
     generated_path = 'output/gen4eval/*.mid'
     
-    MGEresults = MGEval(training_path, generated_path, num_of_generations)
-    metrics_result['MGEval'] = MGEresults
+    #MGEresults = MGEval(training_path, generated_path, num_of_generations)
+    #metrics_result['MGEval'] = MGEresults
     
     criterion = nn.CrossEntropyLoss()
     perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
