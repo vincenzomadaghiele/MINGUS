@@ -62,7 +62,7 @@ class TransformerModel(nn.Module):
         return mask
 
     def make_src_pad_mask(self, src):
-        pad_mask = src.transpose(0, 1) == self.src_pad_idx
+        pad_mask = src.transpose(0, 1) != self.src_pad_idx
         #pad_mask = pad_mask.float().masked_fill(pad_mask == True, float('-inf')).masked_fill(pad_mask == False, float(0.0))
         return pad_mask.to(device)
 
