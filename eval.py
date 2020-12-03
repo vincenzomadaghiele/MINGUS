@@ -375,12 +375,12 @@ if __name__ == '__main__':
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
     converted.write('output/generated_music.mid')
     
-    new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+    #new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
+    #new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
     
     # convert to midi
-    converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-    converted.write('output/equal.mid')
+    #converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+    #converted.write('output/equal.mid')
     
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
@@ -734,6 +734,9 @@ if __name__ == '__main__':
         tot_tokens = data_source.shape[0]*data_source.shape[1]
         correct = 0
         src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
+        
+        tot_tokens = 0 # REMOVE
+        
         with torch.no_grad():
             for i in range(0, data_source.size(0) - 1, bptt):
                 # get batch
@@ -752,10 +755,10 @@ if __name__ == '__main__':
                         logit = word_logits[j]
                         _, max_idx = torch.max(logit, dim=0)
                         
-                        #p = torch.nn.functional.softmax(logit, dim=0).detach().numpy()
-                        #word_index = np.random.choice(len(logit), p=p)
-                        #predicted_sequence.append(word_index)
-                        correct += (max_idx == targets_no_reshape[j,k]).sum().item()
+                        # exclude pad tokens for pitch and duration
+                        if targets_no_reshape[j,k] != 0 and targets_no_reshape[j,k] != 12: # REMOVE
+                            correct += (max_idx == targets_no_reshape[j,k]).sum().item()
+                            tot_tokens += 1
         
         accuracy = correct / tot_tokens *100
         loss = total_loss / (len(data_source) - 1)
@@ -779,8 +782,8 @@ if __name__ == '__main__':
     
     generated_path = 'output/gen4eval/*.mid'
     
-    MGEresults = MGEval(training_path, generated_path, num_of_generations)
-    metrics_result['MGEval'] = MGEresults
+    #MGEresults = MGEval(training_path, generated_path, num_of_generations)
+    #metrics_result['MGEval'] = MGEresults
     
     criterion = nn.CrossEntropyLoss()
     perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
