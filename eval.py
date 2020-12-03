@@ -201,12 +201,12 @@ if __name__ == '__main__':
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 8 # the number of heads in the multiheadattention models
+    nhead = 4 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_50epochs_wjazz_segmented.pt'
+    savePATHpitch = 'modelsPitch/modelPitch_10epochs_wjazz_segmented.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -215,12 +215,12 @@ if __name__ == '__main__':
     emsize = 200 # embedding dimension
     nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 8 # the number of heads in the multiheadattention models
+    nhead = 4 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_50epochs_wjazz_segmented.pt'
+    savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_segmented.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -655,7 +655,7 @@ if __name__ == '__main__':
         return pitch_segmented, duration_segmented
     
     # Maximum value of a sequence
-    segment_length = 100
+    segment_length = 35
     train_pitch_segmented, train_duration_segmented = segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_length)
