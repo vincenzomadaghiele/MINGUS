@@ -193,7 +193,7 @@ if __name__ == '__main__':
     
     # LOAD PITCH DATASET
     pitch_path = 'data/w_jazz/'
-    datasetPitch = ImprovPitchDataset(pitch_path, 200)
+    datasetPitch = ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
     vocabPitch = datasetPitch.vocab
