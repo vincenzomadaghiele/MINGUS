@@ -240,6 +240,9 @@ if __name__ == '__main__':
         new_duration = []
         long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
                     'dot 8th', 'half note triplet', 'quarter note triplet']
+        
+        long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
+        
         counter = 0
         for i in range(min(len(seq_pitch), len(seq_duration))):
             new_pitch.append(seq_pitch[i])
