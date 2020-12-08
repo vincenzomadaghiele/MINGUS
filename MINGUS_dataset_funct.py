@@ -11,7 +11,7 @@ import numpy as np
 import pretty_midi
 import os
 from collections import Counter
-
+import torch
 
 
 # define the Pitch Dataset object for Pytorch
@@ -259,4 +259,122 @@ def convertMIDI(notes, durations, tempo, dur_dict):
                 inst.notes.append(pretty_midi.Note(velocity, pitch, start, end))
             offset += duration
     return pm
+
+def separateSeqs(seq_pitch, seq_duration, segment_length = 35):
+    # Separate the songs into single melodies in order to avoid 
+    # full batches of pad tokens
+        
+    tot_pitch = []
+    tot_duration = []
+    new_pitch = []
+    new_duration = []
+    long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
+                    'dot 8th', 'half note triplet', 'quarter note triplet']
+        
+    #long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
+        
+    counter = 0
+    for i in range(min(len(seq_pitch), len(seq_duration))):
+        new_pitch.append(seq_pitch[i])
+        new_duration.append(seq_duration[i])
+        counter += 1
+        if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
+            if counter > 12:
+                tot_pitch.append(np.array(new_pitch, dtype=object))
+                tot_duration.append(np.array(new_duration, dtype=object))
+                new_pitch = []
+                new_duration = []
+                counter = 0
+        elif counter == segment_length:
+            tot_pitch.append(np.array(new_pitch, dtype=object))
+            tot_duration.append(np.array(new_duration, dtype=object))
+            new_pitch = []
+            new_duration = []
+            counter = 0
+    return tot_pitch, tot_duration
+    
+def segmentDataset(pitch_data, duration_data, segment_length = 35):
+    pitch_segmented = []
+    duration_segmented = []
+    for i in range(min(len(pitch_data), len(duration_data))):
+        train_pitch_sep, train_duration_sep = separateSeqs(pitch_data[i], duration_data[i], segment_length)
+        for seq in train_pitch_sep:
+            pitch_segmented.append(seq)
+        for seq in train_duration_sep:
+            duration_segmented.append(seq)
+    pitch_segmented = np.array(pitch_segmented, dtype=object)
+    duration_segmented = np.array(duration_segmented, dtype=object)
+        
+    return pitch_segmented, duration_segmented
+
+def pad(data):
+    '''
+
+    Parameters
+    ----------
+    data : numpy ndarray or list
+        list of sequences to be padded.
+
+    Returns
+    -------
+    padded : numpy ndarray or list
+        list of padded sequences.
+
+    '''
+    # from: https://pytorch.org/text/_modules/torchtext/data/field.html
+    data = list(data)
+    # calculate max lenght
+    max_len = max(len(x) for x in data)
+    # Define padding tokens
+    pad_token = '<pad>'
+    init_token = '<sos>'
+    eos_token = '<eos>'
+    # pad each sequence in the data to max_lenght
+    padded, lengths = [], []
+    for x in data:
+        padded.append(
+             #([init_token])
+             #+ 
+             list(x[:max_len])
+             #+ ([eos_token])
+             + [pad_token] * max(0, max_len - len(x)))
+    lengths.append(len(padded[-1]) - max(0, max_len - len(x)))
+    return padded
+
+def batchify(data, bsz, dict_to_ix, device):
+    '''
+
+    Parameters
+    ----------
+    data : numpy ndarray or list
+        data to be batched.
+    bsz : int
+        size of a batch.
+    dict_to_ix : python dictionary
+        dictionary for tokenization of the notes.
+
+    Returns
+    -------
+    pytorch Tensor
+        Data tokenized and divided in batches of bsz elements.
+
+    '''
+        
+    padded = pad(data)
+    padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
+    
+    data = torch.tensor(padded_num, dtype=torch.long)
+    data = data.contiguous()
+        
+    print(data.shape)
+
+        
+    # Divide the dataset into bsz parts.
+    #nbatch = data.size(0) // bsz
+    # Trim off any extra elements that wouldn't cleanly fit (remainders).
+    #data = data.narrow(0, 0, nbatch * bsz)
+    # Evenly divide the data across the bsz batches.
+    #data = data.view(bsz, -1).t().contiguous()
+        
+    return data.to(device)
 

@@ -130,12 +130,14 @@ def train(model, vocab, train_data, criterion, optimizer):
     ntokens = len(vocab)
     src_mask = model.generate_square_subsequent_mask(bptt).to(device)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
-        data, targets = get_batch(train_data, i)
+        data, targets = get_batch(train_data, i, bptt)
         optimizer.zero_grad()
         if data.size(0) != bptt:
             src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
-        output = model(data, src_mask)
+        
+        output = model(data, src_mask) 
         loss = criterion(output.view(-1, ntokens), targets)
+        
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
         optimizer.step()
@@ -178,7 +180,7 @@ def evaluate(eval_model, data_source, vocab):
     src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
         for i in range(0, data_source.size(0) - 1, bptt):
-            data, targets = get_batch(data_source, i)
+            data, targets = get_batch(data_source, i, bptt)
             if data.size(0) != bptt:
                 src_mask = eval_model.generate_square_subsequent_mask(data.size(0)).to(device)
             output = eval_model(data, src_mask)
@@ -249,11 +251,12 @@ if __name__ == '__main__':
             new_duration.append(seq_duration[i])
             counter += 1
             if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
-                tot_pitch.append(np.array(new_pitch, dtype=object))
-                tot_duration.append(np.array(new_duration, dtype=object))
-                new_pitch = []
-                new_duration = []
-                counter = 0
+                if counter > 12:
+                    tot_pitch.append(np.array(new_pitch, dtype=object))
+                    tot_duration.append(np.array(new_duration, dtype=object))
+                    new_pitch = []
+                    new_duration = []
+                    counter = 0
             elif counter == segment_length:
                 tot_pitch.append(np.array(new_pitch, dtype=object))
                 tot_duration.append(np.array(new_duration, dtype=object))
@@ -282,7 +285,6 @@ if __name__ == '__main__':
     val_pitch_segmented, val_duration_segmented = segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = segmentDataset(test_pitch, test_duration, segment_length)
 
-    
     
     #%% DATA PREPARATION
 
@@ -322,7 +324,7 @@ if __name__ == '__main__':
         return padded
     
     # divide into batches of size bsz and converts notes into numbers
-    def batchify(data, bsz, dict_to_ix):
+    def batchify(data, bsz, dict_to_ix, device):
         '''
 
         Parameters
@@ -347,30 +349,34 @@ if __name__ == '__main__':
         data = torch.tensor(padded_num, dtype=torch.long)
         data = data.contiguous()
         
+        print(data.shape)
+
+        
         # Divide the dataset into bsz parts.
-        nbatch = data.size(0) // bsz
+        #nbatch = data.size(0) // bsz
         # Trim off any extra elements that wouldn't cleanly fit (remainders).
-        data = data.narrow(0, 0, nbatch * bsz)
+        #data = data.narrow(0, 0, nbatch * bsz)
         # Evenly divide the data across the bsz batches.
-        data = data.view(bsz, -1).t().contiguous()
+        #data = data.view(bsz, -1).t().contiguous()
+        
         return data.to(device)
     
     batch_size = 20
     eval_batch_size = 10
     
-    train_data_pitch = batchify(train_pitch_segmented, batch_size, pitch_to_ix)
-    val_data_pitch = batchify(val_pitch_segmented, eval_batch_size, pitch_to_ix)
-    test_data_pitch = batchify(test_pitch_segmented, eval_batch_size, pitch_to_ix)
+    train_data_pitch = batchify(train_pitch_segmented, batch_size, pitch_to_ix, device)
+    val_data_pitch = batchify(val_pitch_segmented, eval_batch_size, pitch_to_ix, device)
+    test_data_pitch = batchify(test_pitch_segmented, eval_batch_size, pitch_to_ix, device)
     
-    train_data_duration = batchify(train_duration_segmented, batch_size, duration_to_ix)
-    val_data_duration = batchify(val_duration_segmented, eval_batch_size, duration_to_ix)
-    test_data_duration = batchify(test_duration_segmented, eval_batch_size, duration_to_ix)
+    train_data_duration = batchify(train_duration_segmented, batch_size, duration_to_ix, device)
+    val_data_duration = batchify(val_duration_segmented, eval_batch_size, duration_to_ix, device)
+    test_data_duration = batchify(test_duration_segmented, eval_batch_size, duration_to_ix, device)
     
     # divide into target and input sequence of lenght bptt
     # --> obtain matrices of size bptt x batch_size
     # a padded sequence is of length segment_value + 2 (sos and eos tokens)
     bptt = segment_length #+ 2 # lenght of a sequence of data (IMPROVEMENT HERE!!)
-    def get_batch(source, i):
+    def get_batch(source, i, bptt):
         '''
 
         Parameters
@@ -392,10 +398,11 @@ if __name__ == '__main__':
         seq_len = min(bptt, len(source) - 1 - i)
         data = source[i:i+seq_len] # input 
         target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
+
         return data, target
     
-    
     #%% PITCH MODEL TRAINING
+    
     
     # HYPERPARAMETERS
     ntokens_pitch = len(vocabPitch) # the size of vocabulary
@@ -408,7 +415,7 @@ if __name__ == '__main__':
     modelPitch = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
     
     # LOSS FUNCTION
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
     lr = 5.0 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
@@ -463,7 +470,7 @@ if __name__ == '__main__':
     modelDuration = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
     
     # LOSS FUNCTION
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
     lr = 5.0 # learning rate
     optimizer = torch.optim.SGD(modelDuration.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
