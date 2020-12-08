@@ -421,7 +421,7 @@ if __name__ == '__main__':
         print('length of gen melody: ', len(new_melody_pitch))
         print('generated pitches: ', np.array(new_melody_pitch[40:]) )
     
-        converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+        converted = convertMIDI(new_melody_pitch[40:], new_melody_duration[40:], song_properties['tempo'], dur_dict)
         
         song_name = standards[i][12:][:-4]
         print('-'*30)
@@ -622,7 +622,7 @@ if __name__ == '__main__':
         long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
                     'dot 8th', 'half note triplet', 'quarter note triplet']
         
-        long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
+        #long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
         
         counter = 0
         for i in range(min(len(seq_pitch), len(seq_duration))):
@@ -786,8 +786,8 @@ if __name__ == '__main__':
     
     generated_path = 'output/gen4eval/*.mid'
     
-    #MGEresults = MGEval(training_path, generated_path, num_of_generations)
-    #metrics_result['MGEval'] = MGEresults
+    MGEresults = MGEval(training_path, generated_path, num_of_generations)
+    metrics_result['MGEval'] = MGEresults
     
     criterion = nn.CrossEntropyLoss()
     perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion)
@@ -803,6 +803,15 @@ if __name__ == '__main__':
     # Convert metrics dict to JSON and SAVE IT    
     with open('metrics/metrics_result.json', 'w') as fp:
         json.dump(metrics_result, fp)
+    
+    
+    #%% 
+    
+    data, targets, targets_no_reshape = get_batch(test_data_pitch, 0)
+    print(data)
+    print(targets_no_reshape)
+    src_mask = modelPitch_loaded.generate_square_subsequent_mask(bptt).to(device)
+    output = modelPitch_loaded(data, src_mask)
     
     
     #%% MODEL EVALUATION
