@@ -92,8 +92,7 @@ class Transformer(nn.Module):
 
         output = self.fc_out(output)
         return output
-    
-    
+
 # POSITIONAL ENCODING
 class PositionalEncoding(nn.Module):
 
@@ -112,7 +111,6 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
-
 
 def get_batch(source, i, bptt):
     '''
@@ -187,7 +185,9 @@ def train(model, vocab, train_data, criterion, optimizer, bptt, device, epoch, s
             print('| epoch {:3d} | {:5d}/{:5d} batches | '
                   'lr {:02.2f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
-                    epoch, batch, len(train_data) // bptt, scheduler.get_last_lr()[0],
+                    epoch, batch, len(train_data) // bptt, 
+                    #scheduler.get_last_lr()[0],
+                    3.54,
                     elapsed * 1000 / log_interval,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
@@ -223,6 +223,7 @@ def evaluate(eval_model, data_source, vocab, bptt, device, criterion):
             output = eval_model(data, targets, src_mask) 
             total_loss += len(data) * criterion(output.view(-1, ntokens), targets.view(-1)).item()
     return total_loss / (len(data_source) - 1)
+
 
 #%%
 
@@ -312,10 +313,14 @@ if __name__ == '__main__':
     best_val_loss = float("inf")
     
     criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
-    lr = 5.0 # learning rate
-    optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
-        
+    #lr = 5.0 # learning rate
+    #optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+     
+    optimizer = optim.Adam(modelPitch.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, factor=0.1, patience=10, verbose=True
+    )
     
     # TRAINING LOOP
     for epoch in range(1, num_epochs + 1):
@@ -373,10 +378,14 @@ if __name__ == '__main__':
     best_val_loss = float("inf")
     
     criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
-    lr = 5.0 # learning rate
-    optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
-        
+    #lr = 5.0 # learning rate
+    #optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    
+    optimizer = optim.Adam(modelDuration.parameters(), lr=learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, factor=0.1, patience=10, verbose=True
+    )
     
     # TRAINING LOOP
     for epoch in range(1, num_epochs + 1):
@@ -410,6 +419,5 @@ if __name__ == '__main__':
     savePATHpitch = 'modelsPitch/transformerDuration_'+ str(num_epochs) + 'epochs_wjazz_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
-    
-    
+        
     
