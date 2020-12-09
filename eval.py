@@ -765,7 +765,7 @@ if __name__ == '__main__':
                         # exclude pad tokens for pitch and duration
                         if targets_no_reshape[j,k] != 49 and targets_no_reshape[j,k] != 12: # REMOVE
                             correct += (max_idx == targets_no_reshape[j,k]).sum().item()
-                            tot_tokens += 1
+                            tot_tokens += 1 # REMOVE
         
         accuracy = correct / tot_tokens *100
         loss = total_loss / (len(data_source) - 1)
