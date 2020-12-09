@@ -262,7 +262,6 @@ if __name__ == '__main__':
         new_duration = np.array(new_duration) # same solos but with only most frequent notes
         return new_pitch, new_duration
     
-    
     # This is used in the generate() function
     def batch4gen(data, bsz, dict_to_ix):
         '''
@@ -359,6 +358,55 @@ if __name__ == '__main__':
             #melody4gen_list.append(getNote(max_idx, dict_to_ix))
     
         return new_melody
+    
+    def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
+        '''
+    
+        Parameters
+        ----------
+        model : pytorch Model
+            Model to be used for generation.
+        melody4gen : numpy ndarray
+            melody to be used as a generation starting point.
+        dict_to_ix : python dictionary
+            dictionary used for model training.
+        bptt : integer, optional
+            standard lenght of the sequence used for training. The default is 35.
+        next_notes : integer, optional
+            Number of notes to be generated. The default is 10.
+    
+        Returns
+        -------
+        melody4gen_list : list
+            original melody with generated notes appended at the end.
+    
+        '''
+        model.eval()
+        melody4gen_list = melody4gen.tolist()
+        src_mask = model.generate_square_subsequent_mask(bptt).to(device)
+        with torch.no_grad():
+            for i in range(0,next_notes):
+                # prepare input to the model
+                melody4gen_batch = batch4gen(np.array(melody4gen_list), len(melody4gen_list), dict_to_ix)
+                
+                # reshape to column vector
+                melody4gen_batch = melody4gen_batch.reshape(melody4gen_batch.shape[1], melody4gen_batch.shape[0])
+                
+                if melody4gen_batch.size(0) != bptt:
+                    src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
+    
+                y_pred = model(melody4gen_batch, src_mask)
+                
+                temperature = 1
+                word_weights = y_pred[-1].squeeze().div(temperature).exp().cpu()
+                word_idx = torch.multinomial(word_weights, 1)[0]
+                
+                #last_note_logits = y_pred[-1,-1]
+                #_, max_idx = torch.max(last_note_logits, dim=0)
+                melody4gen_list.append(getNote(word_idx, dict_to_ix))
+    
+        return melody4gen_list
+    
     
     bptt = 50
     #specify the path
