@@ -203,7 +203,8 @@ if __name__ == '__main__':
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, dropout).to(device)
+    src_pad_idx = pitch_to_ix['<pad>']
+    modelPitch_loaded = TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
 
     # Import model
     savePATHpitch = 'modelsPitch/modelPitch_10epochs_wjazz_segmented.pt'
@@ -217,7 +218,7 @@ if __name__ == '__main__':
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, dropout).to(device)
+    modelDuration_loaded = TransformerModel(ntokens_duration, emsize, nhead, nhid, nlayers, src_pad_idx, dropout).to(device)
 
     # Import model
     savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_segmented.pt'
@@ -625,16 +626,18 @@ if __name__ == '__main__':
         #long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
         
         counter = 0
+        min_lenght = 12
         for i in range(min(len(seq_pitch), len(seq_duration))):
             new_pitch.append(seq_pitch[i])
             new_duration.append(seq_duration[i])
             counter += 1
             if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
-                tot_pitch.append(np.array(new_pitch, dtype=object))
-                tot_duration.append(np.array(new_duration, dtype=object))
-                new_pitch = []
-                new_duration = []
-                counter = 0
+                if counter > min_lenght:
+                    tot_pitch.append(np.array(new_pitch, dtype=object))
+                    tot_duration.append(np.array(new_duration, dtype=object))
+                    new_pitch = []
+                    new_duration = []
+                    counter = 0
             elif counter == segment_length:
                 tot_pitch.append(np.array(new_pitch, dtype=object))
                 tot_duration.append(np.array(new_duration, dtype=object))

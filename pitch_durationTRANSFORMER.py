@@ -246,12 +246,13 @@ if __name__ == '__main__':
         #long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
         
         counter = 0
+        min_lenght = 12
         for i in range(min(len(seq_pitch), len(seq_duration))):
             new_pitch.append(seq_pitch[i])
             new_duration.append(seq_duration[i])
             counter += 1
             if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
-                if counter > 12:
+                if counter > min_lenght:
                     tot_pitch.append(np.array(new_pitch, dtype=object))
                     tot_duration.append(np.array(new_duration, dtype=object))
                     new_pitch = []
@@ -353,11 +354,13 @@ if __name__ == '__main__':
 
         
         # Divide the dataset into bsz parts.
-        #nbatch = data.size(0) // bsz
+        nbatch = data.size(0) // bsz
         # Trim off any extra elements that wouldn't cleanly fit (remainders).
-        #data = data.narrow(0, 0, nbatch * bsz)
+        data = data.narrow(0, 0, nbatch * bsz)
         # Evenly divide the data across the bsz batches.
-        #data = data.view(bsz, -1).t().contiguous()
+        data = data.view(bsz, -1).t().contiguous()
+        
+        print(data.shape)
         
         return data.to(device)
     

@@ -220,9 +220,8 @@ def evaluate(eval_model, data_source, vocab, bptt, device, criterion):
             data, targets = get_batch(data_source, i, bptt)
             if data.size(0) != bptt:
                 src_mask = eval_model.generate_square_subsequent_mask(data.size(0)).to(device)
-            output = eval_model(data, src_mask)
-            output_flat = output.view(-1, ntokens)
-            total_loss += len(data) * criterion(output_flat, targets).item()
+            output = eval_model(data, targets, src_mask) 
+            total_loss += len(data) * criterion(output.view(-1, ntokens), targets.view(-1)).item()
     return total_loss / (len(data_source) - 1)
 
 #%%
@@ -312,13 +311,11 @@ if __name__ == '__main__':
     batch_size = 32
     best_val_loss = float("inf")
     
-    optimizer = optim.Adam(modelPitch.parameters(), lr=learning_rate)
-
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.1, patience=10, verbose=True)
-    
     criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
-    
+    lr = 5.0 # learning rate
+    optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+        
     
     # TRAINING LOOP
     for epoch in range(1, num_epochs + 1):
@@ -349,7 +346,68 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(num_epochs) + 'epochs_wjazz_segmented.pt'
+    savePATHpitch = 'modelsPitch/transformerPitch_'+ str(num_epochs) + 'epochs_wjazz_segmented.pt'
+    state_dictPitch = best_model_pitch.state_dict()
+    torch.save(state_dictPitch, savePATHpitch)
+    
+    
+    #%% DURATION MODEL
+    
+    ntoken = len(vocabDuration)
+    ninp = 200 # embedding dimension
+    nhead = 4 # number of attention heads
+    n_enc = 6 # number of encoder layers
+    n_dec = 6 # number of decoder layers
+    forward_expansion = 4 
+    pad_idx = pitch_to_ix['<pad>']
+    device = device
+    dropout=0.5
+    
+    modelDuration = Transformer(ntoken, ninp, nhead, n_enc, n_dec, forward_expansion,
+                            pad_idx, device, dropout).to(device)
+    
+    # Training hyperparameters
+    num_epochs = 10
+    learning_rate = 3e-4
+    batch_size = 32
+    best_val_loss = float("inf")
+    
+    criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
+    lr = 5.0 # learning rate
+    optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+        
+    
+    # TRAINING LOOP
+    for epoch in range(1, num_epochs + 1):
+        
+        epoch_start_time = time.time()
+        train(modelDuration, vocabDuration, train_data_duration, criterion, optimizer, 
+                  bptt, device, epoch, scheduler)
+        val_loss = evaluate(modelDuration, val_data_duration, vocabDuration, 
+                                bptt, device, criterion)
+        print('-' * 89)
+        print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+              'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
+                                         val_loss, math.exp(val_loss)))
+        print('-' * 89)
+    
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_model_pitch = modelDuration
+    
+        scheduler.step()
+    
+    
+    # TEST THE MODEL
+    test_loss = evaluate(modelDuration, val_data_duration, vocabDuration,  
+                             bptt, device, criterion)
+    print('=' * 89)
+    print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
+        test_loss, math.exp(test_loss)))
+    print('=' * 89)
+    
+    savePATHpitch = 'modelsPitch/transformerDuration_'+ str(num_epochs) + 'epochs_wjazz_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
