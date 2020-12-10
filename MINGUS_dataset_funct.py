@@ -327,8 +327,8 @@ def pad(data):
     max_len = max(len(x) for x in data)
     # Define padding tokens
     pad_token = '<pad>'
-    init_token = '<sos>'
-    eos_token = '<eos>'
+    #init_token = '<sos>'
+    #eos_token = '<eos>'
     # pad each sequence in the data to max_lenght
     padded, lengths = [], []
     for x in data:
