@@ -106,7 +106,7 @@ def train(model, vocab, train_data, criterion, optimizer, scheduler, epoch, bptt
     ntokens = len(vocab)
     src_mask = model.generate_square_subsequent_mask(bptt).to(device)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
-        data, targets = get_batch(train_data, i, bptt)
+        data, targets, _ = get_batch(train_data, i, bptt)
         optimizer.zero_grad()
         if data.size(0) != bptt:
             src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
@@ -156,7 +156,7 @@ def evaluate(eval_model, data_source, vocab, criterion, bptt, device):
     src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
         for i in range(0, data_source.size(0) - 1, bptt):
-            data, targets = get_batch(data_source, i, bptt)
+            data, targets, _ = get_batch(data_source, i, bptt)
             if data.size(0) != bptt:
                 src_mask = eval_model.generate_square_subsequent_mask(data.size(0)).to(device)
             output = eval_model(data, src_mask)
