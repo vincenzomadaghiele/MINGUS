@@ -29,6 +29,10 @@ import torch.nn as nn
 import numpy as np
 import math
 import json
+import os
+import glob
+from nltk.translate.bleu_score import corpus_bleu
+
 import MINGUS_dataset_funct as dataset
 import MINGUS_model as mod
 import MINGUS_eval_funct as ev
@@ -95,7 +99,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'modelsPitch/modelPitch_10epochs_wjazz_segmented.pt'
+    savePATHpitch = 'models/modelPitch_10epochs_wjazz_segmented.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -111,61 +115,52 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'modelsDuration/modelDuration_10epochs_wjazz_segmented.pt'
+    savePATHduration = 'models/modelDuration_10epochs_wjazz_segmented.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
+    generate_dataset = False
     training_path = 'data/w_jazz/*.mid'
+    num_of_generations = 20
     
-    import glob
-    standards = glob.glob(training_path)
-    num_of_generations = 100
-    j=0
-    # for BLEU score
-    #candidate_corpus_pitch = []
-    #candidate_corpus_duration = []
-    #references_corpus_pitch = []
-    #references_corpus_duration = []
-    for i in range(0, num_of_generations):
+    if generate_dataset:
         
-        # update reference corpus for BLEU
-        #references_corpus_pitch.append(melody4gen_pitch[:60])
-        #references_corpus_duration.append(melody4gen_duration[:60])
+        standards = glob.glob(training_path)
+        
+        for i in range(0, num_of_generations):
+            
+            song_name = standards[i][12:][:-4]
+            print('-'*30)
+            print('Generating over song: '+ song_name)
+            print('-'*30)
+            
+            #specify the path
+            melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(standards[i])
+            melody4gen_pitch, melody4gen_duration = gen.onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+            
+            # generate entire songs given just the 40 notes
+            # each generated song will have same lenght of the original song
+            song_lenght= len(melody4gen_pitch) 
+            melody4gen_pitch = melody4gen_pitch[:40]
+            melody4gen_duration = melody4gen_duration[:40]
+            
+            # very high song lenght makes generation very slow
+            if song_lenght > 1000:
+                song_lenght = 1000
+            
+            notes2gen = song_lenght - 40 # number of new notes to generate
+            temp = 1 # degree of randomness of the decision (creativity of the model)
+            new_melody_pitch = gen.generate(modelPitch_loaded, melody4gen_pitch, 
+                                        pitch_to_ix, device, next_notes=notes2gen, temperature=temp)
+            new_melody_duration = gen.generate(modelDuration_loaded, melody4gen_duration, 
+                                           duration_to_ix, device, next_notes=notes2gen, temperature=temp)
+                    
+            converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
 
-        # update candidate corpus for BLEU
-        #candidate_corpus_pitch.append(new_melody_pitch[:60])
-        #candidate_corpus_duration.append(new_melody_pitch[:60])
+            converted.write('output/gen4eval/'+ song_name + '_gen.mid')
         
-        #specify the path
-        melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(standards[i])
-        melody4gen_pitch, melody4gen_duration = gen.onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
-        melody4gen_pitch = melody4gen_pitch[:40]
-        melody4gen_duration = melody4gen_duration[:40]
-        #print(melody4gen_pitch)
-        #print(melody4gen_duration)
-        
-        notes2gen = 20 # number of new notes to generate
-        temp = 1 # degree of randomness of the decision (creativity of the model)
-        new_melody_pitch = gen.generate(modelPitch_loaded, melody4gen_pitch, 
-                                    pitch_to_ix, device, next_notes=notes2gen, temperature=temp)
-        new_melody_duration = gen.generate(modelDuration_loaded, melody4gen_duration, 
-                                       duration_to_ix, device, next_notes=notes2gen, temperature=temp)
-        
-        print('length of gen melody: ', len(new_melody_pitch))
-        print('generated pitches: ', np.array(new_melody_pitch[40:]) )
-    
-        converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
-        
-        song_name = standards[i][12:][:-4]
-        print('-'*30)
-        print('Generating over song: '+ song_name)
-        print('-'*30)
-        #converted.write('output/gen4eval/music'+str(j)+'.mid')
-        converted.write('output/gen4eval/'+ song_name + '_gen.mid')
-        
-        j+=1
 
 
     #%% Melody Segmentation
@@ -196,20 +191,48 @@ if __name__ == '__main__':
     # --> obtain matrices of size bptt x batch_size
     bptt = segment_length # lenght of a sequence of data (IMPROVEMENT HERE!!)
 
+
+    #%% BLEU score
+    
+    # Root directory of the generation dataset
+    gen_dir = "output/gen4eval/"        
+    
+    #read the generated files
+    files=[i for i in os.listdir(gen_dir) if i.endswith(".mid")]
+    gen_pitch = np.array([np.array(dataset.readMIDI(gen_dir+i)[0], dtype=object) for i in files], dtype=object)
+    gen_duration = np.array([np.array(dataset.readMIDI(gen_dir+i)[1], dtype=object) for i in files], dtype=object)
+    # convert to list
+    gen_ptc = [i.tolist() for i in gen_pitch]
+    gen_dur = [i.tolist() for i in gen_duration]
+    
+    num_seq = len(gen_ptc) # number of generated sequences
+    num_ref = 4 # number of reference examples for each generated sequence
+    
+    reference_pitch = [test_pitch[i:i+num_ref-1] for i in range(0,num_ref*num_seq,num_ref)]
+    reference_ptc = [i.tolist() for i in reference_pitch]
+    
+    reference_duration = [test_duration[i:i+num_ref-1] for i in range(0,num_ref*num_seq,num_ref)]
+    reference_dur = [i.tolist() for i in reference_duration]
+    
+    bleu_pitch = corpus_bleu(reference_ptc, gen_ptc)
+    bleu_duration = corpus_bleu(reference_dur, gen_dur)
+    
     
     #%% METRICS DICTIONARY
     
     # Instanciate dictionary
     metrics_result = {}
     metrics_result['MGEval'] = {}
-    metrics_result['BLEU'] = {}
-    metrics_result['Pitch_accuracy'] = {}
-    metrics_result['Pitch_perplexity'] = {}
-    metrics_result['Pitch_test-loss'] = {}
-    metrics_result['Duration_accuracy'] = {}
-    metrics_result['Duration_perplexity'] = {}
-    metrics_result['Duration_test-loss'] = {}
-    
+    metrics_result['Pitch'] = {}
+    metrics_result['Duration'] = {}
+    metrics_result['Pitch']['Pitch_accuracy'] = {}
+    metrics_result['Pitch']['Pitch_perplexity'] = {}
+    metrics_result['Pitch']['Pitch_test-loss'] = {}
+    metrics_result['Pitch']['Pitch_BLEU'] = {}
+    metrics_result['Duration']['Duration_accuracy'] = {}
+    metrics_result['Duration']['Duration_perplexity'] = {}
+    metrics_result['Duration']['Duration_test-loss'] = {}
+    metrics_result['Duration']['Duration_BLEU'] = {}
     
     generated_path = 'output/gen4eval/*.mid'
     
@@ -218,45 +241,18 @@ if __name__ == '__main__':
     
     criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
     perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = ev.lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion, bptt, device)
-    metrics_result['Pitch_perplexity'] = perplexity_results_pitch
-    metrics_result['Pitch_test-loss'] = testLoss_results_pitch
-    metrics_result['Pitch_accuracy'] = accuracy_results_pitch
+    metrics_result['Pitch']['Pitch_perplexity'] = perplexity_results_pitch
+    metrics_result['Pitch']['Pitch_test-loss'] = testLoss_results_pitch
+    metrics_result['Pitch']['Pitch_accuracy'] = accuracy_results_pitch
+    metrics_result['Pitch']['Pitch_BLEU'] = bleu_pitch
     
     perplexity_results_duration, testLoss_results_duration, accuracy_results_duration  = ev.lossPerplexityAccuracy(modelDuration_loaded, test_data_duration, vocabDuration, criterion, bptt, device)
-    metrics_result['Duration_perplexity'] = perplexity_results_duration
-    metrics_result['Duration_test-loss'] = testLoss_results_duration
-    metrics_result['Duration_accuracy'] = accuracy_results_duration
+    metrics_result['Duration']['Duration_perplexity'] = perplexity_results_duration
+    metrics_result['Duration']['Duration_test-loss'] = testLoss_results_duration
+    metrics_result['Duration']['Duration_accuracy'] = accuracy_results_duration
+    metrics_result['Duration']['Duration_BLEU'] = bleu_duration
     
     # Convert metrics dict to JSON and SAVE IT    
     with open('metrics/metrics_result.json', 'w') as fp:
         json.dump(metrics_result, fp)
-    
-    
-    #%% MODEL EVALUATION
-    # accuracy, perplexity (paper seq-Attn)
-    # NLL loss, BLEU (paper explicitly conditioned melody generation)
-    
-    #parameters = []
-    #for param in modelDuration_loaded.parameters():
-        #parameters.append(param.data.numpy())
-        #print(param.data)
-    
-    """
-    BLEU code: it always gets 0, don't understand why
-    
-    def formatBLEU(corpus, max_n=1):
-        new_corpus = []
-        for song in corpus:
-            for i in range(0, len(song), max_n):
-                new_corpus.append(song[i:i+max_n])
-        return new_corpus
-    max_n = 2
-    weights=[0.5, 0.5]
-    candidate_corpus_pitch_reformat = formatBLEU(candidate_corpus_pitch, max_n)
-    references_corpus_pitch_reformat = formatBLEU(references_corpus_pitch, max_n)
-    from torchtext.data.metrics import bleu_score
-    pitchBLEU = bleu_score(candidate_corpus_pitch, references_corpus_pitch, max_n = max_n, weights = weights)
-    #durationBLEU = bleu_score(candidate_corpus_duration, references_corpus_duration, max_n=4, weights=[0.25, 0.25, 0.25, 0.25])
-    """
-    
-    
+
