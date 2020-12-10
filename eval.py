@@ -21,9 +21,6 @@ Metrics for evaluation:
     - BLEU score (implemented, but always get zero)
     
 Use tensorboard with pyTorch to obtain visualization of loss and perplexity
-Understand if BLEU and accuracy are necessary
-Probably need to implement some export function 
-of the different metrics on a .csv or .txt file
 """
 
 import pretty_midi
@@ -107,9 +104,9 @@ def getNote(val, dict_to_ix):
          if val == value: 
              return key
 
-def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
+def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10, temperature = 1):
     '''
-
+    
     Parameters
     ----------
     model : pytorch Model
@@ -123,11 +120,11 @@ def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
     next_notes : integer, optional
         Number of notes to be generated. The default is 10.
 
-    Returns
-    -------
-    melody4gen_list : list
-        original melody with generated notes appended at the end.
-
+   Returns
+   -------
+   melody4gen_list : list
+       original melody with generated notes appended at the end.
+    
     '''
     model.eval()
     melody4gen_list = melody4gen.tolist()
@@ -142,12 +139,16 @@ def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
             
             if melody4gen_batch.size(0) != bptt:
                 src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
-
+    
             y_pred = model(melody4gen_batch, src_mask)
-            last_note_logits = y_pred[-1,-1]
-            _, max_idx = torch.max(last_note_logits, dim=0)
-            melody4gen_list.append(getNote(max_idx, dict_to_ix))
-
+            
+            word_weights = y_pred[-1].squeeze().div(temperature).exp().cpu()
+            word_idx = torch.multinomial(word_weights, 1)[0]
+            
+            #last_note_logits = y_pred[-1,-1]
+            #_, max_idx = torch.max(last_note_logits, dim=0)
+            melody4gen_list.append(getNote(word_idx, dict_to_ix))
+    
     return melody4gen_list
 
 
@@ -329,7 +330,6 @@ if __name__ == '__main__':
             
             # reshape to column vector
             melody4gen_batch = melody4gen_batch.reshape(melody4gen_batch.shape[1], melody4gen_batch.shape[0])
-            print(melody4gen_batch.shape)
             
             if melody4gen_batch.size(0) != bptt:
                 src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
@@ -339,11 +339,8 @@ if __name__ == '__main__':
             for j in range(y_pred.size(0)):
                 note_logits = y_pred[j,0,:]
                 _, max_idx = torch.max(note_logits, dim=0)
-                #print(max_idx)
                 new_melody.append(getNote(max_idx, dict_to_ix))
-            
-            #print(new_melody)
-            #print(melody4gen_list)
+
             
             ac = 0
             for k in range(1,len(new_melody)):
@@ -359,7 +356,7 @@ if __name__ == '__main__':
     
         return new_melody
     
-    def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10):
+    def generate(model, melody4gen, dict_to_ix, bptt=35, next_notes=10, temperature = 1):
         '''
     
         Parameters
@@ -397,7 +394,6 @@ if __name__ == '__main__':
     
                 y_pred = model(melody4gen_batch, src_mask)
                 
-                temperature = 1
                 word_weights = y_pred[-1].squeeze().div(temperature).exp().cpu()
                 word_idx = torch.multinomial(word_weights, 1)[0]
                 
@@ -417,8 +413,11 @@ if __name__ == '__main__':
     melody4gen_duration = melody4gen_duration[:80]
     
     notes2gen = 40 # number of new notes to generate
-    new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+    temp = 1 # degree of randomness of the decision (creativity of the model)
+    new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, 
+                                next_notes=notes2gen, temperature=temp)
+    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, 
+                                   duration_to_ix, next_notes=notes2gen, temperature=temp)
     
     # convert to midi
     converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
@@ -464,13 +463,16 @@ if __name__ == '__main__':
         #print(melody4gen_duration)
         
         notes2gen = 20 # number of new notes to generate
-        new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, next_notes=notes2gen)
-        new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, next_notes=notes2gen)
+        temp = 1 # degree of randomness of the decision (creativity of the model)
+        new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, 
+                                    pitch_to_ix, next_notes=notes2gen, temperature=temp)
+        new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, 
+                                       duration_to_ix, next_notes=notes2gen, temperature=temp)
         
         print('length of gen melody: ', len(new_melody_pitch))
         print('generated pitches: ', np.array(new_melody_pitch[40:]) )
     
-        converted = convertMIDI(new_melody_pitch[40:], new_melody_duration[40:], song_properties['tempo'], dur_dict)
+        converted = convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
         
         song_name = standards[i][12:][:-4]
         print('-'*30)
@@ -790,7 +792,7 @@ if __name__ == '__main__':
         correct = 0
         src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
         
-        tot_tokens = 0 # REMOVE
+        #tot_tokens = 0 # REMOVE
         
         with torch.no_grad():
             for i in range(0, data_source.size(0) - 1, bptt):
@@ -811,9 +813,9 @@ if __name__ == '__main__':
                         _, max_idx = torch.max(logit, dim=0)
                         
                         # exclude pad tokens for pitch and duration
-                        if targets_no_reshape[j,k] != 49 and targets_no_reshape[j,k] != 12: # REMOVE
-                            correct += (max_idx == targets_no_reshape[j,k]).sum().item()
-                            tot_tokens += 1 # REMOVE
+                        #if targets_no_reshape[j,k] != 49 and targets_no_reshape[j,k] != 12: # REMOVE
+                        correct += (max_idx == targets_no_reshape[j,k]).sum().item()
+                            #tot_tokens += 1 # REMOVE
         
         accuracy = correct / tot_tokens *100
         loss = total_loss / (len(data_source) - 1)
