@@ -365,10 +365,7 @@ def batchify(data, bsz, dict_to_ix, device):
     
     data = torch.tensor(padded_num, dtype=torch.long)
     data = data.contiguous()
-        
-    print(data.shape)
-
-        
+                
     # Divide the dataset into bsz parts.
     nbatch = data.size(0) // bsz
     # Trim off any extra elements that wouldn't cleanly fit (remainders).
