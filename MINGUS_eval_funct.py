@@ -11,7 +11,6 @@ import torch.nn as nn
 import numpy as np
 import math
 import json
-#from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 import MINGUS_dataset_funct as dataset
 import MINGUS_model as mod
 
@@ -26,7 +25,7 @@ def lossPerplexityAccuracy(eval_model, data_source, vocab, criterion, bptt, devi
     src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
         
     #tot_tokens = 0 # REMOVE
-        
+    
     with torch.no_grad():
         for i in range(0, data_source.size(0) - 1, bptt):
             # get batch
@@ -74,7 +73,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
         DESCRIPTION.
 
     '''
-        
+    
     # Build a dataset of generated sequences (coherent with training data)
     # How to build the dataset of generated sequences? 
     # How many tokens for each sequence? 
@@ -90,7 +89,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
         
     # Initalize results dictionary
     results = {}
-        
+    
     # Initialize dataset1 (training data)
     set1 = glob.glob(training_midi_path)
     # Dictionary of metrics
@@ -104,7 +103,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
     #set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
     set1_eval['avg_IOI'] = np.zeros((num_samples,1))
     #set1_eval['note_length_hist'] = np.zeros((num_samples,12))
-        
+    
     # Calculate metrics
     metrics_list = list(set1_eval.keys())
     for metric in metrics_list:
@@ -114,8 +113,8 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
         for i in range(0, num_samples):
             feature = core.extract_feature(set1[i])
             set1_eval[metrics_list[j]][i] = getattr(core.metrics(), metrics_list[j])(feature)
-        
-        
+    
+    
     # Initialize dataset2 (generated samples)
     set2 = glob.glob(generated_midi_path)
     # Dictionary of metrics
@@ -129,7 +128,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
     #set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
     set2_eval['avg_IOI'] = np.zeros((num_samples,1))
     #set2_eval['note_length_hist'] = np.zeros((num_samples,12))
-        
+    
     # Calculate metrics
     for j in range(0, len(metrics_list)):
         for i in range(0, num_samples):

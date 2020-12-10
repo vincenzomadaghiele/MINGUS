@@ -11,7 +11,6 @@ import torch.nn as nn
 import numpy as np
 import math
 import json
-#from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 import MINGUS_dataset_funct as dataset
 import MINGUS_model as mod
 
@@ -244,7 +243,6 @@ if __name__ == '__main__':
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
     
     
-    
     #%% IMPORT PRE-TRAINED MODEL
     
     # HYPERPARAMETERS
@@ -281,7 +279,7 @@ if __name__ == '__main__':
     
     #%% ONE SONG GENERATION WITH PRE-TRAINED MODELS
     
-    bptt = 50
+    bptt = 35
     #specify the path
     f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(f)
@@ -307,5 +305,51 @@ if __name__ == '__main__':
     converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
     converted.write('output/equal.mid')
     
+    
+    #%% BUILD A DATASET OF GENERATED SEQUENCES
+    
+    # Set to True to generate dataset of songs
+    generate_dataset = False
+    
+    if generate_dataset:
+        training_path = 'data/w_jazz/*.mid'
+        
+        import glob
+        standards = glob.glob(training_path)
+        num_of_generations = 20
+
+        for i in range(0, num_of_generations):
+            
+            song_name = standards[i][12:][:-4]
+            print('-'*30)
+            print('Generating over song: '+ song_name)
+            print('-'*30)
+            
+            #specify the path
+            melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(standards[i])
+            melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+            
+            # generate entire songs given just the 40 notes
+            # each generated song will have same lenght of the original song
+            song_lenght= len(melody4gen_pitch) 
+            melody4gen_pitch = melody4gen_pitch[:40]
+            melody4gen_duration = melody4gen_duration[:40]
+            
+            # very high song lenght makes generation very slow
+            if song_lenght > 1000:
+                song_lenght = 1000
+            
+            notes2gen = song_lenght - 40 # number of new notes to generate
+            temp = 1 # degree of randomness of the decision (creativity of the model)
+            new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, 
+                                        pitch_to_ix, device, next_notes=notes2gen, temperature=temp)
+            new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, 
+                                           duration_to_ix, device, next_notes=notes2gen, temperature=temp)
+            
+            print('length of gen melody: ', len(new_melody_pitch))
+        
+            converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+            converted.write('output/gen4eval/'+ song_name + '_gen.mid')
+
     
     
