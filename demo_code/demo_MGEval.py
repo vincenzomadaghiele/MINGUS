@@ -25,7 +25,7 @@ num_samples = 20
 
 
 # Initialize dataset1 (training data)
-set1 = glob.glob('data/w_jazz_mini/*.mid')
+set1 = glob.glob('../data/w_jazz_mini/*.mid')
 # Dictionary of metrics
 set1_eval = {'total_used_pitch':np.zeros((num_samples,1))}
 # Add metrics to the dictionary
@@ -47,7 +47,7 @@ for j in range(0, len(metrics_list)):
 
 
 # Initialize dataset2 (generated samples)
-set2 = glob.glob('data/w_jazz_mini2/*.mid')
+set2 = glob.glob('../data/w_jazz_mini2/*.mid')
 # Dictionary of metrics
 set2_eval = {'total_used_pitch':np.zeros((num_samples,1))}
 # Add metrics to the dictionary

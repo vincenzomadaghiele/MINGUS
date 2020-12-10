@@ -20,7 +20,7 @@ import IPython.display
 
 
 # We'll load in the example.mid file distributed with pretty_midi
-pm = pretty_midi.PrettyMIDI('data/w_jazz/ArtPepper_Anthropology_FINAL.mid')
+pm = pretty_midi.PrettyMIDI('../data/w_jazz/ArtPepper_Anthropology_FINAL.mid')
 
 # Function to plot midi on piano roll
 def plot_piano_roll(pm, start_pitch, end_pitch, fs=100):
@@ -80,7 +80,7 @@ plt.figure()
 
 #%% PRETTY MIDI ON A W_JAZZ SOLO
 
-file = 'data/w_jazz/ArtPepper_Anthropology_FINAL.mid'
+file = '../data/w_jazz/ArtPepper_Anthropology_FINAL.mid'
 
 def readMIDI(file):
     '''
@@ -231,6 +231,6 @@ def convertMIDI(notes, durations, tempo, dur_dict):
 
 notes, durations, dur_dict, song_properties = readMIDI(file)
 converted = convertMIDI(notes, durations, song_properties['tempo'], dur_dict)
-converted.write('output/out.mid')
+converted.write('../output/out.mid')
 
 booh = readMIDI(file)[0]
