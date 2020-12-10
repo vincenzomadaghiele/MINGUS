@@ -14,11 +14,11 @@ and with a different dataset
 This code is used for training and generation of samples
 
 Things to do:
+    - conditioning on chords and inter-conditioning between pitch and duration
     - implement remaining metrics (BLEU, MGEval)
     - run model with other datasets (seAttn data) and compare metrics
     - make net scheme
     - grid search for model optimization
-    - conditioning on chords and inter-conditioning between pitch and duration
     - move all constants to an external .py file
 """
 
@@ -28,7 +28,6 @@ import torch.nn as nn
 import numpy as np
 import math
 import time
-#from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 import MINGUS_dataset_funct as dataset
 import MINGUS_model as mod
 
@@ -42,7 +41,13 @@ if __name__ == '__main__':
     # DATA LOADING
     
     # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz/'
+    
+    dataset_folder = "data"
+    dataset_name = "w_jazz"
+    #pitch_path = 'data/w_jazz/'
+    pitch_path = dataset_folder +'/'+dataset_name+'/'
+    
+    
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -60,7 +65,9 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz/'
+    #duration_path = 'data/w_jazz/'
+    duration_path = dataset_folder + '/' + dataset_name + '/'
+    
     datasetDuration = dataset.ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
@@ -78,20 +85,19 @@ if __name__ == '__main__':
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
     
     
-    #%% MELODY SEGMENTATION
+    #%% DATA PREPARATION
     
     # Maximum value of a sequence
     segment_length = 35
+    # Melody segmentation
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = dataset.segmentDataset(test_pitch, test_duration, segment_length)
 
     
-    #%% DATA PREPARATION
-
     batch_size = 20
     eval_batch_size = 10
-    
+    # Batch the data
     train_data_pitch = dataset.batchify(train_pitch_segmented, batch_size, pitch_to_ix, device)
     val_data_pitch = dataset.batchify(val_pitch_segmented, eval_batch_size, pitch_to_ix, device)
     test_data_pitch = dataset.batchify(test_pitch_segmented, eval_batch_size, pitch_to_ix, device)
@@ -161,7 +167,12 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
+    
+    models_folder = "models"
+    model_name = "MINGUSpitch"
+    num_epochs = str(epochs) + "epochs"
+    savePATHpitch = models_folder + '/' + model_name + '_' + num_epochs + '_' + dataset_name + '.pt'
+    #savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -217,7 +228,12 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
-    savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
+    models_folder = "models"
+    model_name = "MINGUSduration"
+    num_epochs = str(epochs) + "epochs"
+    savePATHduration = models_folder + '/' + model_name + '_' + num_epochs + '_' + dataset_name + '.pt'
+    
+    #savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     

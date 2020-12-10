@@ -187,5 +187,6 @@ def get_batch(source, i, bptt):
     seq_len = min(bptt, len(source) - 1 - i)
     data = source[i:i+seq_len] # input 
     target = source[i+1:i+1+seq_len].view(-1) # target (same as input but shifted by 1)
+    targets_no_reshape = source[i+1:i+1+seq_len]
 
-    return data, target
+    return data, target, targets_no_reshape
