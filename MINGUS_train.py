@@ -27,6 +27,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import math
+import time
 #from MINGUS_dataset_funct import ImprovDurationDataset, ImprovPitchDataset, readMIDI, convertMIDI
 import MINGUS_dataset_funct as dataset
 import MINGUS_model as mod
