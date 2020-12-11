@@ -279,7 +279,7 @@ def separateSeqs(seq_pitch, seq_duration, segment_length = 35):
         new_duration.append(seq_duration[i])
         counter += 1
         if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
-            if counter > 12:
+            if counter > int(segment_length/3):
                 tot_pitch.append(np.array(new_pitch, dtype=object))
                 tot_duration.append(np.array(new_duration, dtype=object))
                 new_pitch = []
