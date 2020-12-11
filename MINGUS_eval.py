@@ -49,7 +49,7 @@ if __name__ == '__main__':
     
     
     dataset_folder = "data"
-    dataset_name = "w_jazz_augmented"
+    dataset_name = "w_jazz"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_w_jazz_augmented.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen100_w_jazz.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -119,7 +119,7 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_w_jazz_augmented.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen100_w_jazz.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
     
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = dataset.segmentDataset(test_pitch, test_duration, segment_length)
-        
+    
     batch_size = 20
     eval_batch_size = 10
     
