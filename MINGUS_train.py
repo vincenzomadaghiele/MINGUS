@@ -86,7 +86,7 @@ if __name__ == '__main__':
     #%% DATA PRE-PROCESSING
     
     # Maximum value of a sequence
-    segment_length = 35
+    segment_length = 100
     # Melody segmentation
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)

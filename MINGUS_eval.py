@@ -48,8 +48,10 @@ if __name__ == '__main__':
     # DATA LOADING
     
     
-    # LOAD PITCH DATASET
-    pitch_path = 'data/w_jazz/'
+    dataset_folder = "data"
+    dataset_name = "w_jazz_augmented"
+    pitch_path = dataset_folder +'/'+dataset_name+'/'
+    
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
     # set vocabulary for conversion
@@ -67,7 +69,9 @@ if __name__ == '__main__':
     test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
     
     # LOAD DURATION DATASET
-    duration_path = 'data/w_jazz/'
+    #duration_path = 'data/w_jazz/'
+    duration_path = dataset_folder + '/' + dataset_name + '/'
+    
     datasetDuration = dataset.ImprovDurationDataset(duration_path, 10)
     X_duration = datasetDuration.getData()
     # set vocabulary for conversion
@@ -99,7 +103,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen100_w_jazz.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_w_jazz_augmented.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -115,13 +119,13 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen100_w_jazz.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_w_jazz_augmented.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    generate_dataset = False
+    generate_dataset = True
     training_path = 'data/w_jazz/*.mid'
     num_of_generations = 20
     
