@@ -99,7 +99,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_w_jazz.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen100_w_jazz.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -115,7 +115,7 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_w_jazz.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen100_w_jazz.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
     
