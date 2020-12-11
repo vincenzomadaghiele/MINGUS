@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # LOAD PITCH DATASET
     
     dataset_folder = "data"
-    dataset_name = "w_jazz_augmented"
+    dataset_name = "w_jazz"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     num_epochs = str(epochs) + "epochs"
     segm_len = "seqLen" + str(segment_length)
     savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
-                     + '_'+ segm_len + '_' + dataset_name + '.pt')
+                     + '_'+ segm_len + '_' + dataset_name + '_EURECOM.pt')
     
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     num_epochs = str(epochs) + "epochs"
     segm_len = "seqLen" + str(segment_length)    
     savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
-                        + '_'+ segm_len + '_' + dataset_name + '.pt')
+                        + '_'+ segm_len + '_' + dataset_name + '_EURECOM.pt')
     
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
