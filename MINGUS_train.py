@@ -85,7 +85,7 @@ if __name__ == '__main__':
     test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
     
     
-    #%% DATA PREPARATION
+    #%% DATA PRE-PROCESSING
     
     # Maximum value of a sequence
     segment_length = 35
@@ -171,7 +171,10 @@ if __name__ == '__main__':
     models_folder = "models"
     model_name = "MINGUSpitch"
     num_epochs = str(epochs) + "epochs"
-    savePATHpitch = models_folder + '/' + model_name + '_' + num_epochs + '_' + dataset_name + '.pt'
+    segm_len = "seqLen" + str(segment_length)
+    savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
+                     + '_'+ segm_len + '_' + dataset_name + '.pt')
+    
     #savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
@@ -231,7 +234,11 @@ if __name__ == '__main__':
     models_folder = "models"
     model_name = "MINGUSduration"
     num_epochs = str(epochs) + "epochs"
-    savePATHduration = models_folder + '/' + model_name + '_' + num_epochs + '_' + dataset_name + '.pt'
+    segm_len = "seqLen" + str(segment_length)
+    #savePATHduration = models_folder + '/' + model_name + '_' + num_epochs + '_' + dataset_name + '.pt'
+    
+    savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
+                        + '_'+ segm_len + '_' + dataset_name + '.pt')
     
     #savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictDuration = best_model_duration.state_dict()
