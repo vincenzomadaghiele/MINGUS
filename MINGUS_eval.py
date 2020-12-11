@@ -162,20 +162,15 @@ if __name__ == '__main__':
             converted.write('output/gen4eval/'+ song_name + '_gen.mid')
         
 
-
-    #%% Melody Segmentation
+    #%% DATA PRE-PROCESSING FOR TEST
+    # this pre-processing must be the same as in the training
     
     # Maximum value of a sequence
     segment_length = 35
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = dataset.segmentDataset(test_pitch, test_duration, segment_length)
-
-
-    #%% Perplexity, Test Loss, Accuracy
-    
-    #DATA PREPARATION FOR TEST
-    
+        
     batch_size = 20
     eval_batch_size = 10
     
@@ -240,15 +235,17 @@ if __name__ == '__main__':
     metrics_result['MGEval'] = MGEresults
     
     criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
-    perplexity_results_pitch, testLoss_results_pitch, accuracy_results_pitch  = ev.lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, vocabPitch, criterion, bptt, device)
-    metrics_result['Pitch']['Pitch_perplexity'] = perplexity_results_pitch
+    testLoss_results_pitch, perplexity_results_pitch, accuracy_results_pitch  = ev.lossPerplexityAccuracy(modelPitch_loaded, test_data_pitch, 
+                                                                                                          vocabPitch, criterion, bptt, device)
     metrics_result['Pitch']['Pitch_test-loss'] = testLoss_results_pitch
+    metrics_result['Pitch']['Pitch_perplexity'] = perplexity_results_pitch
     metrics_result['Pitch']['Pitch_accuracy'] = accuracy_results_pitch
     metrics_result['Pitch']['Pitch_BLEU'] = bleu_pitch
     
-    perplexity_results_duration, testLoss_results_duration, accuracy_results_duration  = ev.lossPerplexityAccuracy(modelDuration_loaded, test_data_duration, vocabDuration, criterion, bptt, device)
-    metrics_result['Duration']['Duration_perplexity'] = perplexity_results_duration
+    testLoss_results_duration, perplexity_results_duration, accuracy_results_duration  = ev.lossPerplexityAccuracy(modelDuration_loaded, test_data_duration, 
+                                                                                                                   vocabDuration, criterion, bptt, device)
     metrics_result['Duration']['Duration_test-loss'] = testLoss_results_duration
+    metrics_result['Duration']['Duration_perplexity'] = perplexity_results_duration
     metrics_result['Duration']['Duration_accuracy'] = accuracy_results_duration
     metrics_result['Duration']['Duration_BLEU'] = bleu_duration
     
