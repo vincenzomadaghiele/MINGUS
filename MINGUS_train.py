@@ -43,10 +43,8 @@ if __name__ == '__main__':
     # LOAD PITCH DATASET
     
     dataset_folder = "data"
-    dataset_name = "w_jazz"
-    #pitch_path = 'data/w_jazz/'
+    dataset_name = "w_jazz_augmented"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
-    
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
@@ -88,13 +86,13 @@ if __name__ == '__main__':
     #%% DATA PRE-PROCESSING
     
     # Maximum value of a sequence
-    segment_length = 100
+    segment_length = 35
     # Melody segmentation
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = dataset.segmentDataset(test_pitch, test_duration, segment_length)
 
-    
+
     batch_size = 20
     eval_batch_size = 10
     # Batch the data
@@ -175,7 +173,6 @@ if __name__ == '__main__':
     savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
                      + '_'+ segm_len + '_' + dataset_name + '.pt')
     
-    #savePATHpitch = 'modelsPitch/modelPitch_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
@@ -234,13 +231,10 @@ if __name__ == '__main__':
     models_folder = "models"
     model_name = "MINGUSduration"
     num_epochs = str(epochs) + "epochs"
-    segm_len = "seqLen" + str(segment_length)
-    #savePATHduration = models_folder + '/' + model_name + '_' + num_epochs + '_' + dataset_name + '.pt'
-    
+    segm_len = "seqLen" + str(segment_length)    
     savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
                         + '_'+ segm_len + '_' + dataset_name + '.pt')
     
-    #savePATHduration = 'modelsDuration/modelDuration_'+ str(epochs) + 'epochs_wjazz_segmented.pt'
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
     
