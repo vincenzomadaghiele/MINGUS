@@ -49,7 +49,7 @@ if __name__ == '__main__':
     
     
     dataset_folder = "data"
-    dataset_name = "w_jazz"
+    dataset_name = "w_jazz_augmented"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen100_w_jazz.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_folkDB.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -119,14 +119,14 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen100_w_jazz.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_folkDB.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
     
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
     generate_dataset = True
-    training_path = 'data/w_jazz/*.mid'
+    training_path = 'data/folkDB/*.mid'
     num_of_generations = 20
     
     if generate_dataset:
@@ -160,10 +160,10 @@ if __name__ == '__main__':
                                         pitch_to_ix, device, next_notes=notes2gen, temperature=temp)
             new_melody_duration = gen.generate(modelDuration_loaded, melody4gen_duration, 
                                            duration_to_ix, device, next_notes=notes2gen, temperature=temp)
-                    
+            
             converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
 
-            converted.write('output/gen4eval/'+ song_name + '_gen.mid')
+            converted.write('output/gen4eval_folkDB/'+ song_name + '_gen.mid')
         
 
     #%% DATA PRE-PROCESSING FOR TEST
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     #%% BLEU score
     
     # Root directory of the generation dataset
-    gen_dir = "output/gen4eval/"        
+    gen_dir = "output/gen4eval_folkDB/"        
     
     #read the generated files
     files=[i for i in os.listdir(gen_dir) if i.endswith(".mid")]
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_test-loss'] = {}
     metrics_result['Duration']['Duration_BLEU'] = {}
     
-    generated_path = 'output/gen4eval/*.mid'
+    generated_path = 'output/gen4eval_folkDB/*.mid'
     
     MGEresults = ev.MGEval(training_path, generated_path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
