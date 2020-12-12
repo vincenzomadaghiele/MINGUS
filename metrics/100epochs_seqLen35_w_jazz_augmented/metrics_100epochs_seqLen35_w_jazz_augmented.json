@@ -1,0 +1,66 @@
+{
+	"MGEval": {
+		"total_used_pitch": {
+			"ref_mean": 26.3,
+			"ref_std": 6.442825467137846,
+			"gen_mean": 30.85,
+			"gen_std": 4.6289847699036555,
+			"ref_KL-div": 0.046391247912655156,
+			"ref_overlap-area": 0.8461628287076259,
+			"gen_KL-div": 0.01235492262498974,
+			"gen_overlap-area": 0.7775316122986293
+		},
+		"total_pitch_class_histogram": {
+			"ref_mean": 0.08333333333333333,
+			"ref_std": 0.057513884688446426,
+			"gen_mean": 0.08333333333333333,
+			"gen_std": 0.031135857942886588,
+			"ref_KL-div": 0.07765190452506099,
+			"ref_overlap-area": 0.8436062521780779,
+			"gen_KL-div": 0.11168973907023953,
+			"gen_overlap-area": 0.6140440185980188
+		},
+		"pitch_class_transition_matrix": {
+			"ref_mean": 4.004513888888889,
+			"ref_std": 9.677417536737922,
+			"gen_mean": 2.870486111111111,
+			"gen_std": 3.425835832696143,
+			"ref_KL-div": 0.081628968766665,
+			"ref_overlap-area": 0.7135571433650428,
+			"gen_KL-div": 7.64559985871832,
+			"gen_overlap-area": 0.6120637404152693
+		},
+		"pitch_range": {
+			"ref_mean": 27.8,
+			"ref_std": 5.9715994507334464,
+			"gen_mean": 32.0,
+			"gen_std": 5.176871642217914,
+			"ref_KL-div": 0.052655742232033745,
+			"ref_overlap-area": 0.8385203866506958,
+			"gen_KL-div": 0.014500537719983476,
+			"gen_overlap-area": 0.833441946121005
+		},
+		"avg_IOI": {
+			"ref_mean": 0.25012762838788205,
+			"ref_std": 0.08776547515044895,
+			"gen_mean": 0.4328719205896959,
+			"gen_std": 0.22480940691600404,
+			"ref_KL-div": 0.22334584189037296,
+			"ref_overlap-area": 0.5970303319124269,
+			"gen_KL-div": 0.03760846306113719,
+			"gen_overlap-area": 0.860550829432603
+		}
+	},
+	"Pitch": {
+		"Pitch_accuracy": 15.945137157107231,
+		"Pitch_perplexity": 11.317433445211988,
+		"Pitch_test-loss": 2.4263443196137104,
+		"Pitch_BLEU": 0.22508874297157916
+	},
+	"Duration": {
+		"Duration_accuracy": 53.01888136800855,
+		"Duration_perplexity": 53.883816866321176,
+		"Duration_test-loss": 3.986830189165287,
+		"Duration_BLEU": 0.41916090992641036
+	}
+}

@@ -1,0 +1,66 @@
+{
+	"MGEval": {
+		"total_used_pitch": {
+			"ref_mean": 11.6,
+			"ref_std": 2.5377155080899043,
+			"gen_mean": 15.25,
+			"gen_std": 2.5074887836239665,
+			"ref_KL-div": 0.059683657050044664,
+			"ref_overlap-area": 0.7351819787590168,
+			"gen_KL-div": 0.01110430892155918,
+			"gen_overlap-area": 0.7702918385885119
+		},
+		"total_pitch_class_histogram": {
+			"ref_mean": 0.08333333333333333,
+			"ref_std": 0.09376925807271286,
+			"gen_mean": 0.08333333333333333,
+			"gen_std": 0.08108686676010748,
+			"ref_KL-div": 0.022327630747452795,
+			"ref_overlap-area": 0.8156897228742744,
+			"gen_KL-div": 0.06997674916133116,
+			"gen_overlap-area": 0.7075354163562008
+		},
+		"pitch_class_transition_matrix": {
+			"ref_mean": 1.4305555555555556,
+			"ref_std": 3.9942715539774682,
+			"gen_mean": 1.4243055555555555,
+			"gen_std": 3.345783966588436,
+			"ref_KL-div": 0.07263727865593445,
+			"ref_overlap-area": 0.8268746407328068,
+			"gen_KL-div": 0.13778091786717864,
+			"gen_overlap-area": 0.8133849958817511
+		},
+		"pitch_range": {
+			"ref_mean": 18.65,
+			"ref_std": 2.9878922336657325,
+			"gen_mean": 23.2,
+			"gen_std": 3.026549190084311,
+			"ref_KL-div": 0.030778720677102786,
+			"ref_overlap-area": 0.7318963638363959,
+			"gen_KL-div": 0.03398943730406044,
+			"gen_overlap-area": 0.7572196016137079
+		},
+		"avg_IOI": {
+			"ref_mean": 0.2916084914769124,
+			"ref_std": 0.05550091306784388,
+			"gen_mean": 0.29941319429841395,
+			"gen_std": 0.0732311315155356,
+			"ref_KL-div": 0.1660646172013875,
+			"ref_overlap-area": 0.8069576774025595,
+			"gen_KL-div": 0.07471181019138329,
+			"gen_overlap-area": 0.7659205189214293
+		}
+	},
+	"Pitch": {
+		"Pitch_accuracy": 30.443683691093014,
+		"Pitch_perplexity": 7.020965256129347,
+		"Pitch_test-loss": 1.9489007094584676,
+		"Pitch_BLEU": 0.24271683512569775
+	},
+	"Duration": {
+		"Duration_accuracy": 81.04163582531459,
+		"Duration_perplexity": 1.8656603047256088,
+		"Duration_test-loss": 0.6236150412257984,
+		"Duration_BLEU": 0.07196790264635806
+	}
+}
