@@ -103,30 +103,32 @@ def train(model, vocab, train_data, criterion, optimizer, scheduler, epoch, bptt
     for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
         data, targets, _ = get_batch(train_data, i, bptt)
         #print(data.shape)
+        #print('bptt ', bptt)
         # there was an issue with batch size
         # change data.shape[0] to seq_len instead of batch size
-        if data.shape[0] == bptt and data.shape[1] == bptt:
-            model.init_hidden_and_cell(bptt)
-            optimizer.zero_grad()
-            output = model(data) 
-            loss = criterion(output.view(-1, ntokens), targets)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
-            optimizer.step()
+        #if data.shape[0] == bptt and data.shape[1] == bptt:
+        #print('inside')
+        model.init_hidden_and_cell(data.shape[0]) # initialize hidden to the dimension of the batch
+        optimizer.zero_grad()
+        output = model(data) 
+        loss = criterion(output.view(-1, ntokens), targets)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+        optimizer.step()
     
-            total_loss += loss.item()
-            log_interval = 200
-            if batch % log_interval == 0 and batch > 0:
-                cur_loss = total_loss / log_interval
-                elapsed = time.time() - start_time
-                print('| epoch {:3d} | {:5d}/{:5d} batches | '
-                      'lr {:02.2f} | ms/batch {:5.2f} | '
-                      'loss {:5.2f} | ppl {:8.2f}'.format(
-                        epoch, batch, len(train_data) // bptt, scheduler.get_last_lr()[0],
-                        elapsed * 1000 / log_interval,
-                        cur_loss, math.exp(cur_loss)))
-                total_loss = 0
-                start_time = time.time()
+        total_loss += loss.item()
+        log_interval = 200
+        if batch % log_interval == 0 and batch > 0:
+            cur_loss = total_loss / log_interval
+            elapsed = time.time() - start_time
+            print('| epoch {:3d} | {:5d}/{:5d} batches | '
+                  'lr {:02.2f} | ms/batch {:5.2f} | '
+                  'loss {:5.2f} | ppl {:8.2f}'.format(
+                      epoch, batch, len(train_data) // bptt, scheduler.get_last_lr()[0],
+                      elapsed * 1000 / log_interval,
+                      cur_loss, math.exp(cur_loss)))
+            total_loss = 0
+            start_time = time.time()
 
 def evaluate(eval_model, data_source, vocab, criterion, bptt, device):
     '''
@@ -153,7 +155,8 @@ def evaluate(eval_model, data_source, vocab, criterion, bptt, device):
     with torch.no_grad():
         for i in range(0, data_source.size(0) - 1, bptt):
             data, targets, _ = get_batch(data_source, i, bptt)
-            eval_model.init_hidden_and_cell(bptt)
+            #if data.shape[0] == bptt and data.shape[1] == bptt:
+            eval_model.init_hidden_and_cell(data.shape[0])
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
             total_loss += len(data) * criterion(output_flat, targets).item()
