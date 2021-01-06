@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Oct 26 11:47:05 2020
+Created on Wed Jan  6 21:08:32 2021
 
 @author: vincenzomadaghiele
-
-Things to do:
-    - compare results on all three datasets and all competitor models 
-    - undertand what is the problem with eurecom machine
-    - start to write report
-    - conditioning on chords and inter-conditioning between pitch and duration
-    - move all constants to an external .py file
 """
-
 import pretty_midi
 import torch
 import torch.nn as nn
@@ -20,7 +12,7 @@ import numpy as np
 import math
 import time
 import MINGUS_dataset_funct as dataset
-import MINGUS_model as mod
+import LSTM_model as mod
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -77,15 +69,15 @@ if __name__ == '__main__':
     #%% DATA PRE-PROCESSING
     
     # Maximum value of a sequence
-    segment_length = 35
+    segment_length = 32 # same as ECMG paper
     # Melody segmentation
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = dataset.segmentDataset(test_pitch, test_duration, segment_length)
 
 
-    batch_size = 20
-    eval_batch_size = 10
+    batch_size = 32
+    eval_batch_size = 32
     # Batch the data
     train_data_pitch = dataset.batchify(train_pitch_segmented, batch_size, pitch_to_ix, device)
     val_data_pitch = dataset.batchify(val_pitch_segmented, eval_batch_size, pitch_to_ix, device)
@@ -112,14 +104,32 @@ if __name__ == '__main__':
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
     src_pad_idx = pitch_to_ix['<pad>']
-    modelPitch = mod.TransformerModel(ntokens_pitch, emsize, nhead, nhid, nlayers, 
-                                  src_pad_idx, device, dropout).to(device)
+
+    # These values are set as the default used in the ECMG paper
+    vocab_size = len(vocabPitch)
+    embed_dim = 8 # 8 for pitch, 4 for duration
+    # the dimension of the output is the same 
+    # as the input because the vocab is the same
+    output_dim = len(vocabPitch)
+    hidden_dim = 256
+    seq_len = 32
+    num_layers = 2
+    batch_size = 32
+    dropout = 0.5
+    batch_norm=True
+    no_cuda=False
+    
+
+    modelPitch = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
+                                hidden_dim, seq_len, num_layers, batch_size, 
+                                dropout, batch_norm, no_cuda).to(device)
     
     # LOSS FUNCTION
-    criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
-    lr = 5.0 # learning rate
-    optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    criterion = nn.NLLLoss(ignore_index=src_pad_idx)
+    lr = 1e-3 # default learning rate of ECMG code
+    optimizer = torch.optim.Adam(modelPitch.parameters(), lr=lr, amsgrad=True)
+   
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95) # not in ECMG code
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
@@ -132,7 +142,7 @@ if __name__ == '__main__':
         
         epoch_start_time = time.time()
         mod.train(modelPitch, vocabPitch, train_data_pitch, criterion, optimizer, 
-              scheduler, epoch, bptt, device)
+              scheduler, epoch, bptt)
         val_loss = mod.evaluate(modelPitch, val_data_pitch, vocabPitch, 
                             criterion, bptt, device)
         print('-' * 89)
@@ -158,7 +168,7 @@ if __name__ == '__main__':
     
     
     models_folder = "models"
-    model_name = "MINGUSpitch"
+    model_name = "LSTMpitch"
     num_epochs = str(epochs) + "epochs"
     segm_len = "seqLen" + str(segment_length)
     savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
