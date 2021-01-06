@@ -97,12 +97,6 @@ if __name__ == '__main__':
     
     
     # HYPERPARAMETERS
-    ntokens_pitch = len(vocabPitch) # the size of vocabulary
-    emsize = 200 # embedding dimension
-    nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 2 # the number of heads in the multiheadattention models
-    dropout = 0.2 # the dropout value
     src_pad_idx = pitch_to_ix['<pad>']
 
     # These values are set as the default used in the ECMG paper
@@ -118,7 +112,6 @@ if __name__ == '__main__':
     dropout = 0.5
     batch_norm=True
     no_cuda=False
-    
 
     modelPitch = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
                                 hidden_dim, seq_len, num_layers, batch_size, 
@@ -181,32 +174,45 @@ if __name__ == '__main__':
     #%% DURATION MODEL TRAINING
     
     # HYPERPARAMETERS
-    ntokens_duration = len(vocabDuration) # the size of vocabulary
-    emsize = 200 # embedding dimension
-    nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
-    nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-    nhead = 2 # the number of heads in the multiheadattention models
-    dropout = 0.2 # the dropout value
-    src_pad_idx = duration_to_ix['<pad>']
-    modelDuration = mod.TransformerModel(ntokens_duration, emsize, nhead, nhid, 
-                                     nlayers, src_pad_idx, device, dropout).to(device)
+    src_pad_idx = pitch_to_ix['<pad>']
+
+    # These values are set as the default used in the ECMG paper
+    vocab_size = len(vocabDuration)
+    embed_dim = 4 # 8 for pitch, 4 for duration
+    # the dimension of the output is the same 
+    # as the input because the vocab is the same
+    output_dim = len(vocabDuration)
+    hidden_dim = 256
+    seq_len = 32
+    num_layers = 2
+    batch_size = 32
+    dropout = 0.5
+    batch_norm=True
+    no_cuda=False
+
+    modelDuration = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
+                                hidden_dim, seq_len, num_layers, batch_size, 
+                                dropout, batch_norm, no_cuda).to(device)
     
     # LOSS FUNCTION
-    criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
-    lr = 5.0 # learning rate
-    optimizer = torch.optim.SGD(modelDuration.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    criterion = nn.NLLLoss(ignore_index=src_pad_idx)
+    lr = 1e-3 # default learning rate of ECMG code
+    optimizer = torch.optim.Adam(modelPitch.parameters(), lr=lr, amsgrad=True)
+   
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95) # not in ECMG code
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
     epochs = 10 # The number of epochs
     best_model = None
+
     
     # TRAINING LOOP
     for epoch in range(1, epochs + 1):
+        
         epoch_start_time = time.time()
         mod.train(modelDuration, vocabDuration, train_data_duration, criterion, optimizer, 
-              scheduler, epoch, bptt, device)
+              scheduler, epoch, bptt)
         val_loss = mod.evaluate(modelDuration, val_data_duration, vocabDuration, 
                             criterion, bptt, device)
         print('-' * 89)
@@ -221,6 +227,7 @@ if __name__ == '__main__':
     
         scheduler.step()
     
+    
     # TEST THE MODEL
     test_loss = mod.evaluate(best_model_duration, test_data_duration, vocabDuration, 
                          criterion, bptt, device)
@@ -229,14 +236,15 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss)))
     print('=' * 89)
     
+    
     models_folder = "models"
-    model_name = "MINGUSduration"
+    model_name = "LSTMduration"
     num_epochs = str(epochs) + "epochs"
-    segm_len = "seqLen" + str(segment_length)    
+    segm_len = "seqLen" + str(segment_length)
     savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
-                        + '_'+ segm_len + '_' + dataset_name + '.pt')
+                     + '_'+ segm_len + '_' + dataset_name + '.pt')
     
-    state_dictDuration = best_model_duration.state_dict()
-    torch.save(state_dictDuration, savePATHduration)
-    
-    
+    state_dictPitch = best_model_duration.state_dict()
+    torch.save(state_dictPitch, savePATHduration)
+            
+            
