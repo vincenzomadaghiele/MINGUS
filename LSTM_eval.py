@@ -19,7 +19,7 @@ from nltk.translate.bleu_score import corpus_bleu
 import MINGUS_dataset_funct as dataset
 import LSTM_model as mod
 import MINGUS_eval_funct as ev
-import MINGUS_generate as gen
+import LSTM_generate as gen
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -88,8 +88,8 @@ if __name__ == '__main__':
     num_layers = 2
     batch_size = 32
     dropout = 0.5
-    batch_norm=True
-    no_cuda=False
+    batch_norm = False # in training it is true
+    no_cuda = False
 
     modelPitch_loaded = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
                                 hidden_dim, seq_len, num_layers, batch_size, 
@@ -114,8 +114,8 @@ if __name__ == '__main__':
     num_layers = 2
     batch_size = 32
     dropout = 0.5
-    batch_norm=True
-    no_cuda=False
+    batch_norm = False # in training it is true
+    no_cuda = False
 
     modelDuration_loaded = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
                                 hidden_dim, seq_len, num_layers, batch_size, 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
             melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(standards[i])
             melody4gen_pitch, melody4gen_duration = gen.onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
             
-            # generate entire songs given just the 40 notes
+            # generate entire songs given just the first 40 notes
             # each generated song will have same lenght of the original song
             song_lenght= len(melody4gen_pitch) 
             melody4gen_pitch = melody4gen_pitch[:40]
@@ -166,20 +166,20 @@ if __name__ == '__main__':
             
             converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
 
-            converted.write('output/gen4eval_w_jazz/'+ song_name + '_gen.mid')
+            converted.write('output/gen4eval_w_jazz/'+ song_name + '_genLSTM.mid')
         
 
     #%% DATA PRE-PROCESSING FOR TEST
     # this pre-processing must be the same as in the training
     
     # Maximum value of a sequence
-    segment_length = 35
+    segment_length = 32
     train_pitch_segmented, train_duration_segmented = dataset.segmentDataset(train_pitch, train_duration, segment_length)
     val_pitch_segmented, val_duration_segmented = dataset.segmentDataset(val_pitch, val_duration, segment_length)
     test_pitch_segmented, test_duration_segmented = dataset.segmentDataset(test_pitch, test_duration, segment_length)
     
-    batch_size = 20
-    eval_batch_size = 10
+    batch_size = 32
+    eval_batch_size = 32
     
     train_data_pitch = dataset.batchify(train_pitch_segmented, batch_size, pitch_to_ix, device)
     val_data_pitch = dataset.batchify(val_pitch_segmented, eval_batch_size, pitch_to_ix, device)
