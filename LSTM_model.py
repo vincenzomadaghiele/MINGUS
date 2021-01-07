@@ -32,7 +32,7 @@ class NoCondLSTM(nn.Module):
 
         self.embedding = nn.Embedding(vocab_size, embed_dim)
         self.lstm = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_layers, 
-                            batch_first=True, dropout=dropout)
+                            batch_first=False, dropout=dropout)
         mid_dim = (hidden_dim + output_dim) // 2
         self.decode1 = nn.Linear(hidden_dim, mid_dim)
         self.decode_bn = nn.BatchNorm1d(seq_len)
@@ -108,7 +108,7 @@ def train(model, vocab, train_data, criterion, optimizer, scheduler, epoch, bptt
         # change data.shape[0] to seq_len instead of batch size
         #if data.shape[0] == bptt and data.shape[1] == bptt:
         #print('inside')
-        model.init_hidden_and_cell(data.shape[0]) # initialize hidden to the dimension of the batch
+        model.init_hidden_and_cell(data.shape[1]) # initialize hidden to the dimension of the batch
         optimizer.zero_grad()
         output = model(data) 
         loss = criterion(output.view(-1, ntokens), targets)
@@ -156,7 +156,7 @@ def evaluate(eval_model, data_source, vocab, criterion, bptt, device):
         for i in range(0, data_source.size(0) - 1, bptt):
             data, targets, _ = get_batch(data_source, i, bptt)
             #if data.shape[0] == bptt and data.shape[1] == bptt:
-            eval_model.init_hidden_and_cell(data.shape[0])
+            eval_model.init_hidden_and_cell(data.shape[1])
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
             total_loss += len(data) * criterion(output_flat, targets).item()

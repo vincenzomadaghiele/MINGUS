@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # LOAD PITCH DATASET
     
     dataset_folder = "data"
-    dataset_name = "w_jazz"
+    dataset_name = "folkDB"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     num_layers = 2
     batch_size = 32
     dropout = 0.5
-    batch_norm=True
+    batch_norm=True # ECMG original is true
     no_cuda=False
 
     modelPitch = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
@@ -187,8 +187,8 @@ if __name__ == '__main__':
     num_layers = 2
     batch_size = 32
     dropout = 0.5
-    batch_norm=True
-    no_cuda=False
+    batch_norm = True # ECMG original is true
+    no_cuda = False
 
     modelDuration = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
                                 hidden_dim, seq_len, num_layers, batch_size, 
