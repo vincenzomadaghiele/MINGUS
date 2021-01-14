@@ -114,7 +114,7 @@ if __name__ == '__main__':
     nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
     nhead = 2 # the number of heads in the multiheadattention models
     dropout = 0.2 # the dropout value
-    src_pad_idx = pitch_to_ix['<pad>']
+    src_pad_idx = duration_to_ix['<pad>']
     modelDuration_loaded = mod.TransformerModel(ntokens_duration, emsize, nhead, nhid, 
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         
         for i in range(0, num_of_generations):
             
-            song_name = standards[i][12:][:-4]
+            song_name = standards[i][12:][:-4] # depends on path length
             print('-'*30)
             print('Generating over song: '+ song_name)
             print('-'*30)

@@ -66,10 +66,12 @@ class NoCondLSTM(nn.Module):
         embedded = self.embedding(data)
         lstm_out, self.hidden_and_cell = self.lstm(embedded, self.hidden_and_cell)
         decoded = self.decode1(lstm_out)
+        #print(decoded.shape)
         if self.batch_norm:
             decoded = self.decode_bn(decoded)
         decoded = self.decode2(F.relu(decoded))
         output = self.softmax(decoded)
+        #print(output.shape)
         return output
 
 

@@ -12,8 +12,12 @@ import numpy as np
 import math
 import json
 import MINGUS_dataset_funct as dataset
-import MINGUS_model as mod
+import LSTM_model as mod
 
+
+# Device configuration
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.manual_seed(1)
 
 def getNote(val, dict_to_ix): 
     for key, value in dict_to_ix.items(): 
@@ -60,6 +64,7 @@ def generate(model, melody4gen, dict_to_ix, device, bptt=35, next_notes=10, temp
             #word_idx = torch.multinomial(word_weights, 1)[0]
             
             word_idx = int(torch.exp(y_pred[-1, :, :]).multinomial(1))
+            #word_idx = int(torch.exp(y_pred[:, -1, :]).multinomial(1))
             
             #last_note_logits = y_pred[-1,-1]
             #_, max_idx = torch.max(last_note_logits, dim=0)
@@ -195,4 +200,174 @@ def generateEqual(model, melody4gen, dict_to_ix, device, bptt=35, next_notes=10)
             #melody4gen_list.append(getNote(max_idx, dict_to_ix))
     
     return new_melody
+
+
+if __name__ == '__main__':
+    
+    # DATA LOADING
+    
+    
+    # LOAD PITCH DATASET
+    pitch_path = 'data/folkDB/'
+    datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
+    X_pitch = datasetPitch.getData()
+    # set vocabulary for conversion
+    vocabPitch = datasetPitch.vocab
+    # Add padding tokens to vocab
+    vocabPitch.append('<pad>')
+    #vocabPitch.append('<sos>')
+    #vocabPitch.append('<eos>')
+    pitch_to_ix = {word: i for i, word in enumerate(vocabPitch)}
+    #print(X_pitch[:3])
+    
+    # Divide pitch into train, validation and test
+    train_pitch = X_pitch[:int(len(X_pitch)*0.7)]
+    val_pitch = X_pitch[int(len(X_pitch)*0.7)+1:int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1)]
+    test_pitch = X_pitch[int(len(X_pitch)*0.7)+1+int(len(X_pitch)*0.1):]
+    
+    # LOAD DURATION DATASET
+    duration_path = 'data/folkDB/'
+    datasetDuration = dataset.ImprovDurationDataset(duration_path, 10)
+    X_duration = datasetDuration.getData()
+    # set vocabulary for conversion
+    vocabDuration = datasetDuration.vocab
+    # Add padding tokens to vocab
+    vocabDuration.append('<pad>')
+    #vocabDuration.append('<sos>')
+    #vocabDuration.append('<eos>')
+    duration_to_ix = {word: i for i, word in enumerate(vocabDuration)}
+    #print(X_duration[:3])
+    
+    # Divide duration into train, validation and test
+    train_duration = X_duration[:int(len(X_duration)*0.7)]
+    val_duration = X_duration[int(len(X_duration)*0.7)+1:int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1)]
+    test_duration = X_duration[int(len(X_duration)*0.7)+1+int(len(X_duration)*0.1):]
+    
+    
+    #%% IMPORT PRE-TRAINED MODEL
+    
+    # HYPERPARAMETERS
+    src_pad_idx = pitch_to_ix['<pad>']
+
+    # These values are set as the default used in the ECMG paper
+    vocab_size = len(vocabPitch)
+    embed_dim = 8 # 8 for pitch, 4 for duration
+    # the dimension of the output is the same 
+    # as the input because the vocab is the same
+    output_dim = len(vocabPitch)
+    hidden_dim = 256
+    seq_len = 32
+    num_layers = 2
+    batch_size = 32
+    dropout = 0.5
+    batch_norm = False # in training it is true
+    no_cuda = False
+
+    modelPitch_loaded = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
+                                hidden_dim, seq_len, num_layers, batch_size, 
+                                dropout, batch_norm, no_cuda).to(device)
+    
+    # Import model
+    savePATHpitch = 'models/LSTMpitch_10epochs_seqLen32_w_jazz.pt'
+    modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
+    
+    
+    # HYPERPARAMETERS
+    src_pad_idx = pitch_to_ix['<pad>']
+
+    # These values are set as the default used in the ECMG paper
+    vocab_size = len(vocabDuration)
+    embed_dim = 4 # 8 for pitch, 4 for duration
+    # the dimension of the output is the same 
+    # as the input because the vocab is the same
+    output_dim = len(vocabDuration)
+    hidden_dim = 256
+    seq_len = 32
+    num_layers = 2
+    batch_size = 32
+    dropout = 0.5
+    batch_norm = False # in training it is true
+    no_cuda = False
+
+    modelDuration_loaded = mod.NoCondLSTM(vocab_size, embed_dim, output_dim, 
+                                hidden_dim, seq_len, num_layers, batch_size, 
+                                dropout, batch_norm, no_cuda).to(device)
+
+    # Import model
+    savePATHduration = 'models/LSTMduration_10epochs_seqLen32_w_jazz.pt'
+    modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
+   
+    #%% ONE SONG GENERATION WITH PRE-TRAINED MODELS
+    '''
+    bptt = 35
+    #specify the path
+    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
+    melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(f)
+    melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+    melody4gen_pitch = melody4gen_pitch[:80]
+    melody4gen_duration = melody4gen_duration[:80]
+    
+    notes2gen = 40 # number of new notes to generate
+    temp = 1 # degree of randomness of the decision (creativity of the model)
+    new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, device,
+                                next_notes=notes2gen, temperature=temp)
+    new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, device,
+                                   next_notes=notes2gen, temperature=temp)
+    
+    # convert to midi
+    converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+    converted.write('output/generated_music.mid')
+    
+    new_melody_pitch = generateEqual(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, device, next_notes=notes2gen)
+    new_melody_duration = generateEqual(modelDuration_loaded, melody4gen_duration, duration_to_ix, device, next_notes=notes2gen)
+    
+    # convert to midi
+    converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+    converted.write('output/equal.mid')
+    '''
+    
+    #%% BUILD A DATASET OF GENERATED SEQUENCES
+    
+    # Set to True to generate dataset of songs
+    generate_dataset = False
+    
+    if generate_dataset:
+        training_path = 'data/folkDB/*.mid'
+        
+        import glob
+        standards = glob.glob(training_path)
+        num_of_generations = 20
+
+        for i in range(0, num_of_generations):
+            
+            song_name = standards[i][12:][:-4]
+            print('-'*30)
+            print('Generating over song: '+ song_name)
+            print('-'*30)
+            
+            #specify the path
+            melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(standards[i])
+            melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
+            
+            # generate entire songs given just the 40 notes
+            # each generated song will have same lenght of the original song
+            song_lenght= len(melody4gen_pitch) 
+            melody4gen_pitch = melody4gen_pitch[:40]
+            melody4gen_duration = melody4gen_duration[:40]
+            
+            # very high song lenght makes generation very slow
+            if song_lenght > 1000:
+                song_lenght = 1000
+            
+            notes2gen = song_lenght - 40 # number of new notes to generate
+            temp = 1 # degree of randomness of the decision (creativity of the model)
+            new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, 
+                                        pitch_to_ix, device, next_notes=notes2gen, temperature=temp)
+            new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, 
+                                           duration_to_ix, device, next_notes=notes2gen, temperature=temp)
+            
+            print('length of gen melody: ', len(new_melody_pitch))
+        
+            converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
+            converted.write('output/gen4eval_folkDB/'+ song_name + '_genLSTM.mid')
 
