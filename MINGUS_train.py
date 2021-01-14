@@ -34,7 +34,7 @@ if __name__ == '__main__':
     # LOAD PITCH DATASET
     
     dataset_folder = "data"
-    dataset_name = "w_jazz"
+    dataset_name = "nottingham_melody"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 100 # The number of epochs
     best_model = None
 
     
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 # The number of epochs
+    epochs = 100 # The number of epochs
     best_model = None
     
     # TRAINING LOOP
