@@ -18,7 +18,7 @@ In the literature different approaches have been tried to reach similar goals, a
 ## Running the code
 
 The libraries necessary to running this code are listed in the requirement.txt file. 
-After downloading this repository, it is necessary to run the following code in the terminal:
+After downloading this repository, run the following code in the terminal to install the dependencies:
 ```
 $ conda create --name <env> --file requirements.txt
 ```
