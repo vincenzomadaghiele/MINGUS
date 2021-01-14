@@ -49,7 +49,7 @@ if __name__ == '__main__':
     
     
     dataset_folder = "data"
-    dataset_name = "w_jazz"
+    dataset_name = "nottingham_melody"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_w_jazz.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_nottingham_melody.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -119,14 +119,14 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_w_jazz.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_nottingham_melody.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
 
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    generate_dataset = True
-    training_path = 'data/w_jazz/*.mid'
+    generate_dataset = False
+    training_path = 'data/nottingham_melody/*.mid'
     num_of_generations = 20
     
     if generate_dataset:
@@ -163,7 +163,7 @@ if __name__ == '__main__':
             
             converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
 
-            converted.write('output/gen4eval_w_jazz/'+ song_name + '_gen.mid')
+            converted.write('output/gen4eval_nottingham/'+ song_name + '_gen.mid')
         
 
     #%% DATA PRE-PROCESSING FOR TEST
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     #%% BLEU score
     
     # Root directory of the generation dataset
-    gen_dir = "output/gen4eval_w_jazz/"        
+    gen_dir = "output/gen4eval_nottingham/"        
     
     #read the generated files
     files=[i for i in os.listdir(gen_dir) if i.endswith(".mid")]
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_test-loss'] = {}
     metrics_result['Duration']['Duration_BLEU'] = {}
     
-    generated_path = 'output/gen4eval_w_jazz/*.mid'
+    generated_path = 'output/gen4eval_nottingham/*.mid'
     
     MGEresults = ev.MGEval(training_path, generated_path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
