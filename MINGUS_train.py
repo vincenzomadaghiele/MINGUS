@@ -6,9 +6,7 @@ Created on Mon Oct 26 11:47:05 2020
 @author: vincenzomadaghiele
 
 Things to do:
-    - compare results on all three datasets and all competitor models 
     - undertand what is the problem with eurecom machine
-    - start to write report
     - conditioning on chords and inter-conditioning between pitch and duration
     - move all constants to an external .py file
 """
@@ -34,7 +32,7 @@ if __name__ == '__main__':
     # LOAD PITCH DATASET
     
     dataset_folder = "data"
-    dataset_name = "nottingham_melody"
+    dataset_name = "folkDB"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -123,10 +121,10 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
 
-    
+    pitch_start_time = time.time()
     # TRAINING LOOP
     for epoch in range(1, epochs + 1):
         
@@ -146,6 +144,8 @@ if __name__ == '__main__':
             best_model_pitch = modelPitch
     
         scheduler.step()
+    
+    pitch_end_time = time.time()
     
     
     # TEST THE MODEL
@@ -189,9 +189,11 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
     
+    
+    duration_start_time = time.time()
     # TRAINING LOOP
     for epoch in range(1, epochs + 1):
         epoch_start_time = time.time()
@@ -211,6 +213,8 @@ if __name__ == '__main__':
     
         scheduler.step()
     
+    duration_end_time = time.time()
+    
     # TEST THE MODEL
     test_loss = mod.evaluate(best_model_duration, test_data_duration, vocabDuration, 
                          criterion, bptt, device)
@@ -228,5 +232,11 @@ if __name__ == '__main__':
     
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
+    
+    #%% Training times
+    
+    print('Total training time for pitch model: ', pitch_end_time - pitch_start_time )
+    print('Total training time for duration model: ', duration_end_time - duration_start_time)
+    
     
     
