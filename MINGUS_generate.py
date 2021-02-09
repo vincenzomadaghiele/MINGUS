@@ -281,19 +281,20 @@ if __name__ == '__main__':
     
     bptt = 35
     #specify the path
-    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
+    f = 'data/w_jazz/MilesDavis_Oleo-1_FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
     melody4gen_pitch = melody4gen_pitch[:80]
     melody4gen_duration = melody4gen_duration[:80]
     
-    notes2gen = 40 # number of new notes to generate
+    notes2gen = 80 # number of new notes to generate
     temp = 1 # degree of randomness of the decision (creativity of the model)
     new_melody_pitch = generate(modelPitch_loaded, melody4gen_pitch, pitch_to_ix, device,
                                 next_notes=notes2gen, temperature=temp)
     new_melody_duration = generate(modelDuration_loaded, melody4gen_duration, duration_to_ix, device,
                                    next_notes=notes2gen, temperature=temp)
     
+    song_name = f[len(pitch_path):][:-4]
     # convert to midi
     converted = dataset.convertMIDI(new_melody_pitch, new_melody_duration, song_properties['tempo'], dur_dict)
     converted.write('output/generated_music.mid')

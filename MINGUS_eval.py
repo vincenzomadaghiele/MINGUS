@@ -49,7 +49,7 @@ if __name__ == '__main__':
     
     
     dataset_folder = "data"
-    dataset_name = "nottingham_melody"
+    dataset_name = "w_jazz"
     pitch_path = dataset_folder +'/'+dataset_name+'/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_nottingham_melody.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_w_jazz.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -119,14 +119,14 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_nottingham_melody.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_w_jazz.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))    
 
 
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    generate_dataset = False
-    training_path = 'data/nottingham_melody/*.mid'
+    generate_dataset = True
+    training_path = 'data/w_jazz/*.mid'
     num_of_generations = 20
     
     if generate_dataset:
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         
         for i in range(0, num_of_generations):
             
-            song_name = standards[i][12:][:-4] # depends on path length
+            song_name = standards[i][len(pitch_path):][:-4] # depends on path length
             print('-'*30)
             print('Generating over song: '+ song_name)
             print('-'*30)
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     #%% BLEU score
     
     # Root directory of the generation dataset
-    gen_dir = "output/gen4eval_nottingham/"        
+    gen_dir = "output/gen4eval_w_jazz/"        
     
     #read the generated files
     files=[i for i in os.listdir(gen_dir) if i.endswith(".mid")]
@@ -255,5 +255,5 @@ if __name__ == '__main__':
     
     # Convert metrics dict to JSON and SAVE IT    
     with open('metrics/metrics_result.json', 'w') as fp:
-        json.dump(metrics_result, fp)
+        json.dump(metrics_result, fp, indent=4)
 
