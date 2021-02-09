@@ -7,7 +7,7 @@
 
 MINGUS is a transformer network for modeling and generation of monophonic jazz melodic lines, named in honour of Charles Mingus (1922 – 1979), American jazz double bassist, composer and pianist.
 
-MINGUS is structured as two parallel transformer encoder models with the same structure, one predicting pitch and another one predicting duration. This structure was chosen because it allows to capture the rhythmic variation by allowing the model have a lot of different rhythmic codifications in the dictionary of the duration network.
+MINGUS is structured as two parallel transformer encoder models, one predicting pitch and another one predicting duration. This structure was chosen because it allows to capture the rhythmic variation by allowing the model have a lot of different rhythmic values in the dictionary of the duration network.
 
 The purpose of this experiment is to explore the capability of the transformer to model and generate realistic melodic lines in the style of a jazz improvisation. It is also an opportunity to compare the performances of RNN-based models and transformers on musical data.
 
