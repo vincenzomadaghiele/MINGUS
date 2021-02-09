@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     #%% BUILD A DATASET OF GENERATED SEQUENCES
     
-    generate_dataset = True
+    generate_dataset = False
     training_path = 'data/w_jazz/*.mid'
     num_of_generations = 20
     
