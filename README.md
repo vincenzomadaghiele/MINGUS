@@ -5,23 +5,11 @@
 
 ## Project Description
 
-The purpose of this project is to generate a melodic line in the style of a jazz improvisation using machine learning techniques.
+MINGUS is a transformer network for modeling and generation of monophonic jazz melodic lines, named in honour of Charles Mingus (1922 – 1979), American jazz double bassist, composer and pianist.
 
-A traditional jazz tune has a standard structure: it is composed by a melody, called “theme”, which is usually played at the beginning and at the end of the tune, a “chord progression”, which sets the harmony of the song, and by a series of improvisations by the solo instrumentalists, which compose melodic lines in the moment of the improvisation, taking into account the harmony and the rhythm of the song.
+MINGUS is structured as two parallel transformer encoder models with the same structure, one predicting pitch and another one predicting duration. This structure was chosen because it allows to capture the rhythmic variation by allowing the model have a lot of different rhythmic codifications in the dictionary of the duration network.
 
-The goal of the developed model should be, therefore, to generate a melodic line starting from a “jazz standard” structure, composed by a “theme” (a melody) and a “harmonic progression” (a series of chords); these information will be the input of the model. The output will be a generated melodic line with style depending on the data used to train the model.
-
-As the project concerns symbolic music generation, the dataset will be composed of jazz improvisation transcriptions in .midi format [1].
-
-In the literature different approaches have been tried to reach similar goals, as for example using Natural Language Processing techniques, for example Jiang, Xia, Berg-Kirkpatrick, “Discovering Music Relations with Sequential Attention” [2] and OpenAI’s MuseNet [3], which both aim at generating melodic lines from a starting melody.
-
-## Running the code
-
-The libraries necessary to running this code are listed in the requirement.txt file. 
-After downloading this repository, run the following code in the terminal to install the dependencies:
-```
-$ conda create --name <env> --file requirements.txt
-```
+The purpose of this experiment is to explore the capability of the transformer to model and generate realistic melodic lines in the style of a jazz improvisation. It is also an opportunity to compare the performances of RNN-based models and transformers on musical data.
 
 ## Code description
 
@@ -34,11 +22,17 @@ $ conda create --name <env> --file requirements.txt
 * MINGUS_const.py : constants needed for model training
 * MINGUS_generate.py : generate over a single sample
 
-## References
+## Running the code
 
-[1] https://jazzomat.hfm-weimar.de/dbformat/dboverview.html, https://www.kaggle.com/saikayala/jazz-ml-ready-midi
+The libraries necessary to running this code are listed in the requirement.txt file. 
+After downloading this repository, run the following code in the terminal to install the dependencies in a conda environment:
+```
+$ conda create --name <env> --file requirements.txt
+```
 
-[2] Junyan Jiang, Gus Xia and Taylor Berg-Kirkpatrick . Discovering Music Relations with Sequential Attention 
+To re-train the model run the script MINGUS_train.py. Choose the dataset by typing the name of the folder containing the midi files in line 35. The trained models will be saved in the 'models' folder.
 
-[3] https://openai.com/blog/musenet/#fn2
+To evaluate the model run the script MINGUS_eval.py. Choose the dataset by typing the name of the folder containing the midi files in line 52. Choose the trained pitch and duration models from the 'models' folder and type their name in line 106 and 122. The metrics results will be saved as a json file in the 'metrics' folder.
+
+To generate on a song run the script MINGUS_generate. Choose the dataset by typing the name of the folder containing the midi files in line 210. Choose the trained pitch and duration models from the 'models' folder and type their name in line 260 and 276. Set the number of notes to generate at line 290. The generated midi file will be saved in the 'output' folder. To generate on multiple songs set line 313 as True and select the dataset in line 316.
 
