@@ -1,7 +1,8 @@
 # MINGUS - Melodic Improvisation Neural Generator Using Seq2seq
 
+##### Author: Vincenzo Madaghiele
 ##### Supervisors: Pasquale Lisena, Raphaël Troncy 
-##### Student: Vincenzo Madaghiele
+
 
 ## Project Description
 
