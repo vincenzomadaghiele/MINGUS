@@ -128,7 +128,16 @@ After reading the midi file each melody is split into a pitch and duration seque
 $P$ is the pitch vector containing the midi number for each note and $D$ is a vector storing the duration of each note of the melody. The $R$ character in $P$ is the code for a rest. The duration value is extracted by sampling each measure of the midi file into 96 equally sized parts and assigning to each note the closest duration from a series of possible duration values chosen in advance; for example, the "quarter note" value is assigned to notes whose duration is closer to $measure \ duration \ [s] / 96 * 24$. In this specific case the choice to divide a measure into 96 equal parts allows for representation precision up to 8th note triplets and dotted 16th notes. By using a greater number of samples it would be possible to represent more precisely many different duration values. This method of time division ensures flexibility to different music styles which could require the use of more complex time divisions such as quituplets of septuplets. 
 
 This procedure was applied to all the midi files in the dataset. After converting them into arrays, the frequency with which each unique pitch and duration value appears in the whole dataset has been calculated, and the values with very low frequency have been excluded from the data. 
-The resulting arrays were then split into three subsets for training (70\%), validation (10\%) and testing (20\%). The next step is melody segmentation: language models are trained on batches of phrases with a maximum fixed length so also the training of MINGUS was done on batches of musical phrases. In order to divide each midi song into meaningful musical phrases the songs were split either when a long rest was encountered (long rests generally mark the end of a musical phrase) or when the maximum sequence length of 35 notes has been reached. The threshold for the long rest duration and the sequence length have been chosen experimentally by trial and error. The long rest durations are all of the durations that are greater than a quarter note triplet. By experimenting it has been found that a different choice of maximum duration, if not extreme, does not have much influence on the result, while the sequence length has a greater effect on the result. Another interesting observation is that the long rest must be included into the musical segment, otherwise the model will not learn the function of rests.
+The resulting arrays were then split into three subsets for training (70\%), validation (10\%) and testing (20\%). The next step is melody segmentation: language models are trained on batches of phrases with a maximum fixed length so also the training of MINGUS was done on batches of musical phrases. In order to divide each midi song into meaningful musical phrases the songs were split either when a long rest was encountered (long rests generally mark the end of a musical phrase) or when the maximum sequence length of 35 notes has been reached. An example of segmentation can be seen in figure \ref{fig:segmentation}, in which the different melodic segment are highlighted in different colors.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{report-2/fig/segmentation.png}
+    \caption{Example of melody segmentation, from Charlie Parker improvisation on Donna Lee, Weimar Jazz DB} 
+    \label{fig:segmentation}
+\end{figure}
+
+The threshold for the long rest duration and the sequence length have been chosen experimentally by trial and error. The long rest durations are all of the durations that are greater than a quarter note triplet. By experimenting it has been found that a different choice of maximum duration, if not extreme, does not have much influence on the result, while the sequence length has a greater effect on the result. Another interesting observation is that the long rest must be included into the musical segment, otherwise the model will not learn the function of rests.
 After the segmentation is complete all of the melodies that are shorter than 35 tokens are padded to that length with specific "pad" tokens. The 35-token sequences are then grouped into batches of 20 melodies for training and 10 melodies for validation and testing; they are then encoded and converted into tensors ready for network input. 
 
 In order to obtain a bigger dataset some data augmentation techniques were applied to the input data. To augment the pitch data each pitch value was transposed a semitone up or down and the resulting transposed midi files were then added to the datasets. It is not possible to augment duration data, because modifying the duration of music makes the resulting melodies not realistic. 
@@ -141,7 +150,7 @@ The entire architecture used in this experiment is shown in figure \ref{fig:mode
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{report-2/fig/MINGUS_net_model.png}
+    \includegraphics[width=0.8\textwidth]{report-2/fig/MINGUS_net_model.png}
     \caption{MINGUS model architecture 
     \label{fig:model architecture}}
 \end{figure}
