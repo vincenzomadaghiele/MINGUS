@@ -31,9 +31,12 @@ After downloading this repository, run the following code in the terminal to ins
 $ conda create --name <env> --file requirements.txt
 ```
 
+### Training
 To re-train the model run the script MINGUS_train.py. Choose the dataset by typing the name of the folder containing the midi files in line 35. The trained models will be saved in the 'models' folder.
 
+### Evaluation
 To evaluate the model run the script MINGUS_eval.py. Choose the dataset by typing the name of the folder containing the midi files in line 52. Choose the trained pitch and duration models from the 'models' folder and type their name in line 106 and 122. The metrics results will be saved as a json file in the 'metrics' folder.
 
+### Generation
 To generate on a song run the script MINGUS_generate. Choose the dataset by typing the name of the folder containing the midi files in line 210. Choose the trained pitch and duration models from the 'models' folder and type their name in line 260 and 276. Set the number of notes to generate at line 290. The generated midi file will be saved in the 'output' folder. To generate on multiple songs set line 313 as True and select the dataset in line 316.
 
