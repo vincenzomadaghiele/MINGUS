@@ -257,7 +257,7 @@ if __name__ == '__main__':
                                          nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHpitch = 'models/modelPitch_10epochs_wjazz_segmented.pt'
+    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_w_jazz.pt'
     modelPitch_loaded.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -273,7 +273,7 @@ if __name__ == '__main__':
                                             nlayers, src_pad_idx, device, dropout).to(device)
 
     # Import model
-    savePATHduration = 'models/modelDuration_10epochs_wjazz_segmented.pt'
+    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_w_jazz.pt'
     modelDuration_loaded.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -281,11 +281,11 @@ if __name__ == '__main__':
     
     bptt = 35
     #specify the path
-    f = 'data/w_jazz/MilesDavis_Oleo-1_FINAL.mid'
+    f = 'data/w_jazz/JohnColtrane_Mr.P.C._FINAL.mid'
     melody4gen_pitch, melody4gen_duration, dur_dict, song_properties = dataset.readMIDI(f)
     melody4gen_pitch, melody4gen_duration = onlyDict(melody4gen_pitch, melody4gen_duration, vocabPitch, vocabDuration)
-    melody4gen_pitch = melody4gen_pitch[:80]
-    melody4gen_duration = melody4gen_duration[:80]
+    melody4gen_pitch = melody4gen_pitch[:41]
+    melody4gen_duration = melody4gen_duration[:41]
     
     notes2gen = 80 # number of new notes to generate
     temp = 1 # degree of randomness of the decision (creativity of the model)
