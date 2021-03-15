@@ -33,7 +33,7 @@ if __name__ == '__main__':
     
     dataset_folder = "data"
     dataset_name = "w_jazz"
-    pitch_path = dataset_folder +'/'+dataset_name+'/'
+    pitch_path = dataset_folder + '/' + dataset_name + '/'
     
     datasetPitch = dataset.ImprovPitchDataset(pitch_path, 20)
     X_pitch = datasetPitch.getData()
