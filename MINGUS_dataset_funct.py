@@ -35,7 +35,7 @@ class ImprovPitchDataset(Dataset):
         #computing frequency of each note
         freq = dict(Counter(notes_))
         frequent_notes = [note_ for note_, count in freq.items() if count>=freq_threshold]
-        print("number of frequent pithces (more than ", freq_threshold, " times): ", (len(frequent_notes)))
+        print("number of frequent pitches (more than ", freq_threshold, " times): ", (len(frequent_notes)))
         
         # prepare new musical files which contain only the top frequent notes
         new_music=[]
