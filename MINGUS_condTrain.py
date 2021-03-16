@@ -193,6 +193,7 @@ if __name__ == '__main__':
     # substitute for chord representation compatibility between music21 and WjazzDB
     new_unique_chords = []
     WjazzToMusic21 = {}
+    WjazzToChordComposition = {}
     for chord in unique_chords:
         chord_components = [char for char in chord]
         for i in range(len(chord_components)):
@@ -206,39 +207,93 @@ if __name__ == '__main__':
             if i == 1 and chord_components[i] == 'b':
                 chord_components[i] = '-'
             # change each 9# or 11# or 13# to #9 or #11 or #13
-            if (chord_components[i] == '#' or chord_components[i] == 'b') and (chord_components[i-1] == '9' or chord_components[i-1] == '11' or chord_components[i-1] == '13'):
-                alteration = chord_components[i]
-                degree = chord_components[i-1]
-                chord_components[i-1] = alteration
-                chord_components[i] = degree
+            if (chord_components[i] == '#' or chord_components[i] == 'b') and (chord_components[i-1] == '9' or (chord_components[i-1] == '1' and chord_components[i-2] == '1') or (chord_components[i-1] == '3' and chord_components[i-2] == '1')):
+                if chord_components[i-1] == '9':
+                    alteration = chord_components[i]
+                    degree = chord_components[i-1]
+                    chord_components[i-1] = alteration
+                    chord_components[i] = degree
+                else:
+                    alteration = chord_components[i]
+                    dx = chord_components[i-2]
+                    ux = chord_components[i-1]
+                    chord_components[i-2] = alteration
+                    chord_components[i-1] = dx
+                    chord_components[i] = ux
         # substitute 'alt' with '5#'
         if len(chord) > 3:
             if chord[-3:] == 'alt':
                 chord_components[1] = '+'
                 chord_components[2] = '7'
                 del chord_components[3:]
+            if chord[-4:] == 'sus7':
+                chord_components[-4] = '7'
+                chord_components[-3:] = 'sus'
+            if chord[-5:] == 'sus79':
+                chord_components[-5] = '7'
+                chord_components[-4:] = 'sus'
+            if chord[-3:] == 'j79':
+                chord_components[-3:] = 'M7'
+            if chord[-6:] == 'j7911#':
+                chord_components[-6:] = 'M7#11'
         
         # reassemble chord
         new_chord_name = ''
         for component in chord_components:
             new_chord_name += component
+            
+        # special cases
+        if chord == 'C-/Bb':
+            new_chord_name = 'Cm/B-'
+        if chord == 'Eb/Bb':
+            new_chord_name = 'E-/B-' # MAKE THIS GENERAL 
+        if chord == 'C-69':
+            new_chord_name = 'Cm9'
+        if chord == 'Gbj79':
+            new_chord_name = 'G-M7'
+
+        
         new_unique_chords.append(new_chord_name)
         
+        print(chord)
+        print(new_chord_name)
+        
         if new_chord_name == 'NC':
-            pass
+            pitchNames = []
         else:
-            print(chord)
-            print(new_chord_name)
             h = m21.harmony.ChordSymbol(new_chord_name)
             pitchNames = [str(p) for p in h.pitches]
-            print('%-10s%s' % (new_chord_name, '[' + (', '.join(pitchNames)) + ']'))
+        
+        print('%-10s%s' % (new_chord_name, '[' + (', '.join(pitchNames)) + ']'))
+        
+        # Update dictionaries
+        WjazzToMusic21[chord] = new_chord_name
+        WjazzToChordComposition[chord] = pitchNames
     
     
     #%%
     
-    h = m21.harmony.ChordSymbol('C+7')
+    chord = 'G7913#'
+    chord_components = [char for char in chord]
+    if (chord_components[i] == '#' or chord_components[i] == 'b') and (chord_components[i-1] == '9' or (chord_components[i-1] == '1' and chord_components[i-2] == '1') or (chord_components[i-1] == '3' and chord_components[i-2] == '1')):
+        if chord_components[i-1] == '9':
+            alteration = chord_components[i]
+            degree = chord_components[i-1]
+            chord_components[i-1] = alteration
+            chord_components[i] = degree
+        else:
+            alteration = chord_components[i]
+            dx = chord_components[i-2]
+            ux = chord_components[i-1]
+            chord_components[i-2] = alteration
+            chord_components[i-1] = dx
+            chord_components[i] = ux
+            
+        
+    #%%
+    h = m21.harmony.ChordSymbol('G/Eb')
     pitchNames = [str(p) for p in h.pitches]
-    print('%-10s%s' % ('C+7', '[' + (', '.join(pitchNames)) + ']'))
+    print('%-10s%s' % ('G/Eb', '[' + (', '.join(pitchNames)) + ']'))
     
     
     #%% Data augmentation
