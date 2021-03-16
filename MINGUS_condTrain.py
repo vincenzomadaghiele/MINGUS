@@ -191,9 +191,13 @@ if __name__ == '__main__':
                 unique_chords.append(chord)
     
     # substitute for chord representation compatibility between music21 and WjazzDB
+    # to do this I have extracted all unique chords and operated some simplification
+    # to the chord notes in order for them to be recognized by music21
     new_unique_chords = []
+    WjazzChords = []
     WjazzToMusic21 = {}
     WjazzToChordComposition = {}
+    WjazzToMidiChords = {}
     for chord in unique_chords:
         chord_components = [char for char in chord]
         for i in range(len(chord_components)):
@@ -220,6 +224,8 @@ if __name__ == '__main__':
                     chord_components[i-2] = alteration
                     chord_components[i-1] = dx
                     chord_components[i] = ux
+            if chord_components[i] == 'b' and chord_components[i-2] == '/':
+                chord_components[i] = '-'
         # substitute 'alt' with '5#'
         if len(chord) > 3:
             if chord[-3:] == 'alt':
@@ -236,7 +242,14 @@ if __name__ == '__main__':
                 chord_components[-3:] = 'M7'
             if chord[-6:] == 'j7911#':
                 chord_components[-6:] = 'M7#11'
-        
+            if chord[-3:] == '-69':
+                chord_components[-3:] = 'm9'
+            if chord[-3:] == '-79':
+                chord_components[-3:] = 'm7'
+            if chord[-5:] == '-7911':
+                chord_components[-5:] = 'm7'
+            if chord[-7:] == 'sus7913':
+                chord_components[-7:] = '7sus'
         # reassemble chord
         new_chord_name = ''
         for component in chord_components:
@@ -251,13 +264,21 @@ if __name__ == '__main__':
             new_chord_name = 'Cm9'
         if chord == 'Gbj79':
             new_chord_name = 'G-M7'
+        if chord == 'Eb-79/Ab':
+            new_chord_name = 'E-m7'
+        if chord == 'Aj7911#/Ab':
+            new_chord_name = 'AM7#11/A-'
+        if chord == 'Db-69/Ab':
+            new_chord_name = 'D-m9/A-'
+        if chord == 'Db-69/Db':
+            new_chord_name = 'D-m9/D-'
+        if chord == 'Dbj7911#/C':
+            new_chord_name = 'D-M7#11/C'
+        if chord == 'C-j7913':
+            new_chord_name = 'CmM7'
+        if chord == 'Bb-7913':
+            new_chord_name = 'B-m7'
 
-        
-        new_unique_chords.append(new_chord_name)
-        
-        print(chord)
-        print(new_chord_name)
-        
         if new_chord_name == 'NC':
             pitchNames = []
         else:
@@ -266,9 +287,81 @@ if __name__ == '__main__':
         
         print('%-10s%s' % (new_chord_name, '[' + (', '.join(pitchNames)) + ']'))
         
+        
+        midiChord = []
+        multi_hot = np.zeros(12)
+        for p in pitchNames:
+            
+            # midi conversion
+            c = m21.pitch.Pitch(p)
+            midiChord.append(c.midi)
+            
+            # multi-hot
+            # C C#/D- D D#/E- E E#/F F#/G- G G#/A- A A#/B- B 
+            # 0   1   2   3   4   5    6   7   8   9  10   11
+            if p[0] == 'C' and p[1] == '-':
+                multi_hot[11] = 1
+            elif p[0] == 'C' and p[1] == '#':
+                multi_hot[1] = 1
+            elif p[0] == 'C' :
+                multi_hot[0] = 1
+            
+            elif p[0] == 'D' and p[1] == '-':
+                multi_hot[1] = 1
+            elif p[0] == 'D' and p[1] == '#':
+                multi_hot[3] = 1
+            elif p[0] == 'D' :
+                multi_hot[2] = 1
+            
+            elif p[0] == 'E' and p[1] == '-':
+                multi_hot[3] = 1
+            elif p[0] == 'E' and p[1] == '#':
+                multi_hot[5] = 1
+            elif p[0] == 'E' :
+                multi_hot[4] = 1
+            
+            elif p[0] == 'F' and p[1] == '-':
+                multi_hot[4] = 1
+            elif p[0] == 'F' and p[1] == '#':
+                multi_hot[6] = 1
+            elif p[0] == 'F' :
+                multi_hot[7] = 1
+            
+            elif p[0] == 'G' and p[1] == '-':
+                multi_hot[6] = 1
+            elif p[0] == 'G' and p[1] == '#':
+                multi_hot[8] = 1
+            elif p[0] == 'G' :
+                multi_hot[7] = 1
+            
+            elif p[0] == 'A' and p[1] == '-':
+                multi_hot[8] = 1
+            elif p[0] == 'A' and p[1] == '#':
+                multi_hot[10] = 1
+            elif p[0] == 'A' :
+                multi_hot[9] = 1
+            
+            elif p[0] == 'B' and p[1] == '-':
+                multi_hot[10] = 1
+            elif p[0] == 'B' and p[1] == '#':
+                multi_hot[0] = 1
+            elif p[0] == 'B' :
+                multi_hot[11] = 1
+            
+
         # Update dictionaries
+        new_unique_chords.append(new_chord_name)
         WjazzToMusic21[chord] = new_chord_name
         WjazzToChordComposition[chord] = pitchNames
+        WjazzToMidiChords[chord] = midiChord
+        
+        NewChord = {}
+        NewChord['Wjazz name'] = chord
+        NewChord['music21 name'] = new_chord_name
+        NewChord['chord composition'] = pitchNames
+        NewChord['midi chord composition'] = midiChord
+        NewChord['one-hot encoding'] = multi_hot.tolist()
+        WjazzChords.append(NewChord)
     
     
     #%%
