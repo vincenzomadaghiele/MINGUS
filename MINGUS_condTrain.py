@@ -27,7 +27,42 @@ TRAIN_BATCH_SIZE = 20
 EVAL_BATCH_SIZE = 10
 BPTT = 128 # length of one note sequence (use powers of 2 for even divisions)
 AUGMENTATION = False
+SEGMENTATION = True
 
+
+def pad(data):
+    '''
+
+    Parameters
+    ----------
+    data : numpy ndarray or list
+        list of sequences to be padded.
+
+    Returns
+    -------
+    padded : numpy ndarray or list
+        list of padded sequences.
+
+    '''
+    # from: https://pytorch.org/text/_modules/torchtext/data/field.html
+    data = list(data)
+    # calculate max lenght
+    max_len = max(len(x) for x in data)
+    # Define padding tokens
+    pad_token = '<pad>'
+    #init_token = '<sos>'
+    #eos_token = '<eos>'
+    # pad each sequence in the data to max_lenght
+    padded, lengths = [], []
+    for x in data:
+        padded.append(
+             #([init_token])
+             #+ 
+             list(x[:max_len])
+             #+ ([eos_token])
+             + [pad_token] * max(0, max_len - len(x)))
+    lengths.append(len(padded[-1]) - max(0, max_len - len(x)))
+    return padded
 
 def batchify(data, bsz, dict_to_ix, device):
     '''
@@ -48,7 +83,11 @@ def batchify(data, bsz, dict_to_ix, device):
 
     '''
     
-    padded_num = [[dict_to_ix[x] for x in ex] for ex in data]
+    if SEGMENTATION:
+        padded = pad(data)
+        padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
+    else:
+        padded_num = [[dict_to_ix[x] for x in ex] for ex in data]
     
     data = torch.tensor(padded_num, dtype=torch.long)
     data = data.contiguous()
@@ -59,8 +98,104 @@ def batchify(data, bsz, dict_to_ix, device):
     data = data.narrow(0, 0, nbatch * bsz)
     # Evenly divide the data across the bsz batches.
     data = data.view(bsz, -1).t().contiguous()
-    
+        
     return data.to(device)
+
+def separateSeqs(seq_pitch, seq_duration,
+                 seq_chord, seq_bass, seq_beat,
+                 segment_length = 35):
+    # Separate the songs into single melodies in order to avoid 
+    # full batches of pad tokens
+        
+    tot_pitch = []
+    tot_duration = []
+    tot_chord = []
+    tot_bass = []
+    tot_beat = []
+
+    new_pitch = []
+    new_duration = []
+    new_chord = []
+    new_bass = []
+    new_beat = []
+    
+    long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
+                    'dot 8th', 'half note triplet', 'quarter note triplet']
+    
+    #long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
+    
+    counter = 0
+    for i in range(len(seq_pitch)):
+        
+        new_pitch.append(seq_pitch[i])
+        new_duration.append(seq_duration[i])
+        new_chord.append(seq_chord[i])
+        new_bass.append(seq_bass[i])
+        new_beat.append(seq_beat[i])
+        
+        counter += 1
+        if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
+            if counter > int(segment_length/3):
+                tot_pitch.append(np.array(new_pitch, dtype=object))
+                tot_duration.append(np.array(new_duration, dtype=object))
+                tot_chord.append(np.array(new_chord, dtype=object))
+                tot_bass.append(np.array(new_bass, dtype=object))
+                tot_beat.append(np.array(new_beat, dtype=object))
+                new_pitch = []
+                new_duration = []
+                new_chord = []
+                new_bass = []
+                new_beat = []
+                counter = 0
+        elif counter == segment_length:
+            tot_pitch.append(np.array(new_pitch, dtype=object))
+            tot_duration.append(np.array(new_duration, dtype=object))
+            tot_chord.append(np.array(new_chord, dtype=object))
+            tot_bass.append(np.array(new_bass, dtype=object))
+            tot_beat.append(np.array(new_beat, dtype=object))
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            counter = 0
+            
+    return tot_pitch, tot_duration, tot_chord, tot_bass, tot_beat
+    
+def segmentDataset(pitch_data, duration_data, 
+                   chord_data, bass_data, beat_data,
+                   segment_length = 35):
+    
+    pitch_segmented = []
+    duration_segmented = []
+    chord_segmented = []
+    bass_segmented = []
+    beat_segmented = []
+    for i in range(len(pitch_data)):
+        pitch_sep, duration_sep, chord_sep, bass_sep, beat_sep = separateSeqs(pitch_data[i], 
+                                                                              duration_data[i], 
+                                                                              chord_data[i],
+                                                                              bass_data[i],
+                                                                              beat_data[i], 
+                                                                              segment_length)
+        for seq in pitch_sep:
+            pitch_segmented.append(seq)
+        for seq in duration_sep:
+            duration_segmented.append(seq)
+        for seq in chord_sep:
+            chord_segmented.append(seq)
+        for seq in bass_sep:
+            bass_segmented.append(seq)
+        for seq in beat_sep:
+            beat_segmented.append(seq)
+            
+    pitch_segmented = np.array(pitch_segmented, dtype=object)
+    duration_segmented = np.array(duration_segmented, dtype=object)
+    chord_segmented = np.array(duration_segmented, dtype=object)
+    bass_segmented = np.array(duration_segmented, dtype=object)
+    beat_segmented = np.array(duration_segmented, dtype=object)
+        
+    return pitch_segmented, duration_segmented, chord_segmented, bass_segmented, beat_segmented
 
 
 if __name__ == '__main__':
@@ -407,41 +542,81 @@ if __name__ == '__main__':
         # training augmentation
         new_pitch = []
         new_duration = []
+        new_chord = []
+        new_bass = []
+        new_beat = []
         for aug in range (1,augmentation_const):
             for i in range(pitch_train.shape[0]):
-                new_pitch.append(pitch_train[i,:] + aug)
-                new_duration.append(duration_train[i,:])
-                new_pitch.append(pitch_train[i,:] - aug)
-                new_duration.append(duration_train[i,:])
+                new_pitch.append(pitch_train[i] + aug) # SOLVE: CANNOT SUM BECAUSE OF RESTS
+                new_duration.append(duration_train[i])
+                new_chord.append(chord_train[i] + aug)
+                new_bass.append(bass_train[i] + aug)
+                new_beat.append(beat_train[i])
+                
+                new_pitch.append(pitch_train[i] - aug)
+                new_duration.append(duration_train[i])
+                new_chord.append(chord_train[i] - aug)
+                new_bass.append(bass_train[i] - aug)
+                new_beat.append(beat_train[i])
         
         pitch_train = np.array(new_pitch)
         duration_train = np.array(new_duration)
+        chord_train = np.array(new_chord)
+        bass_train = np.array(new_bass)
+        beat_train = np.array(new_beat)
         
         # validation augmentation
         new_pitch = []
         new_duration = []
+        new_chord = []
+        new_bass = []
+        new_beat = []
         for aug in range (1,augmentation_const):
             for i in range(pitch_validation.shape[0]):
-                new_pitch.append(pitch_validation[i,:] + aug)
-                new_duration.append(duration_validation[i,:])
-                new_pitch.append(pitch_validation[i,:] - aug)
-                new_duration.append(duration_validation[i,:])
+                new_pitch.append(pitch_validation[i] + aug)
+                new_duration.append(duration_validation[i])
+                new_chord.append(chord_validation[i] + aug)
+                new_bass.append(bass_validation[i] + aug)
+                new_beat.append(beat_validation[i])
+                
+                new_pitch.append(pitch_validation[i] - aug)
+                new_duration.append(duration_validation[i])
+                new_chord.append(chord_validation[i] - aug)
+                new_bass.append(bass_validation[i] - aug)
+                new_beat.append(beat_validation[i])
         
         pitch_validation = np.array(new_pitch)
         duration_validation = np.array(new_duration)
+        chord_validation = np.array(new_chord)
+        bass_validation = np.array(new_bass)
+        beat_validation = np.array(new_beat)
         
         # test augmentation
         new_pitch = []
         new_duration = []
+        new_chord = []
+        new_bass = []
+        new_beat = []
         for aug in range (1,augmentation_const):
             for i in range(pitch_test.shape[0]):
-                new_pitch.append(pitch_test[i,:] + aug)
-                new_duration.append(duration_test[i,:])
-                new_pitch.append(pitch_test[i,:] - aug)
-                new_duration.append(duration_test[i,:])
+                new_pitch.append(pitch_test[i] + aug)
+                new_duration.append(duration_test[i])
+                new_chord.append(chord_test[i] + aug)
+                new_bass.append(bass_test[i] + aug)
+                new_beat.append(beat_test[i])
+                
+                new_pitch.append(pitch_test[i] - aug)
+                new_duration.append(duration_test[i])
+                new_chord.append(chord_test[i] - aug)
+                new_bass.append(bass_test[i] - aug)
+                new_beat.append(beat_test[i])
         
         pitch_test = np.array(new_pitch)
         duration_test = np.array(new_duration)
+        chord_test = np.array(new_chord)
+        bass_test = np.array(new_bass)
+        beat_test = np.array(new_beat)
+        
         
         # check for out of threshold pitch
         pitch_train[pitch_train > 127] = 127
@@ -450,55 +625,119 @@ if __name__ == '__main__':
         pitch_validation[pitch_validation < 0] = 0
         pitch_test[pitch_test > 127] = 127
         pitch_test[pitch_test < 0] = 0
+        
+        # probably not necessary with chords
+        
+        bass_train[bass_train > 127] = 127
+        bass_train[bass_train < 0] = 0
+        bass_validation[bass_validation > 127] = 127
+        bass_validation[bass_validation < 0] = 0
+        bass_test[bass_test > 127] = 127
+        bass_test[bass_test < 0] = 0
     
-    '''
+    
     #%% Reshape according to sequence length
+    # At the end of this step the datasets should be composed 
+    # of equal length melodies
+    # SEGMENTATION --> padded segmented melodies
+    # !SEGMENTATION --> equal length not padded note sequences
     
-    print('Reshaping...')
-    
-    new_pitch = []
-    new_duration = []
-    for i in range(pitch_train.shape[0]):
-        for j in range(int(pitch_train.shape[1]/BPTT)):
-            new_pitch.append(pitch_train[i, j * BPTT:(j+1) * BPTT])
-            new_duration.append(duration_train[i, j * BPTT:(j+1) * BPTT])
+    if SEGMENTATION:
+        print('Melody segmentation...')
+        
+        pitch_train, duration_train, chord_train, bass_train, beat_train = segmentDataset(pitch_train, 
+                                                                                          duration_train, 
+                                                                                          chord_train,
+                                                                                          bass_train,
+                                                                                          beat_train,
+                                                                                          BPTT)
+        pitch_validation, duration_validation, chord_validation, bass_validation, beat_validation = segmentDataset(pitch_validation, 
+                                                                                                                   duration_validation, 
+                                                                                                                   chord_validation,
+                                                                                                                   bass_validation,
+                                                                                                                   beat_validation,
+                                                                                                                   BPTT)
+        pitch_test, duration_test, chord_test, bass_test, beat_test = segmentDataset(pitch_test, 
+                                                                                     duration_test, 
+                                                                                     chord_test,
+                                                                                     bass_test,
+                                                                                     beat_test,
+                                                                                     BPTT)
 
-    pitch_train = np.array(new_pitch)
-    duration_train = np.array(new_duration)
+    else:
+        print('Reshaping...')
+        
+        new_pitch = []
+        new_duration = []
+        new_chord = []
+        new_bass = []
+        new_beat = []
+        for i in range(pitch_train.shape[0]):
+            for j in range(int(len(pitch_train[i])/BPTT)):
+                new_pitch.append(pitch_train[j * BPTT:(j+1) * BPTT])
+                new_duration.append(duration_train[j * BPTT:(j+1) * BPTT])
+                new_chord.append(chord_train[j * BPTT:(j+1) * BPTT])
+                new_bass.append(bass_train[j * BPTT:(j+1) * BPTT])
+                new_beat.append(beat_train[j * BPTT:(j+1) * BPTT])
     
-    # reshape validation
-    new_pitch = []
-    new_duration = []
-    for i in range(pitch_validation.shape[0]):
-        for j in range(int(pitch_validation.shape[1]/BPTT)):
-            new_pitch.append(pitch_validation[i, j * BPTT:(j+1) * BPTT])
-            new_duration.append(duration_validation[i, j * BPTT:(j+1) * BPTT])
-
-    pitch_validation = np.array(new_pitch)
-    duration_validation = np.array(new_duration)
+        pitch_train = np.array(new_pitch)
+        duration_train = np.array(new_duration)
+        chord_train = np.array(new_chord)
+        bass_train = np.array(new_bass)
+        beat_train = np.array(new_beat)
+        
+        # reshape validation
+        new_pitch = []
+        new_duration = []
+        new_chord = []
+        new_bass = []
+        new_beat = []
+        for i in range(pitch_validation.shape[0]):
+            for j in range(int(len(pitch_validation[i])/BPTT)):
+                new_pitch.append(pitch_validation[j * BPTT:(j+1) * BPTT])
+                new_duration.append(duration_validation[j * BPTT:(j+1) * BPTT])
+                new_chord.append(chord_validation[j * BPTT:(j+1) * BPTT])
+                new_bass.append(bass_validation[j * BPTT:(j+1) * BPTT])
+                new_beat.append(beat_validation[j * BPTT:(j+1) * BPTT])
     
-    # reshape test
-    new_pitch = []
-    new_duration = []
-    for i in range(pitch_test.shape[0]):
-        for j in range(int(pitch_test.shape[1]/BPTT)):
-            new_pitch.append(pitch_test[i, j * BPTT:(j+1) * BPTT])
-            new_duration.append(duration_test[i, j * BPTT:(j+1) * BPTT])
-
-    pitch_test = np.array(new_pitch)
-    duration_test = np.array(new_duration)
+        pitch_validation = np.array(new_pitch)
+        duration_validation = np.array(new_duration)
+        chord_validation = np.array(new_chord)
+        bass_validation = np.array(new_bass)
+        beat_validation = np.array(new_beat)
+        
+        # reshape test
+        new_pitch = []
+        new_duration = []
+        new_chord = []
+        new_bass = []
+        new_beat = []
+        for i in range(pitch_test.shape[0]):
+            for j in range(int(len(pitch_test[i])/BPTT)):
+                new_pitch.append(pitch_test[j * BPTT:(j+1) * BPTT])
+                new_duration.append(duration_test[j * BPTT:(j+1) * BPTT])
+                new_chord.append(chord_test[j * BPTT:(j+1) * BPTT])
+                new_bass.append(bass_test[j * BPTT:(j+1) * BPTT])
+                new_beat.append(beat_test[j * BPTT:(j+1) * BPTT])
+    
+        pitch_test = np.array(new_pitch)
+        duration_test = np.array(new_duration)
+        chord_test = np.array(new_chord)
+        bass_test = np.array(new_bass)
+        beat_test = np.array(new_beat)
+    
     
     
     #%% TOKENIZE AND BATCHIFY
     
-    
+    '''
     pitch_train = pitch_train[0:1000,:]
     pitch_validation = pitch_validation[0:1000,:]
     pitch_test = pitch_test[0:1000,:]
     duration_train = duration_train[0:1000,:]
     duration_validation = duration_validation[0:1000,:]
     duration_test = duration_test[0:1000,:]
-    
+    '''
     
     print('Batching...')
     
@@ -509,4 +748,4 @@ if __name__ == '__main__':
     train_duration_batched = batchify(duration_train, TRAIN_BATCH_SIZE, duration_to_ix, device)
     val_duration_batched = batchify(duration_validation, EVAL_BATCH_SIZE, duration_to_ix, device)
     test_duration_batched = batchify(duration_test, EVAL_BATCH_SIZE, duration_to_ix, device)    
-    '''
+    
