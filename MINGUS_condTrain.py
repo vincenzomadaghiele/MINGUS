@@ -116,11 +116,15 @@ if __name__ == '__main__':
     
     #%% COMPUTE VOCABS
     
+    print('Computing vocabs...')
+    
     # use all pitch values 0-127
+    # vocabPitch is used to encode also bass and chord values
     vocabPitch = {} 
     for i in range(0,128):
         vocabPitch[i] = i
     vocabPitch[128] = 'R'
+    vocabPitch[129] = '<pad>'
     # inverse dictionary
     pitch_to_ix = {v: k for k, v in vocabPitch.items()} 
     
@@ -138,6 +142,7 @@ if __name__ == '__main__':
     duration_to_ix['half note triplet'] = 9
     duration_to_ix['quarter note triplet'] = 10
     duration_to_ix['8th note triplet'] = 11
+    duration_to_ix['pad'] = 12
     # inverse dictionary
     vocabDuration = {v: k for k, v in duration_to_ix.items()}
     
@@ -145,31 +150,9 @@ if __name__ == '__main__':
     vocabBeat = {} 
     for i in range(0,4):
         vocabBeat[i] = i
+    vocabBeat[5] = '<pad>'
     # inverse dictionary
-    beat_to_ix = {v: k for k, v in vocabBeat.items()} 
-    
-    
-    #%% PRE-PROCESSING
-    
-    print('Pre-processing...')
-    # Convert lists to array 
-
-    pitch_train = np.array(pitch_train)
-    pitch_validation = np.array(pitch_validation)
-    pitch_test = np.array(pitch_test)
-    
-    duration_train = np.array(duration_train)
-    duration_validation = np.array(duration_validation)
-    duration_test = np.array(duration_test)
-    
-    bass_train = np.array(bass_train)
-    bass_validation = np.array(bass_validation)
-    bass_test = np.array(bass_test)
-    
-    beat_train = np.array(beat_train)
-    beat_validation = np.array(beat_validation)
-    beat_test = np.array(beat_test)
-    
+    beat_to_ix = {v: k for k, v in vocabBeat.items()}     
     
     # BUILD CHORD DICTIONARY
     
@@ -285,8 +268,7 @@ if __name__ == '__main__':
             h = m21.harmony.ChordSymbol(new_chord_name)
             pitchNames = [str(p) for p in h.pitches]
         
-        print('%-10s%s' % (new_chord_name, '[' + (', '.join(pitchNames)) + ']'))
-        
+        #print('%-10s%s' % (new_chord_name, '[' + (', '.join(pitchNames)) + ']'))
         
         midiChord = []
         multi_hot = np.zeros(12)
@@ -347,7 +329,7 @@ if __name__ == '__main__':
                 multi_hot[0] = 1
             elif p[0] == 'B' :
                 multi_hot[11] = 1
-            
+        
 
         # Update dictionaries
         new_unique_chords.append(new_chord_name)
@@ -364,29 +346,52 @@ if __name__ == '__main__':
         WjazzChords.append(NewChord)
     
     
-    #%%
+    #%% PRE-PROCESSING
     
-    chord = 'G7913#'
-    chord_components = [char for char in chord]
-    if (chord_components[i] == '#' or chord_components[i] == 'b') and (chord_components[i-1] == '9' or (chord_components[i-1] == '1' and chord_components[i-2] == '1') or (chord_components[i-1] == '3' and chord_components[i-2] == '1')):
-        if chord_components[i-1] == '9':
-            alteration = chord_components[i]
-            degree = chord_components[i-1]
-            chord_components[i-1] = alteration
-            chord_components[i] = degree
-        else:
-            alteration = chord_components[i]
-            dx = chord_components[i-2]
-            ux = chord_components[i-1]
-            chord_components[i-2] = alteration
-            chord_components[i-1] = dx
-            chord_components[i] = ux
-            
-        
-    #%%
-    h = m21.harmony.ChordSymbol('G/Eb')
-    pitchNames = [str(p) for p in h.pitches]
-    print('%-10s%s' % ('G/Eb', '[' + (', '.join(pitchNames)) + ']'))
+    print('Pre-processing...')
+    # Convert lists to array 
+
+    pitch_train = np.array(pitch_train)
+    pitch_validation = np.array(pitch_validation)
+    pitch_test = np.array(pitch_test)
+    
+    duration_train = np.array(duration_train)
+    duration_validation = np.array(duration_validation)
+    duration_test = np.array(duration_test)
+   
+    new_chord_train = []
+    for song in chord_train:
+        new_song_chords = []
+        for chord in song:
+            new_song_chords.append(WjazzToMidiChords[chord])
+        new_chord_train.append(new_song_chords)
+    
+    new_chord_validation = []
+    for song in chord_validation:
+        new_song_chords = []
+        for chord in song:
+            new_song_chords.append(WjazzToMidiChords[chord])
+        new_chord_validation.append(new_song_chords)
+    
+    new_chord_test = []
+    for song in chord_test:
+        new_song_chords = []
+        for chord in song:
+            new_song_chords.append(WjazzToMidiChords[chord])
+        new_chord_test.append(new_song_chords)
+    
+    chord_train = np.array(new_chord_train)
+    chord_validation = np.array(new_chord_validation)
+    chord_test = np.array(new_chord_test)
+    
+    bass_train = np.array(bass_train)
+    bass_validation = np.array(bass_validation)
+    bass_test = np.array(bass_test)
+    
+    beat_train = np.array(beat_train)
+    beat_validation = np.array(beat_validation)
+    beat_test = np.array(beat_test)
+    
     
     
     #%% Data augmentation
