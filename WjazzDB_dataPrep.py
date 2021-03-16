@@ -147,8 +147,18 @@ if __name__=="__main__":
             # how to represent rest?
             songs.append(song)
     
+    # split into train, validation and test
+    songs_split = {}
+    # train: 70% 
+    songs_split['train'] = songs[:int(len(songs)*0.7)]
+    # train: 10% 
+    songs_split['validation'] = songs[int(len(songs)*0.7)+1:int(len(songs)*0.7)+1+int(len(songs)*0.1)]
+    # train: 20% 
+    songs_split['test'] = songs[int(len(songs)*0.7)+1+int(len(songs)*0.1):]
+    
+    
     # Convert dict to JSON and SAVE IT
     with open('data/WjazzDB.json', 'w') as fp:
-        json.dump(songs, fp, indent=4)
+        json.dump(songs_split, fp, indent=4)
     
     
