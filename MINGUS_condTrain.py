@@ -26,7 +26,7 @@ torch.manual_seed(1)
 TRAIN_BATCH_SIZE = 20
 EVAL_BATCH_SIZE = 10
 BPTT = 128 # length of one note sequence (use powers of 2 for even divisions)
-AUGMENTATION = False
+AUGMENTATION = True
 SEGMENTATION = True
 
 
@@ -537,7 +537,7 @@ if __name__ == '__main__':
         
         print('Data augmentation...')
         # ex. if augmentation_const = 4 the song will be transposed +4 and -4 times
-        augmentation_const = 4 
+        augmentation_const = 2
         
         # training augmentation
         new_pitch = []
@@ -546,17 +546,17 @@ if __name__ == '__main__':
         new_bass = []
         new_beat = []
         for aug in range (1,augmentation_const):
-            for i in range(pitch_train.shape[0]):
-                new_pitch.append(pitch_train[i] + aug) # SOLVE: CANNOT SUM BECAUSE OF RESTS
+            for i in range(pitch_train.shape[0]):                
+                new_pitch.append(pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_train[i]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                 new_duration.append(duration_train[i])
-                new_chord.append(chord_train[i] + aug)
-                new_bass.append(bass_train[i] + aug)
+                new_chord.append([[pitch + aug for pitch in chord] for chord in chord_train[i]])
+                new_bass.append([pitch if pitch is None else pitch + aug for pitch in bass_train[i]])
                 new_beat.append(beat_train[i])
-                
-                new_pitch.append(pitch_train[i] - aug)
+
+                new_pitch.append(pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_train[i])
                 new_duration.append(duration_train[i])
-                new_chord.append(chord_train[i] - aug)
-                new_bass.append(bass_train[i] - aug)
+                new_chord.append([[pitch - aug for pitch in chord] for chord in chord_train[i]])
+                new_bass.append([pitch if pitch is None else pitch - aug for pitch in bass_train[i]])
                 new_beat.append(beat_train[i])
         
         pitch_train = np.array(new_pitch)
@@ -573,16 +573,16 @@ if __name__ == '__main__':
         new_beat = []
         for aug in range (1,augmentation_const):
             for i in range(pitch_validation.shape[0]):
-                new_pitch.append(pitch_validation[i] + aug)
+                new_pitch.append(pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_validation[i]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                 new_duration.append(duration_validation[i])
-                new_chord.append(chord_validation[i] + aug)
-                new_bass.append(bass_validation[i] + aug)
+                new_chord.append([[pitch + aug for pitch in chord] for chord in chord_validation[i]])
+                new_bass.append([pitch if pitch is None else pitch + aug for pitch in bass_validation[i]])
                 new_beat.append(beat_validation[i])
-                
-                new_pitch.append(pitch_validation[i] - aug)
+
+                new_pitch.append(pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_validation[i])
                 new_duration.append(duration_validation[i])
-                new_chord.append(chord_validation[i] - aug)
-                new_bass.append(bass_validation[i] - aug)
+                new_chord.append([[pitch - aug for pitch in chord] for chord in chord_validation[i]])
+                new_bass.append([pitch if pitch is None else pitch - aug for pitch in bass_validation[i]])
                 new_beat.append(beat_validation[i])
         
         pitch_validation = np.array(new_pitch)
@@ -599,16 +599,16 @@ if __name__ == '__main__':
         new_beat = []
         for aug in range (1,augmentation_const):
             for i in range(pitch_test.shape[0]):
-                new_pitch.append(pitch_test[i] + aug)
+                new_pitch.append(pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_test[i]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                 new_duration.append(duration_test[i])
-                new_chord.append(chord_test[i] + aug)
-                new_bass.append(bass_test[i] + aug)
+                new_chord.append([[pitch + aug for pitch in chord] for chord in chord_test[i]])
+                new_bass.append([pitch if pitch is None else pitch + aug for pitch in bass_test[i]])
                 new_beat.append(beat_test[i])
-                
-                new_pitch.append(pitch_test[i] - aug)
+
+                new_pitch.append(pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_test[i])
                 new_duration.append(duration_test[i])
-                new_chord.append(chord_test[i] - aug)
-                new_bass.append(bass_test[i] - aug)
+                new_chord.append([[pitch - aug for pitch in chord] for chord in chord_test[i]])
+                new_bass.append([pitch if pitch is None else pitch - aug for pitch in bass_test[i]])
                 new_beat.append(beat_test[i])
         
         pitch_test = np.array(new_pitch)
@@ -616,24 +616,6 @@ if __name__ == '__main__':
         chord_test = np.array(new_chord)
         bass_test = np.array(new_bass)
         beat_test = np.array(new_beat)
-        
-        
-        # check for out of threshold pitch
-        pitch_train[pitch_train > 127] = 127
-        pitch_train[pitch_train < 0] = 0
-        pitch_validation[pitch_validation > 127] = 127
-        pitch_validation[pitch_validation < 0] = 0
-        pitch_test[pitch_test > 127] = 127
-        pitch_test[pitch_test < 0] = 0
-        
-        # probably not necessary with chords
-        
-        bass_train[bass_train > 127] = 127
-        bass_train[bass_train < 0] = 0
-        bass_validation[bass_validation > 127] = 127
-        bass_validation[bass_validation < 0] = 0
-        bass_test[bass_test > 127] = 127
-        bass_test[bass_test < 0] = 0
     
     
     #%% Reshape according to sequence length
@@ -737,7 +719,7 @@ if __name__ == '__main__':
     duration_train = duration_train[0:1000,:]
     duration_validation = duration_validation[0:1000,:]
     duration_test = duration_test[0:1000,:]
-    '''
+    
     
     print('Batching...')
     
@@ -748,4 +730,4 @@ if __name__ == '__main__':
     train_duration_batched = batchify(duration_train, TRAIN_BATCH_SIZE, duration_to_ix, device)
     val_duration_batched = batchify(duration_validation, EVAL_BATCH_SIZE, duration_to_ix, device)
     test_duration_batched = batchify(duration_test, EVAL_BATCH_SIZE, duration_to_ix, device)    
-    
+    '''
