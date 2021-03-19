@@ -26,11 +26,11 @@ torch.manual_seed(1)
 TRAIN_BATCH_SIZE = 20
 EVAL_BATCH_SIZE = 10
 BPTT = 35 # length of one note sequence (use powers of 2 for even divisions)
-AUGMENTATION = False
+AUGMENTATION = True
 SEGMENTATION = True
 
 
-def pad(data):
+def pad(data, isChord=False):
     '''
 
     Parameters
@@ -49,7 +49,10 @@ def pad(data):
     # calculate max lenght
     max_len = max(len(x) for x in data)
     # Define padding tokens
-    pad_token = '<pad>'
+    if isChord:
+        pad_token = ['<pad>', '<pad>', '<pad>', '<pad>']
+    else:
+        pad_token = '<pad>'
     #init_token = '<sos>'
     #eos_token = '<eos>'
     # pad each sequence in the data to max_lenght
@@ -64,7 +67,7 @@ def pad(data):
     lengths.append(len(padded[-1]) - max(0, max_len - len(x)))
     return padded
 
-def batchify(data, bsz, dict_to_ix, device):
+def batchify(data, bsz, dict_to_ix, device, isChord=False):
     '''
 
     Parameters
@@ -84,20 +87,36 @@ def batchify(data, bsz, dict_to_ix, device):
     '''
     
     if SEGMENTATION:
-        padded = pad(data)
-        padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
+        if isChord:
+            padded = pad(data, isChord)
+            #print(padded)
+            padded_num = [[np.array([dict_to_ix[note] for note in chord])
+                           for chord in sequence] for sequence in padded]
+        else:
+            padded = pad(data)
+            padded_num = [[dict_to_ix[x] for x in ex] for ex in padded]
     else:
-        padded_num = [[dict_to_ix[x] for x in ex] for ex in data]
+        if isChord:
+            padded_num = [[[dict_to_ix[note] for note in chord] 
+                           for chord in sequence] for sequence in data]
+        else:
+            padded_num = [[dict_to_ix[x] for x in ex] for ex in data]
+    
     
     data = torch.tensor(padded_num, dtype=torch.long)
     data = data.contiguous()
-                
+    
+    
     # Divide the dataset into bsz parts.
     nbatch = data.size(0) // bsz
     # Trim off any extra elements that wouldn't cleanly fit (remainders).
     data = data.narrow(0, 0, nbatch * bsz)
     # Evenly divide the data across the bsz batches.
-    data = data.view(bsz, -1).t().contiguous()
+    if isChord:
+        data = data.view(bsz, -1, 4).transpose(0,1).contiguous()
+    else:
+        data = data.view(bsz, -1).t().contiguous()
+    
     
     return data.to(device)
 
@@ -415,72 +434,79 @@ if __name__ == '__main__':
             new_chord_name = 'B-m7'
 
         if new_chord_name == 'NC':
-            pitchNames = []
+            pitchNames = ['R','R','R','R']
+            midiChord = ['R','R','R','R']
+            multi_hot = np.zeros(12)
         else:
             h = m21.harmony.ChordSymbol(new_chord_name)
             pitchNames = [str(p) for p in h.pitches]
-        
-        #print('%-10s%s' % (new_chord_name, '[' + (', '.join(pitchNames)) + ']'))
-        
-        midiChord = []
-        multi_hot = np.zeros(12)
-        for p in pitchNames:
-            
-            # midi conversion
-            c = m21.pitch.Pitch(p)
-            midiChord.append(c.midi)
-            
-            # multi-hot
-            # C C#/D- D D#/E- E E#/F F#/G- G G#/A- A A#/B- B 
-            # 0   1   2   3   4   5    6   7   8   9  10   11
-            if p[0] == 'C' and p[1] == '-':
-                multi_hot[11] = 1
-            elif p[0] == 'C' and p[1] == '#':
-                multi_hot[1] = 1
-            elif p[0] == 'C' :
-                multi_hot[0] = 1
-            
-            elif p[0] == 'D' and p[1] == '-':
-                multi_hot[1] = 1
-            elif p[0] == 'D' and p[1] == '#':
-                multi_hot[3] = 1
-            elif p[0] == 'D' :
-                multi_hot[2] = 1
-            
-            elif p[0] == 'E' and p[1] == '-':
-                multi_hot[3] = 1
-            elif p[0] == 'E' and p[1] == '#':
-                multi_hot[5] = 1
-            elif p[0] == 'E' :
-                multi_hot[4] = 1
-            
-            elif p[0] == 'F' and p[1] == '-':
-                multi_hot[4] = 1
-            elif p[0] == 'F' and p[1] == '#':
-                multi_hot[6] = 1
-            elif p[0] == 'F' :
-                multi_hot[7] = 1
-            
-            elif p[0] == 'G' and p[1] == '-':
-                multi_hot[6] = 1
-            elif p[0] == 'G' and p[1] == '#':
-                multi_hot[8] = 1
-            elif p[0] == 'G' :
-                multi_hot[7] = 1
-            
-            elif p[0] == 'A' and p[1] == '-':
-                multi_hot[8] = 1
-            elif p[0] == 'A' and p[1] == '#':
-                multi_hot[10] = 1
-            elif p[0] == 'A' :
-                multi_hot[9] = 1
-            
-            elif p[0] == 'B' and p[1] == '-':
-                multi_hot[10] = 1
-            elif p[0] == 'B' and p[1] == '#':
-                multi_hot[0] = 1
-            elif p[0] == 'B' :
-                multi_hot[11] = 1
+            # The following bit is added 
+            # just for parameter modeling purposes
+            if len(pitchNames) < 4:
+                hd = m21.harmony.ChordStepModification('add', 7)
+                h.addChordStepModification(hd, updatePitches=True)
+                #chord = m21.chord.Chord(pitchNames)
+                pitchNames = [str(p) for p in h.pitches]                
+                
+            midiChord = []
+            multi_hot = np.zeros(12)
+            for p in pitchNames:
+                
+                # midi conversion
+                c = m21.pitch.Pitch(p)
+                midiChord.append(c.midi)
+                
+                # multi-hot
+                # C C#/D- D D#/E- E E#/F F#/G- G G#/A- A A#/B- B 
+                # 0   1   2   3   4   5    6   7   8   9  10   11
+                if p[0] == 'C' and p[1] == '-':
+                    multi_hot[11] = 1
+                elif p[0] == 'C' and p[1] == '#':
+                    multi_hot[1] = 1
+                elif p[0] == 'C' :
+                    multi_hot[0] = 1
+                
+                elif p[0] == 'D' and p[1] == '-':
+                    multi_hot[1] = 1
+                elif p[0] == 'D' and p[1] == '#':
+                    multi_hot[3] = 1
+                elif p[0] == 'D' :
+                    multi_hot[2] = 1
+                
+                elif p[0] == 'E' and p[1] == '-':
+                    multi_hot[3] = 1
+                elif p[0] == 'E' and p[1] == '#':
+                    multi_hot[5] = 1
+                elif p[0] == 'E' :
+                    multi_hot[4] = 1
+                
+                elif p[0] == 'F' and p[1] == '-':
+                    multi_hot[4] = 1
+                elif p[0] == 'F' and p[1] == '#':
+                    multi_hot[6] = 1
+                elif p[0] == 'F' :
+                    multi_hot[7] = 1
+                
+                elif p[0] == 'G' and p[1] == '-':
+                    multi_hot[6] = 1
+                elif p[0] == 'G' and p[1] == '#':
+                    multi_hot[8] = 1
+                elif p[0] == 'G' :
+                    multi_hot[7] = 1
+                
+                elif p[0] == 'A' and p[1] == '-':
+                    multi_hot[8] = 1
+                elif p[0] == 'A' and p[1] == '#':
+                    multi_hot[10] = 1
+                elif p[0] == 'A' :
+                    multi_hot[9] = 1
+                
+                elif p[0] == 'B' and p[1] == '-':
+                    multi_hot[10] = 1
+                elif p[0] == 'B' and p[1] == '#':
+                    multi_hot[0] = 1
+                elif p[0] == 'B' :
+                    multi_hot[11] = 1
         
 
         # Update dictionaries
@@ -515,21 +541,24 @@ if __name__ == '__main__':
     for song in chord_train:
         new_song_chords = []
         for chord in song:
-            new_song_chords.append(WjazzToMidiChords[chord])
+            # Only include four-notes chords
+            new_song_chords.append(WjazzToMidiChords[chord][:4])
         new_chord_train.append(new_song_chords)
     
     new_chord_validation = []
     for song in chord_validation:
         new_song_chords = []
         for chord in song:
-            new_song_chords.append(WjazzToMidiChords[chord])
+            # Only include four-notes chords
+            new_song_chords.append(WjazzToMidiChords[chord][:4])
         new_chord_validation.append(new_song_chords)
     
     new_chord_test = []
     for song in chord_test:
         new_song_chords = []
         for chord in song:
-            new_song_chords.append(WjazzToMidiChords[chord])
+            # Only include four-notes chords
+            new_song_chords.append(WjazzToMidiChords[chord][:4])
         new_chord_test.append(new_song_chords)
     
     chord_train = np.array(new_chord_train)
@@ -564,13 +593,13 @@ if __name__ == '__main__':
             for i in range(pitch_train.shape[0]):                
                 new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_train[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                 new_duration.append(duration_train[i])
-                new_chord.append([[pitch + aug for pitch in chord] for chord in chord_train[i]])
+                new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_train[i]])
                 new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_train[i]])
                 new_beat.append(beat_train[i])
 
                 new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_train[i]])
                 new_duration.append(duration_train[i])
-                new_chord.append([[pitch - aug for pitch in chord] for chord in chord_train[i]])
+                new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_train[i]])
                 new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_train[i]])
                 new_beat.append(beat_train[i])
         
@@ -590,13 +619,13 @@ if __name__ == '__main__':
             for i in range(pitch_validation.shape[0]):
                 new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_validation[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                 new_duration.append(duration_validation[i])
-                new_chord.append([[pitch + aug for pitch in chord] for chord in chord_validation[i]])
+                new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_validation[i]])
                 new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_validation[i]])
                 new_beat.append(beat_validation[i])
 
                 new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_validation[i]])
                 new_duration.append(duration_validation[i])
-                new_chord.append([[pitch - aug for pitch in chord] for chord in chord_validation[i]])
+                new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_validation[i]])
                 new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_validation[i]])
                 new_beat.append(beat_validation[i])
         
@@ -616,13 +645,13 @@ if __name__ == '__main__':
             for i in range(pitch_test.shape[0]):
                 new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_test[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                 new_duration.append(duration_test[i])
-                new_chord.append([[pitch + aug for pitch in chord] for chord in chord_test[i]])
+                new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_test[i]])
                 new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_test[i]])
                 new_beat.append(beat_test[i])
 
                 new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_test[i]])
                 new_duration.append(duration_test[i])
-                new_chord.append([[pitch - aug for pitch in chord] for chord in chord_test[i]])
+                new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_test[i]])
                 new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_test[i]])
                 new_beat.append(beat_test[i])
         
@@ -742,7 +771,11 @@ if __name__ == '__main__':
     
     train_duration_batched = batchify(duration_train, TRAIN_BATCH_SIZE, duration_to_ix, device)
     val_duration_batched = batchify(duration_validation, EVAL_BATCH_SIZE, duration_to_ix, device)
-    test_duration_batched = batchify(duration_test, EVAL_BATCH_SIZE, duration_to_ix, device)    
+    test_duration_batched = batchify(duration_test, EVAL_BATCH_SIZE, duration_to_ix, device)  
+    
+    train_chord_batched = batchify(chord_train, TRAIN_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+    val_chord_batched = batchify(chord_validation, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+    test_chord_batched = batchify(chord_test, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
     
     train_bass_batched = batchify(bass_train, TRAIN_BATCH_SIZE, pitch_to_ix, device)
     val_bass_batched = batchify(bass_validation, EVAL_BATCH_SIZE, pitch_to_ix, device)
@@ -802,12 +835,12 @@ if __name__ == '__main__':
         
         epoch_start_time = time.time()
         mod.train(modelPitch, vocabPitch, 
-                  train_pitch_batched, train_duration_batched,
+                  train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
                   criterion, optimizer, scheduler, epoch, BPTT, device, isPitch)
         
         val_loss = mod.evaluate(modelPitch, vocabPitch, 
-                                val_pitch_batched, val_duration_batched,
+                                val_pitch_batched, val_duration_batched, val_chord_batched,
                                 val_bass_batched, val_beat_batched,
                                 criterion, BPTT, device, isPitch)
         
@@ -828,8 +861,8 @@ if __name__ == '__main__':
     
     # TEST THE MODEL
     test_loss = mod.evaluate(best_model_pitch, vocabPitch, 
-                                val_pitch_batched, val_duration_batched,
-                                val_bass_batched, val_beat_batched,
+                                test_pitch_batched, test_duration_batched, test_chord_batched, 
+                                test_bass_batched, test_beat_batched,
                                 criterion, BPTT, device, isPitch)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
@@ -897,12 +930,12 @@ if __name__ == '__main__':
         
         epoch_start_time = time.time()
         mod.train(modelPitch, vocabDuration, 
-                  train_pitch_batched, train_duration_batched,
+                  train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
                   criterion, optimizer, scheduler, epoch, BPTT, device, isPitch)
         
         val_loss = mod.evaluate(modelPitch, vocabDuration, 
-                                val_pitch_batched, val_duration_batched,
+                                val_pitch_batched, val_duration_batched, val_chord_batched,
                                 val_bass_batched, val_beat_batched,
                                 criterion, BPTT, device, isPitch)
         
@@ -923,8 +956,8 @@ if __name__ == '__main__':
     
     # TEST THE MODEL
     test_loss = mod.evaluate(best_model_pitch, vocabDuration, 
-                                val_pitch_batched, val_duration_batched,
-                                val_bass_batched, val_beat_batched,
+                                test_pitch_batched, test_duration_batched, test_chord_batched,
+                                test_bass_batched, test_beat_batched,
                                 criterion, BPTT, device, isPitch)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
