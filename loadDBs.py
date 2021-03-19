@@ -206,7 +206,8 @@ def segmentDataset(pitch_data, duration_data,
 class WjazzDB():
 
     def __init__(self, device, TRAIN_BATCH_SIZE, EVAL_BATCH_SIZE,
-                 BPTT, AUGMENTATION = True, SEGMENTATION = True):
+                 BPTT, AUGMENTATION = True, SEGMENTATION = True, 
+                 augmentation_const = 4):
         
         # DATA LOADING
         print('Loading data from the Weimar Jazz Database...')
@@ -577,7 +578,6 @@ class WjazzDB():
             
             print('Data augmentation...')
             # ex. if augmentation_const = 4 the song will be transposed +4 and -4 times
-            augmentation_const = 4
             
             # training augmentation
             new_pitch = []
