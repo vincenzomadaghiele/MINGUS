@@ -16,32 +16,43 @@ import time
 class TransformerModel(nn.Module):
 
     def __init__(self, pitch_vocab_size, pitch_embed_dim,
-                     offset_vocab_size, offset_embed_dim, 
-                     duration_vocab_size, duration_embed_dim,
+                     duration_vocab_size, duration_embed_dim, 
+                     bass_embed_dim, 
+                     beat_vocab_size, beat_embed_dim, 
                      ninp, nhead, nhid, nlayers, 
-                     src_pad_idx, device, dropout=0.5):
+                     pitch_pad_idx, duration_pad_idx, beat_pad_idx, 
+                     device, dropout=0.5, isPitch=True):
         
         super(TransformerModel, self).__init__()
         from torch.nn import TransformerEncoder, TransformerEncoderLayer
         self.model_type = 'Transformer'
         self.src_mask = None
-        self.src_pad_idx = src_pad_idx
+        self.pitch_pad_idx = pitch_pad_idx
+        self.duration_pad_idx = duration_pad_idx
+        self.beat_pad_idx = beat_pad_idx
         self.device = device
         self.ninp = ninp
         
-        # pitch embedding
-        self.pitch_embedding = nn.Embedding(pitch_vocab_size, pitch_embed_dim) # pitch
-        # conditional embeddings 
-        self.offset_embedding = nn.Embedding(offset_vocab_size, offset_embed_dim) # offset
-        self.duration_embedding = nn.Embedding(duration_vocab_size, duration_embed_dim) # duration
+        # feature embeddings
+        self.pitch_embedding = nn.Embedding(pitch_vocab_size, pitch_embed_dim, padding_idx=self.pitch_pad_idx) # pitch
+        self.duration_embedding = nn.Embedding(duration_vocab_size, duration_embed_dim, padding_idx=self.duration_pad_idx) # duration
+        self.bass_embedding = nn.Embedding(pitch_vocab_size, bass_embed_dim, padding_idx=self.pitch_pad_idx) # bass
+        self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim) # beat
+        
         
         # Start the transformer structure with multidimensional data
-        encoder_input_dim = offset_embed_dim + pitch_embed_dim + duration_embed_dim
+        encoder_input_dim = pitch_embed_dim + duration_embed_dim + bass_embed_dim #+ beat_embed_dim
         self.encoder = nn.Linear(encoder_input_dim, ninp)
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
-        self.decoder = nn.Linear(ninp, pitch_vocab_size)
+        
+        if isPitch:
+            self.out_linear = nn.Linear(ninp, pitch_embed_dim)
+            self.out_decoder = nn.Linear(pitch_embed_dim, pitch_vocab_size)
+        else:
+            self.out_linear = nn.Linear(ninp, duration_embed_dim)
+            self.out_decoder = nn.Linear(duration_embed_dim, duration_vocab_size)
 
         self.init_weights()
 
@@ -59,34 +70,40 @@ class TransformerModel(nn.Module):
         initrange = 0.1
         
         # initialize embedding weights
-        self.embedding.weight.data.uniform_(-initrange, initrange)
         self.pitch_embedding.weight.data.uniform_(-initrange, initrange)
         self.duration_embedding.weight.data.uniform_(-initrange, initrange)
+        self.bass_embedding.weight.data.uniform_(-initrange, initrange)
+        self.beat_embedding.weight.data.uniform_(-initrange, initrange)
         
         # initialize transformer structure weigths
+        self.encoder.bias.data.zero_()
         self.encoder.weight.data.uniform_(-initrange, initrange)
-        self.decoder.bias.data.zero_()
-        self.decoder.weight.data.uniform_(-initrange, initrange)
+        self.out_linear.bias.data.zero_()
+        self.out_linear.weight.data.uniform_(-initrange, initrange)
+        self.out_decoder.bias.data.zero_()
+        self.out_decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, velocity, pitch, duration, src_mask):
+    def forward(self, pitch, duration, bass, beat, src_mask):
         
         # embed data
-        velocity_embeds = self.embedding(velocity)
         pitch_embeds = self.pitch_embedding(pitch)
         duration_embeds = self.duration_embedding(duration)
+        bass_embeds = self.bass_embedding(bass)
+        #beat_embeds = self.beat_embedding(beat)
         
         # Concatenate along 3rd dimension
-        src = self.encoder(torch.cat([velocity_embeds, pitch_embeds, duration_embeds], 2)) * math.sqrt(self.ninp)
-        
-        # There is no padding mask yet
-        #src_padding_mask = self.make_src_pad_mask(src)
+        #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)
+        src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds], 2)) * math.sqrt(self.ninp)
+
+        #src_padding_mask = self.make_src_pad_mask(src) # PROBLEM
         
         # Positional encoding
-        #src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         #output = self.transformer_encoder(src, src_mask, src_padding_mask)
         output = self.transformer_encoder(src, src_mask)
-        output = self.decoder(output)
+        output = self.out_linear(output)
+        output = self.out_decoder(output)
+        
         return output
 
 
@@ -110,9 +127,10 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
-def train(model, vocabVelocity, train_data_velocity, 
+def train(model, vocabTarget, 
           train_data_pitch, train_data_duration, 
-          criterion, optimizer, scheduler, epoch, bptt, device):
+          train_data_bass, train_data_beat, 
+          criterion, optimizer, scheduler, epoch, bptt, device, isPitch=True):
     '''
 
     Parameters
@@ -143,21 +161,26 @@ def train(model, vocabVelocity, train_data_velocity,
     model.train() # Turn on the train mode
     total_loss = 0.
     start_time = time.time()
-    ntokens = len(vocabVelocity)
+    ntokens = len(vocabTarget)
     src_mask = model.generate_square_subsequent_mask(bptt).to(device)
-    for batch, i in enumerate(range(0, train_data_velocity.size(0) - 1, bptt)):
+    for batch, i in enumerate(range(0, train_data_pitch.size(0) - 1, bptt)):
         
-        # get a batch of data
-        data_velocity, targets, _ = get_batch(train_data_velocity, i, bptt)
-        data_pitch, _, _ = get_batch(train_data_pitch, i, bptt)
-        data_duration, _, _ = get_batch(train_data_duration, i, bptt)
+        if isPitch:
+            # get a batch of data
+            data_pitch, targets, _ = get_batch(train_data_pitch, i, bptt)
+            data_duration, _, _ = get_batch(train_data_duration, i, bptt)
+        else:
+            data_pitch, _, _ = get_batch(train_data_pitch, i, bptt)
+            data_duration, targets, _ = get_batch(train_data_duration, i, bptt)
+        data_bass, _, _ = get_batch(train_data_bass, i, bptt)
+        data_beat, _, _ = get_batch(train_data_beat, i, bptt)
         
         optimizer.zero_grad()
-        if data_velocity.size(0) != bptt:
-            src_mask = model.generate_square_subsequent_mask(data_velocity.size(0)).to(device)
+        if data_pitch.size(0) != bptt:
+            src_mask = model.generate_square_subsequent_mask(data_pitch.size(0)).to(device)
         
         # pass the data trought the model
-        output = model(data_velocity, data_pitch, data_duration, src_mask) 
+        output = model(data_pitch, data_duration, data_bass, data_beat, src_mask) 
         loss = criterion(output.view(-1, ntokens), targets)
         
         # backpropagation step
@@ -174,16 +197,16 @@ def train(model, vocabVelocity, train_data_velocity,
             print('| epoch {:3d} | {:5d}/{:5d} batches | '
                   'lr {:02.2f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
-                    epoch, batch, len(train_data_velocity) // bptt, scheduler.get_last_lr()[0],
+                    epoch, batch, len(train_data_pitch) // bptt, scheduler.get_last_lr()[0],
                     elapsed * 1000 / log_interval,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
 
 
-def evaluate(vocabVelocity, eval_data_velocity, 
-             eval_data_pitch, eval_data_duration, 
-             eval_model, criterion, bptt, device):
+def evaluate(eval_model, vocabTarget, eval_data_pitch, 
+             eval_data_duration, eval_data_bass, eval_data_beat, 
+             criterion, bptt, device, isPitch=True):
     '''
 
     Parameters
@@ -210,22 +233,28 @@ def evaluate(vocabVelocity, eval_data_velocity,
     '''
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
-    ntokens = len(vocabVelocity)
+    ntokens = len(vocabTarget)
     src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
-        for i in range(0, eval_data_velocity.size(0) - 1, bptt):
+        for i in range(0, eval_data_pitch.size(0) - 1, bptt):
             
-            data_velocity, targets, _ = get_batch(eval_data_velocity, i, bptt)
-            data_pitch, _, _ = get_batch(eval_data_pitch, i, bptt)
-            data_duration, _, _ = get_batch(eval_data_duration, i, bptt)
+            # get a batch of data
+            if isPitch:
+                data_pitch, targets, _ = get_batch(eval_data_pitch, i, bptt)
+                data_duration, _, _ = get_batch(eval_data_duration, i, bptt)
+            else:
+                data_pitch, _, _ = get_batch(eval_data_pitch, i, bptt)
+                data_duration, targets, _ = get_batch(eval_data_duration, i, bptt)
+            data_bass, _, _ = get_batch(eval_data_bass, i, bptt)
+            data_beat, _, _ = get_batch(eval_data_beat, i, bptt)
             
-            if data_velocity.size(0) != bptt:
-                src_mask = eval_model.generate_square_subsequent_mask(data_velocity.size(0)).to(device)
+            if data_pitch.size(0) != bptt:
+                src_mask = eval_model.generate_square_subsequent_mask(data_pitch.size(0)).to(device)
             
-            output = eval_model(data_velocity, data_pitch, data_duration, src_mask)
+            output = eval_model(data_pitch, data_duration, data_bass, data_beat, src_mask) 
             output_flat = output.view(-1, ntokens)
-            total_loss += len(data_velocity) * criterion(output_flat, targets).item()
-    return total_loss / (len(eval_data_velocity) - 1)
+            total_loss += len(data_pitch) * criterion(output_flat, targets).item()
+    return total_loss / (len(eval_data_pitch) - 1)
 
 
 def get_batch(source, i, bptt):
