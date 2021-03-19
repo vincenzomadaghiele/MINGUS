@@ -24,6 +24,7 @@ class TransformerModel(nn.Module):
         self.src_mask = None
         self.src_pad_idx = src_pad_idx
         self.device = device
+        
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
