@@ -6,10 +6,12 @@ Created on Mon Mar 15 15:37:30 2021
 @author: vincenzomadaghiele
 """
 import pretty_midi
+import numpy as np
 import torch
 import torch.nn as nn
 import math
 import time
+from sklearn.metrics import accuracy_score
 
 
 # TRANSFORMER MODEL
@@ -238,6 +240,8 @@ def evaluate(eval_model, vocabTarget,
     '''
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
+    total_accuracy = 0.
+    tot_tokens = 0.
     ntokens = len(vocabTarget)
     src_mask = eval_model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
@@ -259,10 +263,24 @@ def evaluate(eval_model, vocabTarget,
             
             output = eval_model(data_pitch, data_duration, data_chord,
                                 data_bass, data_beat, src_mask) 
+            
+            # cross-entropy loss
             output_flat = output.view(-1, ntokens)
             total_loss += len(data_pitch) * criterion(output_flat, targets).item()
             
-    return total_loss / (len(eval_data_pitch) - 1)
+            # accuracy
+            padTokent = vocabTarget['<pad>']
+            max_logprobs = np.argmax(output_flat.numpy(), axis=1)
+            nptargets = np.copy(targets.numpy())
+            # ensure that pad tokens are not counted
+            nptargets[nptargets == padTokent] = 1000
+            # count not padding elements
+            notPaddingElements = (nptargets != 1000).sum()
+            
+            total_accuracy += accuracy_score(max_logprobs, nptargets) * notPaddingElements
+            tot_tokens += notPaddingElements
+            
+    return total_loss / (len(eval_data_pitch) - 1), total_accuracy / tot_tokens
 
 
 def get_batch(source, i, bptt):

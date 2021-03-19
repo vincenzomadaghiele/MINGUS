@@ -33,7 +33,7 @@ if __name__ == '__main__':
     train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
     val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getTrainingData()
     test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTrainingData()
-        
+    
     
     #%% PITCH MODEL TRAINING
     
@@ -83,20 +83,20 @@ if __name__ == '__main__':
     for epoch in range(1, epochs + 1):
         
         epoch_start_time = time.time()
-        mod.train(modelPitch, vocabPitch, 
+        mod.train(modelPitch, pitch_to_ix, 
                   train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
                   criterion, optimizer, scheduler, epoch, con.BPTT, device, isPitch)
         
-        val_loss = mod.evaluate(modelPitch, vocabPitch, 
+        val_loss, val_acc = mod.evaluate(modelPitch, pitch_to_ix, 
                                 val_pitch_batched, val_duration_batched, val_chord_batched,
                                 val_bass_batched, val_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
         
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-              'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
-                                         val_loss, math.exp(val_loss)))
+              'valid ppl {:5.2f} | valid acc {:5.2f}'.format(epoch, (time.time() - epoch_start_time),
+                                         val_loss, math.exp(val_loss), val_acc))
         print('-' * 89)
     
         if val_loss < best_val_loss:
@@ -109,13 +109,13 @@ if __name__ == '__main__':
     
     
     # TEST THE MODEL
-    test_loss = mod.evaluate(best_model_pitch, vocabPitch, 
+    test_loss, test_acc = mod.evaluate(best_model_pitch, pitch_to_ix, 
                                 test_pitch_batched, test_duration_batched, test_chord_batched, 
                                 test_bass_batched, test_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
     print('=' * 89)
-    print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-        test_loss, math.exp(test_loss)))
+    print('| End of training | test loss {:5.2f} | test ppl {:5.2f} | test acc {:5.2f}'.format(
+        test_loss, math.exp(test_loss), test_acc))
     print('=' * 89)
     
     dataset_name = 'Wjazz'
@@ -178,20 +178,20 @@ if __name__ == '__main__':
     for epoch in range(1, epochs + 1):
         
         epoch_start_time = time.time()
-        mod.train(modelPitch, vocabDuration, 
+        mod.train(modelPitch, duration_to_ix, 
                   train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
                   criterion, optimizer, scheduler, epoch, con.BPTT, device, isPitch)
         
-        val_loss = mod.evaluate(modelPitch, vocabDuration, 
+        val_loss, val_acc = mod.evaluate(modelPitch, duration_to_ix, 
                                 val_pitch_batched, val_duration_batched, val_chord_batched,
                                 val_bass_batched, val_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
         
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-              'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
-                                         val_loss, math.exp(val_loss)))
+              'valid ppl {:5.2f} | valid acc {:5.2f}'.format(epoch, (time.time() - epoch_start_time),
+                                         val_loss, math.exp(val_loss), val_acc))
         print('-' * 89)
     
         if val_loss < best_val_loss:
@@ -204,13 +204,13 @@ if __name__ == '__main__':
     
     
     # TEST THE MODEL
-    test_loss = mod.evaluate(best_model_pitch, vocabDuration, 
+    test_loss, test_acc = mod.evaluate(best_model_pitch, duration_to_ix, 
                                 test_pitch_batched, test_duration_batched, test_chord_batched,
                                 test_bass_batched, test_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
     print('=' * 89)
-    print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-        test_loss, math.exp(test_loss)))
+    print('| End of training | test loss {:5.2f} | test ppl {:5.2f} | test acc {:5.2f}'.format(
+        test_loss, math.exp(test_loss), test_acc))
     print('=' * 89)
     
     dataset_name = 'Wjazz'
