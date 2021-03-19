@@ -5,14 +5,11 @@ Created on Fri Mar 19 17:29:36 2021
 
 @author: vincenzomadaghiele
 """
-import pretty_midi
+
 import music21 as m21
 import torch
-import torch.nn as nn
 import numpy as np
 import json
-import math
-import time
 import MINGUS_const as con
 
 def pad(data, isChord=False):

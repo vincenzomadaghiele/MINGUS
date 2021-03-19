@@ -5,7 +5,7 @@ Created on Mon Mar 15 15:37:30 2021
 
 @author: vincenzomadaghiele
 """
-import pretty_midi
+
 import numpy as np
 import torch
 import torch.nn as nn
