@@ -209,7 +209,7 @@ class WjazzDB():
                  BPTT, AUGMENTATION = True, SEGMENTATION = True):
         
         # DATA LOADING
-        print('Loading data...')
+        print('Loading data from the Weimar Jazz Database...')
         songs_path = 'data/WjazzDB.json'
         with open(songs_path) as f:
             songs = json.load(f)
