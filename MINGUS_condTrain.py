@@ -163,13 +163,13 @@ if __name__ == '__main__':
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
-    lr = 5 # learning rate
+    lr = 0.05 # learning rate
     optimizer = torch.optim.SGD(modelDuration.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
 
     duration_start_time = time.time()
