@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # LOAD DATA 
     
     WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
-                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION)
+                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
     
     vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
     
