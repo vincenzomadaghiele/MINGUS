@@ -15,8 +15,9 @@ import numpy as np
 import json
 import math
 import time
-import MINGUS_dataset_funct as dataset
+import loadDBs as dataset
 import MINGUS_condModel as mod
+import MINGUS_const as con
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -219,7 +220,7 @@ def segmentDataset(pitch_data, duration_data,
 
 
 if __name__ == '__main__':
-    
+
     # DATA LOADING
     print('Loading data...')
     songs_path = 'data/WjazzDB.json'
@@ -785,6 +786,20 @@ if __name__ == '__main__':
     val_beat_batched = batchify(beat_validation, EVAL_BATCH_SIZE, beat_to_ix, device)
     test_beat_batched = batchify(beat_test, EVAL_BATCH_SIZE, beat_to_ix, device)
     
+    
+    #%% LOAD DATA 
+    
+    WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION)
+    
+    vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
+    
+    pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+    
+    train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
+    val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getTrainingData()
+    test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTrainingData()
+        
     
     #%% PITCH MODEL TRAINING
     

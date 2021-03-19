@@ -13,6 +13,7 @@ import numpy as np
 import json
 import math
 import time
+import MINGUS_const as con
 
 def pad(data, isChord=False):
     '''
@@ -70,7 +71,7 @@ def batchify(data, bsz, dict_to_ix, device, isChord=False):
 
     '''
     
-    if SEGMENTATION:
+    if con.SEGMENTATION:
         if isChord:
             padded = pad(data, isChord)
             #print(padded)
@@ -795,7 +796,7 @@ class WjazzDB():
         return self.vocabPitch, self.vocabDuration, self.vocabBeat
     
     def getInverseVocabs(self):
-        return self.pitch_to_ix, self.duration_to_ix, self.beat_to_ix,
+        return self.pitch_to_ix, self.duration_to_ix, self.beat_to_ix
     
     def getTrainingData(self):
         return self.train_pitch_batched, self.train_duration_batched, self.train_chord_batched, self.train_bass_batched, self.train_beat_batched
