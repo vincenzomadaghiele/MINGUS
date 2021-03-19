@@ -153,7 +153,7 @@ if __name__ == '__main__':
     pitch_pad_idx = pitch_to_ix['<pad>']
     duration_pad_idx = duration_to_ix['<pad>']
     beat_pad_idx = beat_to_ix['<pad>']
-    modelPitch = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
+    modelDuration = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
                                       bass_embed_dim, 
                                       beat_vocab_size, beat_embed_dim,  
@@ -172,18 +172,18 @@ if __name__ == '__main__':
     epochs = 10 # The number of epochs
     best_model = None
 
-    pitch_start_time = time.time()
+    duration_start_time = time.time()
     # TRAINING LOOP
     print('Starting training...')
     for epoch in range(1, epochs + 1):
         
         epoch_start_time = time.time()
-        mod.train(modelPitch, duration_to_ix, 
+        mod.train(modelDuration, duration_to_ix, 
                   train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
                   criterion, optimizer, scheduler, epoch, con.BPTT, device, isPitch)
         
-        val_loss, val_acc = mod.evaluate(modelPitch, duration_to_ix, 
+        val_loss, val_acc = mod.evaluate(modelDuration, duration_to_ix, 
                                 val_pitch_batched, val_duration_batched, val_chord_batched,
                                 val_bass_batched, val_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
@@ -196,15 +196,15 @@ if __name__ == '__main__':
     
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            best_model_pitch = modelPitch
+            best_model_duration = modelDuration
     
         scheduler.step()
     
-    pitch_end_time = time.time()
+    duration_end_time = time.time()
     
     
     # TEST THE MODEL
-    test_loss, test_acc = mod.evaluate(best_model_pitch, duration_to_ix, 
+    test_loss, test_acc = mod.evaluate(best_model_duration, duration_to_ix, 
                                 test_pitch_batched, test_duration_batched, test_chord_batched,
                                 test_bass_batched, test_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
@@ -221,9 +221,10 @@ if __name__ == '__main__':
     savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
                      + '_'+ segm_len + '_' + dataset_name + '.pt')
     
-    state_dictPitch = best_model_pitch.state_dict()
+    state_dictPitch = best_model_duration.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     
-    
+    print('Total training time for pitch model: ', pitch_end_time - pitch_start_time )
+    print('Total training time for duration model: ', duration_end_time - duration_start_time)
     
     
