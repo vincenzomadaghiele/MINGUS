@@ -270,7 +270,7 @@ def evaluate(eval_model, vocabTarget,
             
             # accuracy
             padTokent = vocabTarget['<pad>']
-            max_logprobs = np.argmax(output_flat.numpy(), axis=1)
+            max_logprobs = np.argmax(output_flat.cpu().numpy(), axis=1)
             nptargets = np.copy(targets.cpu().numpy())
             # ensure that pad tokens are not counted
             nptargets[nptargets == padTokent] = 1000
