@@ -31,8 +31,8 @@ if __name__ == '__main__':
     pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
     
     train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
-    val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getTrainingData()
-    test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTrainingData()
+    val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
+    test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
     
     
     #%% PITCH MODEL TRAINING
