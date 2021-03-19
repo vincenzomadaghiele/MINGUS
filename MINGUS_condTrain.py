@@ -163,7 +163,7 @@ if __name__ == '__main__':
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
-    lr = 5 # learning rate
+    lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
     
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     
     # TEST THE MODEL
     test_loss, test_acc = mod.evaluate(best_model_duration, duration_to_ix, 
-                                test_pitch_batched, test_duration_batched, test_chord_batched,
+                                test_pitch_batched, test_duration_batched, test_chord_batched, 
                                 test_bass_batched, test_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
     print('=' * 89)
@@ -223,6 +223,7 @@ if __name__ == '__main__':
     
     state_dictPitch = best_model_duration.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
+    
     
     print('Total training time for pitch model: ', pitch_end_time - pitch_start_time )
     print('Total training time for duration model: ', duration_end_time - duration_start_time)
