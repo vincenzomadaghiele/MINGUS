@@ -31,6 +31,7 @@ if __name__=="__main__":
             song['instrument'] = row[8]
             song['style'] = row[9]
             song['avgtempo'] = row[10]
+            song['chord changes'] = row[16]
             
             pitch_array = []
             duration_array = []
@@ -43,6 +44,7 @@ if __name__=="__main__":
             melid = row[1]
             onset = 0
             last_onset = 0
+            beat_dur_array = []
             # SELECT ALL BEATS OF THIS melid
             beats_cur = con.cursor()
             beats_cur.execute("SELECT * FROM beats WHERE melid = %d" % melid) 
@@ -63,6 +65,7 @@ if __name__=="__main__":
                         # duration count could be adjusted to take into account
                         # of swing timing and far smaller durations!!
                         beat_duration_sec = event_row[14]
+                        beat_dur_array.append(beat_duration_sec)
                         
                         # sampling of the measure
                         unit = beat_duration_sec * 4 / 96.
@@ -143,6 +146,7 @@ if __name__=="__main__":
             song['chords'] = chord_array
             song['bass pitch'] = bass_pitch_array
             song['beats'] = beat_array
+            song['beat duration [sec]'] = np.mean(beat_dur_array)
 
             # how to represent rest?
             songs.append(song)

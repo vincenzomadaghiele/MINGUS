@@ -211,6 +211,8 @@ class WjazzDB():
         songs_path = 'data/WjazzDB.json'
         with open(songs_path) as f:
             songs = json.load(f)
+            
+        self.songs = songs
         
         pitch_train = []
         pitch_validation = []
@@ -517,6 +519,10 @@ class WjazzDB():
         self.duration_to_ix = duration_to_ix
         self.beat_to_ix = beat_to_ix
         
+        self.WjazzChords = WjazzChords
+        self.WjazzToMusic21 = WjazzToMusic21
+        self.WjazzToChordComposition = WjazzToChordComposition
+        self.WjazzToMidiChords = WjazzToMidiChords
         
         # PRE-PROCESSING
         
@@ -804,5 +810,10 @@ class WjazzDB():
     def getTestData(self):
         return self.test_pitch_batched, self.test_duration_batched, self.test_chord_batched, self.test_bass_batched, self.test_beat_batched
         
+    def getChordDicts(self):
+        return self.WjazzChords, self.WjazzToMusic21, self.WjazzToChordComposition, self.WjazzToMidiChords
+    
+    def getOriginalSongDict(self):
+        return self.songs
     
     
