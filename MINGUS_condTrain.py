@@ -74,7 +74,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
 
     pitch_start_time = time.time()
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 100 # The number of epochs
+    epochs = 10 # The number of epochs
     best_model = None
 
     duration_start_time = time.time()
