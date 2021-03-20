@@ -31,7 +31,7 @@ if __name__=="__main__":
             song['instrument'] = row[8]
             song['style'] = row[9]
             song['avgtempo'] = row[10]
-            song['chord changes'] = row[16]
+            song['chord changes'] = row[15]
             
             pitch_array = []
             duration_array = []
@@ -75,6 +75,15 @@ if __name__=="__main__":
                         possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 72, 
                                               unit * 36, unit * 18, unit * 9, unit * 32, unit * 16, unit * 8]
                         
+                        unit = beat_duration_sec * 4 / 192.
+                        #unit = beat_duration_sec * 4 / 96.
+                        # possible note durations in seconds 
+                        # (it is possible to add representations - include 32nds, quintuplets...):
+                        # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+                        possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
+                                              unit * 144, unit * 72, unit * 36, unit * 18, unit * 9, 
+                                              unit * 64, unit * 32, unit * 16, unit * 8, unit * 4, unit * 2]
+                        
                         # Define durations dictionary
                         dur_dict = {}
                         dur_dict[possible_durations[0]] = 'full'
@@ -82,16 +91,22 @@ if __name__=="__main__":
                         dur_dict[possible_durations[2]] = 'quarter'
                         dur_dict[possible_durations[3]] = '8th'
                         dur_dict[possible_durations[4]] = '16th'
-                        dur_dict[possible_durations[5]] = 'dot half'
-                        dur_dict[possible_durations[6]] = 'dot quarter'
-                        dur_dict[possible_durations[7]] = 'dot 8th'
-                        dur_dict[possible_durations[8]] = 'dot 16th'
-                        dur_dict[possible_durations[9]] = 'half note triplet'
-                        dur_dict[possible_durations[10]] = 'quarter note triplet'
-                        dur_dict[possible_durations[11]] = '8th note triplet'
+                        dur_dict[possible_durations[5]] = '32th'
+                        dur_dict[possible_durations[6]] = '64th'
+                        dur_dict[possible_durations[7]] = 'dot half'
+                        dur_dict[possible_durations[8]] = 'dot quarter'
+                        dur_dict[possible_durations[9]] = 'dot 8th'
+                        dur_dict[possible_durations[10]] = 'dot 16th'
+                        dur_dict[possible_durations[11]] = 'dot 32th'
+                        dur_dict[possible_durations[12]] = 'half note triplet'
+                        dur_dict[possible_durations[13]] = 'quarter note triplet'
+                        dur_dict[possible_durations[14]] = '8th note triplet'
+                        dur_dict[possible_durations[15]] = '16th note triplet'
+                        dur_dict[possible_durations[16]] = '32th note triplet'
+                        dur_dict[possible_durations[17]] = '64th note triplet'
                         
                         
-                        # Detect rest by onset subtraction !!!
+                        # Detect rest by onset subtraction 
                         # and add to arrays before notes
                         
                         # check for rests
@@ -102,7 +117,7 @@ if __name__=="__main__":
                         if intra_note_time >= possible_durations[4]:
                             # there is a rest!
                             
-                            # handle the possibility of pauses longer than a full note
+                            # handle the possibility of rests longer than a full note
                             while intra_note_time > possible_durations[0]:
                                 # calculate distance from each duration
                                 distance = np.abs(np.array(possible_durations) - intra_note_time)
@@ -117,6 +132,19 @@ if __name__=="__main__":
                                 beat_array.append(beat)
                                 #velocity_array.append(velocity)                    
                                 #offset_array.append(offset)
+                            
+                            # calculate distance from each duration
+                            distance = np.abs(np.array(possible_durations) - intra_note_time)
+                            idx = distance.argmin()
+                            duration = dur_dict[possible_durations[idx]]
+                            
+                            pitch_array.append('R')
+                            duration_array.append(duration)
+                            chord_array.append(chord)
+                            bass_pitch_array.append(bass_pitch)
+                            beat_array.append(beat)
+                            #velocity_array.append(velocity)                    
+                            #offset_array.append(offset)
                         
                         pitch = event_row[3]
                         duration_sec = event_row[4]
