@@ -190,7 +190,7 @@ if __name__=="__main__":
     songs_split['train'] = songs[:int(len(songs)*0.7)]
     # train: 10% 
     songs_split['validation'] = songs[int(len(songs)*0.7)+1:int(len(songs)*0.7)+1+int(len(songs)*0.1)]
-    # train: 20% 
+    # train: 20%
     songs_split['test'] = songs[int(len(songs)*0.7)+1+int(len(songs)*0.1):]
     
     
