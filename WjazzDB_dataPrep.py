@@ -39,6 +39,7 @@ if __name__=="__main__":
             chord_array = []
             bass_pitch_array = []
             beat_array = []
+            bar_array = []
             
             # FIX melid OF THIS SONG
             melid = row[1]
@@ -114,7 +115,7 @@ if __name__=="__main__":
                         intra_note_time = onset - last_onset
                         # if the interval between notes is greater than the smallest duration ('16th')
                         # and smaller than the greatest duration ('full') then there is a rest
-                        if intra_note_time >= possible_durations[4]:
+                        if intra_note_time >= possible_durations[17]:
                             # there is a rest!
                             
                             # handle the possibility of rests longer than a full note
@@ -130,6 +131,7 @@ if __name__=="__main__":
                                 chord_array.append(chord)
                                 bass_pitch_array.append(bass_pitch)
                                 beat_array.append(beat)
+                                bar_array.append(bar)
                                 #velocity_array.append(velocity)                    
                                 #offset_array.append(offset)
                             
@@ -143,6 +145,7 @@ if __name__=="__main__":
                             chord_array.append(chord)
                             bass_pitch_array.append(bass_pitch)
                             beat_array.append(beat)
+                            bar_array.append(bar)
                             #velocity_array.append(velocity)                    
                             #offset_array.append(offset)
                         
@@ -162,6 +165,7 @@ if __name__=="__main__":
                         chord_array.append(chord)
                         bass_pitch_array.append(bass_pitch)
                         beat_array.append(beat)
+                        bar_array.append(bar)
                         #velocity_array.append(velocity)                    
                         #offset_array.append(offset)
                         last_onset = beat_duration_sec + onset
@@ -175,6 +179,7 @@ if __name__=="__main__":
             song['bass pitch'] = bass_pitch_array
             song['beats'] = beat_array
             song['beat duration [sec]'] = np.mean(beat_dur_array)
+            song['bars'] = bar_array
 
             # how to represent rest?
             songs.append(song)
