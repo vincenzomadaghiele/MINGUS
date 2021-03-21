@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     #%% Conversion to MIDI
 
-    trialSong = songs['train'][2]
+    trialSong = songs['train'][0]
     notes = trialSong['pitch']
     durations = trialSong['duration']
     beats = trialSong['beats']
@@ -159,6 +159,7 @@ if __name__ == '__main__':
     pm.instruments.append(chords_inst)
     pm.instruments.append(bass_inst)
     velocity = 100
+    velocity_chord = 50
     offset = 0
     previous_bass = 0
     previous_chord = [0,0,0,0]
@@ -173,16 +174,15 @@ if __name__ == '__main__':
                 start = offset
                 end = offset + duration
                 
-                # SOLVE BEAT COUNT PROBLEM!
                 # check for new bass note
                 if int(bass[i]) != previous_bass:
                     # How many beats does the bass note last ? 
-                    beats_bass_dur = beats[i+1]
+                    beats_bass_dur = 1
                     for j in range(i,len(notes)-1):
                         if bass[j+1] != int(bass[i]):
                             break
                         if beats[j+1] != beats[j]:
-                            if beats[j+1] != 4:
+                            if beats[j+1] > beats[j]:
                                 beats_bass_dur += beats[j+1] - beats[j]
                             else:
                                 beats_bass_dur += beats[j+1]
@@ -192,36 +192,33 @@ if __name__ == '__main__':
                     bass_end = offset + bass_duration
                     bass_inst.notes.append(pretty_midi.Note(velocity, int(bass[i]), bass_start, bass_end))
                     previous_bass = int(bass[i])
-                
+                    
+                    print('Note: %d lasts %d beats (array n %d)' % (bass[i], beats_bass_dur, i))
+                '''
                 # check for new chord
                 if chords[i] != previous_chord:
                     # How many beats does the bass note last ? 
-                    beats_chord_dur = beats[i+1]
+                    beats_chord_dur = beats[i]
                     for j in range(i,len(notes)-1):
                         if chords[j+1] != chords[i]:
                             break
                         if beats[j+1] != beats[j]:
-                            if beats[j+1] != 1:
+                            if beats[j+1] > beats[j]:
                                 beats_chord_dur += beats[j+1] - beats[j]
                             else:
                                 beats_chord_dur += beats[j+1]
-                            
-                    print('Chord: %s lasts %d beats' % (chords[i], beats_chord_dur))
+                    
+                    #print('Chord: %s lasts %d beats' % (chords[i], beats_chord_dur))
+                    
                     
                     chord_duration = inv_dur_dict['quarter'] * beats_chord_dur
                     chord_start = offset
                     chord_end = offset + chord_duration
                     for chord_pitch in WjazzToMidiChords[chords[i]]:
-                        chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), start, end))
-                        previous_chord = chords[i]      
-                
-                '''
-                current_chord = chords[i]
-                if current_chord != previous_chord:
-                    for chord_pitch in WjazzToMidiChords[current_chord]:
-                        chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), start, end))
-                        previous_chord = current_chord
-                '''
+                        chords_inst.notes.append(pretty_midi.Note(velocity_chord, int(chord_pitch), start, end))
+                        previous_chord = chords[i]
+                        '''
+                    
             else:
                 pitch = int(notes[i])
                 duration = inv_dur_dict[durations[i]]
@@ -232,12 +229,12 @@ if __name__ == '__main__':
                 # check for new bass note
                 if int(bass[i]) != previous_bass:
                     # How many beats does the bass note last ? 
-                    beats_bass_dur = beats[i+1]
+                    beats_bass_dur = 1
                     for j in range(i,len(notes)-1):
                         if bass[j+1] != int(bass[i]):
                             break
                         if beats[j+1] != beats[j]:
-                            if beats[j+1] != 4:
+                            if beats[j+1] > beats[j]:
                                 beats_bass_dur += beats[j+1] - beats[j]
                             else:
                                 beats_bass_dur += beats[j+1]
@@ -247,106 +244,35 @@ if __name__ == '__main__':
                     bass_end = offset + bass_duration
                     bass_inst.notes.append(pretty_midi.Note(velocity, int(bass[i]), bass_start, bass_end))
                     previous_bass = int(bass[i])
+                    
+                    print('Note: %d lasts %d beats (array n %d)' % (bass[i], beats_bass_dur, i))
                 
+                '''
                 # check for new chord
                 if chords[i] != previous_chord:
                     # How many beats does the bass note last ? 
-                    beats_chord_dur = beats[i+1]
+                    beats_chord_dur = beats[i]
                     for j in range(i,len(notes)-1):
                         if chords[j+1] != chords[i]:
                             break
                         if beats[j+1] != beats[j]:
-                            if beats[j+1] != 1:
+                            if beats[j+1] > beats[j]:
                                 beats_chord_dur += beats[j+1] - beats[j]
                             else:
                                 beats_chord_dur += beats[j+1]
                     
-                    print('Chord: %s lasts %d beats' % (chords[i], beats_chord_dur))
+                    #print('Chord: %s lasts %d beats' % (chords[i], beats_chord_dur))
                     
                     chord_duration = inv_dur_dict['quarter'] * beats_chord_dur
                     chord_start = offset
                     chord_end = offset + chord_duration
                     for chord_pitch in WjazzToMidiChords[chords[i]]:
-                        chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), start, end))
+                        chords_inst.notes.append(pretty_midi.Note(velocity_chord, int(chord_pitch), start, end))
                         previous_chord = chords[i] 
-                
-                '''
-                current_chord = chords[i]
-                if current_chord != previous_chord:
-                    for chord_pitch in WjazzToMidiChords[current_chord]:
-                        chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), start, end))
-                        previous_chord = current_chord
-                '''
-                
+                    '''
             offset += duration
     
     pm.write('output/equal.mid')
-    
-    
-    #%% 
-    
-    offset = 0
-    current_bass_pitch = bass[0]
-    current_beat = beats[0]
-    num_bass_beats = 0
-    for i in range(len(bass)):
-        current_bar = trialSong['bars']
-        current_beat = trialSong['beats']
-        #current_bass_pitch = bass[i]
-        if bass[i] == current_bass_pitch and beats[i] != current_beat:
-            num_bass_beats += current_beat - beats[i]
-        elif bass[i] != current_bass_pitch and beats[i] != current_beat:
-            duration = inv_dur_dict[durations[i]]
-            start = offset
-            end = offset + duration
-            inst.notes.append(pretty_midi.Note(velocity, pitch, start, end))
-        
-        elif bass[i] != current_bass_pitch and beats[i] == current_beat:
-            print('Error: bass change inside a beat')
-    
-    
-    #%%
-    
-    num_bars = max(bars)
-    new_bars = []
-    new_beats = []
-    new_bass = []
-    new_chords = []
-    
-    for i in range(num_bars):
-        for j in range(1,5):
-            new_bars.append(i)
-            new_beats.append(j)
-    
-    current_bass = bass[0]
-    current_bar = bars[0]
-    current_beat = beats[0]
-    new_bass.append(current_bass)
-    for i in range(len(bass)):
-        bass[i]
-        bars[i]
-        beats[i]
-        if beats[i] != current_beat:
-            new_bass.append(bass[i])
-            current_beat = beats[i]
-    
-    
-    current_bar = bars[0]
-    current_beat = beats[0]
-    count_bars = 0
-    count_beats = 0
-    for i in range(len(bass)):
-        if bars[i] != current_bar:
-            count_bars += 1
-            current_bar = bars[i]
-        if beats[i] != current_beat:
-            count_beats += current_beat - beats[i]
-            current_beat = beats[i]
-        
-        
-        
-    
-    
 
     
     
