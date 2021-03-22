@@ -12,7 +12,6 @@ import numpy as np
 #import music21 as m21
 import glob
 from note_seq import abc_parser
-import note_seq
 
 
 if __name__=="__main__":
@@ -37,12 +36,8 @@ if __name__=="__main__":
         
                 song = {}
                 metadata = abcSong.sequence_metadata
-                song['artist'] = metadata.artist
                 song['title'] = metadata.title
-                song['genre'] = metadata.genre
-                song['composers'] = metadata.composers
                 song['total time [sec]'] = abcSong.total_time
-                #song['chord changes'] = row[15]
                 song['quantization [sec]'] = abcSong.quantization_info.steps_per_second
                 song['quantization [beat]'] = abcSong.quantization_info.steps_per_quarter
                 
@@ -94,7 +89,7 @@ if __name__=="__main__":
                 bass_pitch_array = []
                 beat_array = []
                 bar_array = []
-                    
+                
                 for i in range(len(abcSong.notes)-1):
                     
                     note = abcSong.notes[i]
@@ -108,10 +103,14 @@ if __name__=="__main__":
                     distance = np.abs(np.array(possible_durations) - duration_sec)
                     idx = distance.argmin()
                     duration_array.append(dur_dict[possible_durations[idx]])
+                    beat_array.append(0)
                     
+                    nochord = True
                     for j in range(len(chords_times)-1):
                         if chords_times[j+1][1] > note.start_time and chords_times[j][1] <= note.start_time:
                             chord_array.append(chords_times[j][0])
+                            
+                            nochord = False
                     
                     # check for rests
                     intra_note_time = abcSong.notes[i+1].start_time - abcSong.notes[i].end_time
@@ -127,20 +126,29 @@ if __name__=="__main__":
                             distance = np.abs(np.array(possible_durations) - intra_note_time)
                             idx = distance.argmin()
                             duration_array.append(dur_dict[possible_durations[idx]])
+                            beat_array.append(0)
                             intra_note_time -= possible_durations[idx]
                             
                             for j in range(len(chords_times)-1):
                                 if chords_times[j+1][1] > abcSong.notes[i].end_time and chords_times[j][1] <= abcSong.notes[i].end_time:
                                     chord_array.append(chords_times[j][0])
+                                    
+                                    nochord = False
                         
                         pitch_array.append('R')
                         # calculate distance from each duration
                         distance = np.abs(np.array(possible_durations) - intra_note_time)
                         idx = distance.argmin()
                         duration_array.append(dur_dict[possible_durations[idx]])
+                        beat_array.append(0)
                         for j in range(len(chords_times)-1):
                             if chords_times[j+1][1] > abcSong.notes[i].end_time and chords_times[j][1] <= abcSong.notes[i].end_time:
                                 chord_array.append(chords_times[j][0])
+                                
+                                nochord = False
+                    
+                    if nochord:
+                        print('No chord at song %s, note %d' % (song['title'], i))
                 
                 # all these vector should have the same length
                 # each element corresponds to a note event
@@ -149,7 +157,7 @@ if __name__=="__main__":
                 song['offset'] = offset_array
                 song['chords'] = chord_array
                 song['bass pitch'] = bass_pitch_array
-                song['beats'] = beat_array
+                song['beats'] = beat_array # atm filled with zeros to not give problem in training
                 song['beat duration [sec]'] = beat_duration_sec
                 song['bars'] = bar_array
                 
