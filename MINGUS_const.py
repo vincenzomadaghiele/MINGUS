@@ -13,7 +13,7 @@ EVAL_BATCH_SIZE = 10
 # length of one note sequence (use powers of 2 for even divisions)
 BPTT = 35 
 AUGMENTATION = True
-SEGMENTATION = True
+SEGMENTATION = False
 augmentation_const = 5
 
 DATASET = 'NottinghamDB'
