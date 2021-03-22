@@ -194,7 +194,7 @@ if __name__ == '__main__':
                     previous_bass = int(bass[i])
                     
                     print('Note: %d lasts %d beats (array n %d)' % (bass[i], beats_bass_dur, i))
-                '''
+                
                 # check for new chord
                 if chords[i] != previous_chord:
                     # How many beats does the bass note last ? 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
                     for chord_pitch in WjazzToMidiChords[chords[i]]:
                         chords_inst.notes.append(pretty_midi.Note(velocity_chord, int(chord_pitch), start, end))
                         previous_chord = chords[i]
-                        '''
+                        
                     
             else:
                 pitch = int(notes[i])
@@ -247,7 +247,7 @@ if __name__ == '__main__':
                     
                     print('Note: %d lasts %d beats (array n %d)' % (bass[i], beats_bass_dur, i))
                 
-                '''
+                
                 # check for new chord
                 if chords[i] != previous_chord:
                     # How many beats does the bass note last ? 
@@ -269,7 +269,7 @@ if __name__ == '__main__':
                     for chord_pitch in WjazzToMidiChords[chords[i]]:
                         chords_inst.notes.append(pretty_midi.Note(velocity_chord, int(chord_pitch), start, end))
                         previous_chord = chords[i] 
-                    '''
+                    
             offset += duration
     
     pm.write('output/equal.mid')
