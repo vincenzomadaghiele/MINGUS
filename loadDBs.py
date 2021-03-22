@@ -1011,7 +1011,7 @@ class NottinghamDB():
                 new_chord_name = 'A-' 
             
             
-            if new_chord_name == '':
+            if new_chord_name == 'NC':
                 pitchNames = ['R','R','R','R']
                 midiChord = ['R','R','R','R']
                 multi_hot = np.zeros(12)

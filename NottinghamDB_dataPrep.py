@@ -9,13 +9,11 @@ for info about the note_seq : https://github.com/magenta/note-seq/blob/master/no
 
 import json
 import numpy as np
-#import music21 as m21
 import glob
 from note_seq import abc_parser
 
 
 if __name__=="__main__":
-    
     
     path = 'data/nottingham-dataset-master/ABC_cleaned/'
     abc = '*.abc'
@@ -80,8 +78,7 @@ if __name__=="__main__":
                         chord = textannotation.text
                         chord_time = textannotation.time
                         chords_times.append([chord, chord_time])
-        
-        
+                
                 pitch_array = []
                 duration_array = []
                 offset_array = []
@@ -103,7 +100,7 @@ if __name__=="__main__":
                     distance = np.abs(np.array(possible_durations) - duration_sec)
                     idx = distance.argmin()
                     duration_array.append(dur_dict[possible_durations[idx]])
-                    beat_array.append(0)
+                    beat_array.append(1)
                     
                     nochord = True
                     for j in range(len(chords_times)-1):
@@ -126,7 +123,7 @@ if __name__=="__main__":
                             distance = np.abs(np.array(possible_durations) - intra_note_time)
                             idx = distance.argmin()
                             duration_array.append(dur_dict[possible_durations[idx]])
-                            beat_array.append(0)
+                            beat_array.append(1)
                             intra_note_time -= possible_durations[idx]
                             
                             for j in range(len(chords_times)-1):
@@ -140,7 +137,7 @@ if __name__=="__main__":
                         distance = np.abs(np.array(possible_durations) - intra_note_time)
                         idx = distance.argmin()
                         duration_array.append(dur_dict[possible_durations[idx]])
-                        beat_array.append(0)
+                        beat_array.append(1)
                         for j in range(len(chords_times)-1):
                             if chords_times[j+1][1] > abcSong.notes[i].end_time and chords_times[j][1] <= abcSong.notes[i].end_time:
                                 chord_array.append(chords_times[j][0])
@@ -148,7 +145,8 @@ if __name__=="__main__":
                                 nochord = False
                     
                     if nochord:
-                        print('No chord at song %s, note %d' % (song['title'], i))
+                        #print('No chord at song %s, note %d' % (song['title'], i))
+                        chord_array.append('NC')
                 
                 # all these vector should have the same length
                 # each element corresponds to a note event
@@ -160,6 +158,9 @@ if __name__=="__main__":
                 song['beats'] = beat_array # atm filled with zeros to not give problem in training
                 song['beat duration [sec]'] = beat_duration_sec
                 song['bars'] = bar_array
+                
+                if len(chord_array) != len(pitch_array):
+                    print('Error at song %s' % song['title'] )
                 
                 songs.append(song)
     
