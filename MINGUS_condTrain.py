@@ -134,7 +134,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss), test_acc))
     print('=' * 89)
     
-    dataset_name = 'Wjazz'
+    dataset_name = con.DATASET
     models_folder = "models"
     model_name = "MINGUSpitch"
     num_epochs = str(epochs) + "epochs"
@@ -229,7 +229,7 @@ if __name__ == '__main__':
         test_loss, math.exp(test_loss), test_acc))
     print('=' * 89)
     
-    dataset_name = 'Wjazz'
+    dataset_name = con.DATASET
     models_folder = "models"
     model_name = "MINGUSduration"
     num_epochs = str(epochs) + "epochs"
