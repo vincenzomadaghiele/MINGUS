@@ -14,6 +14,6 @@ EVAL_BATCH_SIZE = 10
 BPTT = 35 
 AUGMENTATION = True
 SEGMENTATION = True
-augmentation_const = 4
+augmentation_const = 10
 
 DATASET = 'NottinghamDB'
