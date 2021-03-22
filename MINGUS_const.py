@@ -15,3 +15,5 @@ BPTT = 35
 AUGMENTATION = True
 SEGMENTATION = True
 augmentation_const = 4
+
+DATASET = 'NottinghamDB'

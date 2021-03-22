@@ -23,16 +23,32 @@ if __name__ == '__main__':
 
     # LOAD DATA
     
-    WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
-                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
-    
-    vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
-    
-    pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
-    
-    train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
-    val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
-    test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+    if con.DATASET == 'WjazzDB':
+        
+        WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                     con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
+        
+        pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+        
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+        
+    elif con.DATASET == 'NottinghamDB':
+        
+        NottinghamDB = dataset.NottinghamDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                            con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        vocabPitch, vocabDuration, vocabBeat = NottinghamDB.getVocabs()
+        
+        pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
+        
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = NottinghamDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = NottinghamDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = NottinghamDB.getTestData()
+        
     
     
     #%% PITCH MODEL TRAINING

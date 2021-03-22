@@ -121,7 +121,7 @@ def separateSeqs(seq_pitch, seq_duration,
     new_beat = []
     
     long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
-                    'dot 8th', 'half note triplet', 'quarter note triplet']
+                'dot 8th', 'half note triplet', 'quarter note triplet']
     
     #long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter']
         
@@ -822,4 +822,601 @@ class WjazzDB():
     def getOriginalSongDict(self):
         return self.songs
     
+
+class NottinghamDB():
+
+    def __init__(self, device, TRAIN_BATCH_SIZE, EVAL_BATCH_SIZE,
+                 BPTT, AUGMENTATION = True, SEGMENTATION = True, 
+                 augmentation_const = 4):
+        
+        # DATA LOADING
+        print('Loading data from the Weimar Jazz Database...')
+        songs_path = 'data/NottinghamDB.json'
+        with open(songs_path) as f:
+            songs = json.load(f)
+            
+        self.songs = songs
+        
+        pitch_train = []
+        pitch_validation = []
+        pitch_test = []
+        
+        duration_train = []
+        duration_validation = []
+        duration_test = []
+        
+        chord_train = []
+        chord_validation = []
+        chord_test = []
+        
+        bass_train = []
+        bass_validation = []
+        bass_test = []
+        
+        beat_train = []
+        beat_validation = []
+        beat_test = []
+        
+        
+        for song in songs['train']:
+            pitch_train.append(song['pitch'])
+            duration_train.append(song['duration'])
+            chord_train.append(song['chords'])
+            bass_train.append(song['bass pitch'])
+            beat_train.append(song['beats'])
+                
+        for song in songs['validation']:
+            pitch_validation.append(song['pitch'])
+            duration_validation.append(song['duration'])
+            chord_validation.append(song['chords'])
+            bass_validation.append(song['bass pitch'])
+            beat_validation.append(song['beats'])
+                
+        for song in songs['test']:
+            pitch_test.append(song['pitch'])
+            duration_test.append(song['duration'])
+            chord_test.append(song['chords'])
+            bass_test.append(song['bass pitch'])
+            beat_test.append(song['beats'])
+        
+        
+        # COMPUTE VOCABS
+        
+        print('Computing vocabs...')
+        
+        # use all pitch values 0-127
+        # vocabPitch is used to encode also bass and chord values
+        vocabPitch = {} 
+        for i in range(0,128):
+            vocabPitch[i] = i
+        vocabPitch[128] = 'R'
+        vocabPitch[129] = '<pad>'
+        # inverse dictionary
+        pitch_to_ix = {v: k for k, v in vocabPitch.items()} 
+        
+        # use 12 duration values
+        duration_to_ix = {} 
+        duration_to_ix['full'] = 0
+        duration_to_ix['half'] = 1
+        duration_to_ix['quarter'] = 2
+        duration_to_ix['8th'] = 3
+        duration_to_ix['16th'] = 4
+        duration_to_ix['32th'] = 5
+        duration_to_ix['dot half'] = 6
+        duration_to_ix['dot quarter'] = 7
+        duration_to_ix['dot 8th'] = 8
+        duration_to_ix['dot 16th'] = 9
+        duration_to_ix['half note triplet'] = 10
+        duration_to_ix['quarter note triplet'] = 11
+        duration_to_ix['8th note triplet'] = 12
+        duration_to_ix['16th note triplet'] = 13
+        duration_to_ix['<pad>'] = 14
+        # inverse dictionary
+        vocabDuration = {v: k for k, v in duration_to_ix.items()}
+        
+        # Beat dictionary
+        # some songs have 5 beats, it is probably an error
+        # I have added one beat but the two songs could be removed 
+        # or the beat substituted
+        vocabBeat = {}
+        for i in range(0,5): 
+            vocabBeat[i] = i+1
+        vocabBeat[6] = '<pad>'
+        # inverse dictionary
+        beat_to_ix = {v: k for k, v in vocabBeat.items()}     
+        
+        for song in bass_train:
+            for i in range(len(song)):
+                if song[i] == None:
+                    song[i] = 'R'
+        for song in bass_validation:
+            for i in range(len(song)):
+                if song[i] == None:
+                    song[i] = 'R'
+        for song in bass_test:
+            for i in range(len(song)):
+                if song[i] == None:
+                    song[i] = 'R'
+        
+        # BUILD CHORD DICTIONARY
+        
+        # select unique chords
+        unique_chords = []
+        for chord_list in chord_train:
+            for chord in chord_list:
+                if chord not in unique_chords:
+                    unique_chords.append(chord)
+        
+        for chord_list in chord_validation:
+            for chord in chord_list:
+                if chord not in unique_chords:
+                    unique_chords.append(chord)
+        
+        for chord_list in chord_test:
+            for chord in chord_list:
+                if chord not in unique_chords:
+                    unique_chords.append(chord)
+        
+        # substitute for chord representation compatibility between music21 and WjazzDB
+        # to do this I have extracted all unique chords and operated some simplification
+        # to the chord notes in order for them to be recognized by music21
+        new_unique_chords = []
+        NottinghamChords = []
+        NottinghamToMusic21 = {}
+        NottinghamToChordComposition = {}
+        NottinghamToMidiChords = {}
+        for chord in unique_chords:
+            new_chord_name = chord
+            
+            # special cases
+            if chord == 'D/f+':
+                new_chord_name = 'D/F#'
+            if chord == 'G/b':
+                new_chord_name = 'G/B' 
+            if chord == 'C#d':
+                new_chord_name = 'C#'
+            if chord == 'G#d':
+                new_chord_name = 'G#'
+            if chord == 'D/a':
+                new_chord_name = 'D/A' 
+            if chord == 'A7/f+':
+                new_chord_name = 'A7/F#'
+            if chord == 'D7/b':
+                new_chord_name = 'D7/B'
+            if chord == 'D#d':
+                new_chord_name = 'D#'
+            if chord == 'Ad':
+                new_chord_name = 'A'
+            if chord == 'D7/f+':
+                new_chord_name = 'D7/f#'
+            if chord == 'Am/g':
+                new_chord_name = 'Am/G'
+            if chord == 'Gd':
+                new_chord_name = 'G'
+            if chord == 'E7/b':
+                new_chord_name = 'E7/B'
+            if chord == 'A/c+':
+                new_chord_name = 'A/C#'
+            if chord == 'Ed':
+                new_chord_name = 'E'
+            if chord == 'E7/g+':
+                new_chord_name = 'E7/G#'
+            if chord == 'G/d':
+                new_chord_name = 'G/D'
+            if chord == 'Bb':
+                new_chord_name = 'B-'
+            if chord == 'Eb':
+                new_chord_name = 'E-' 
+            if chord == 'Ab':
+                new_chord_name = 'A-' 
+            
+            
+            if new_chord_name == '':
+                pitchNames = ['R','R','R','R']
+                midiChord = ['R','R','R','R']
+                multi_hot = np.zeros(12)
+            else:
+                h = m21.harmony.ChordSymbol(new_chord_name)
+                pitchNames = [str(p) for p in h.pitches]
+                # The following bit is added 
+                # just for parameter modeling purposes
+                if len(pitchNames) < 4:
+                    hd = m21.harmony.ChordStepModification('add', 7)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    #chord = m21.chord.Chord(pitchNames)
+                    pitchNames = [str(p) for p in h.pitches]                
+                    
+                midiChord = []
+                multi_hot = np.zeros(12)
+                for p in pitchNames:
+                    
+                    # midi conversion
+                    c = m21.pitch.Pitch(p)
+                    midiChord.append(c.midi)
+                    
+                    # multi-hot
+                    # C C#/D- D D#/E- E E#/F F#/G- G G#/A- A A#/B- B 
+                    # 0   1   2   3   4   5    6   7   8   9  10   11
+                    if p[0] == 'C' and p[1] == '-':
+                        multi_hot[11] = 1
+                    elif p[0] == 'C' and p[1] == '#':
+                        multi_hot[1] = 1
+                    elif p[0] == 'C' :
+                        multi_hot[0] = 1
+                    
+                    elif p[0] == 'D' and p[1] == '-':
+                        multi_hot[1] = 1
+                    elif p[0] == 'D' and p[1] == '#':
+                        multi_hot[3] = 1
+                    elif p[0] == 'D' :
+                        multi_hot[2] = 1
+                    
+                    elif p[0] == 'E' and p[1] == '-':
+                        multi_hot[3] = 1
+                    elif p[0] == 'E' and p[1] == '#':
+                        multi_hot[5] = 1
+                    elif p[0] == 'E' :
+                        multi_hot[4] = 1
+                    
+                    elif p[0] == 'F' and p[1] == '-':
+                        multi_hot[4] = 1
+                    elif p[0] == 'F' and p[1] == '#':
+                        multi_hot[6] = 1
+                    elif p[0] == 'F' :
+                        multi_hot[7] = 1
+                    
+                    elif p[0] == 'G' and p[1] == '-':
+                        multi_hot[6] = 1
+                    elif p[0] == 'G' and p[1] == '#':
+                        multi_hot[8] = 1
+                    elif p[0] == 'G' :
+                        multi_hot[7] = 1
+                    
+                    elif p[0] == 'A' and p[1] == '-':
+                        multi_hot[8] = 1
+                    elif p[0] == 'A' and p[1] == '#':
+                        multi_hot[10] = 1
+                    elif p[0] == 'A' :
+                        multi_hot[9] = 1
+                    
+                    elif p[0] == 'B' and p[1] == '-':
+                        multi_hot[10] = 1
+                    elif p[0] == 'B' and p[1] == '#':
+                        multi_hot[0] = 1
+                    elif p[0] == 'B' :
+                        multi_hot[11] = 1
+            
     
+            # Update dictionaries
+            new_unique_chords.append(new_chord_name)
+            NottinghamToMusic21[chord] = new_chord_name
+            NottinghamToChordComposition[chord] = pitchNames
+            NottinghamToMidiChords[chord] = midiChord
+            
+            NewChord = {}
+            NewChord['Wjazz name'] = chord
+            NewChord['music21 name'] = new_chord_name
+            NewChord['chord composition'] = pitchNames
+            NewChord['midi chord composition'] = midiChord
+            NewChord['one-hot encoding'] = multi_hot.tolist()
+            NottinghamChords.append(NewChord)
+        
+        self.vocabPitch = vocabPitch
+        self.vocabDuration = vocabDuration
+        self.vocabBeat = vocabBeat
+        
+        self.pitch_to_ix = pitch_to_ix
+        self.duration_to_ix = duration_to_ix
+        self.beat_to_ix = beat_to_ix
+        
+        self.NottinghamChords = NottinghamChords
+        self.NottinghamToMusic21 = NottinghamToMusic21
+        self.NottinghamToChordComposition = NottinghamToChordComposition
+        self.NottinghamToMidiChords = NottinghamToMidiChords
+        
+        # PRE-PROCESSING
+        
+        print('Pre-processing...')
+        # Convert lists to array 
+    
+        pitch_train = np.array(pitch_train)
+        pitch_validation = np.array(pitch_validation)
+        pitch_test = np.array(pitch_test)
+        
+        duration_train = np.array(duration_train)
+        duration_validation = np.array(duration_validation)
+        duration_test = np.array(duration_test)
+       
+        new_chord_train = []
+        new_bass_train = []
+        for song in chord_train:
+            new_song_chords = []
+            new_song_bass = []
+            for chord in song:
+                # Only include four-notes chords
+                new_song_chords.append(NottinghamToMidiChords[chord][:4])
+                new_song_bass.append(NottinghamToMidiChords[chord][0])
+            new_chord_train.append(new_song_chords)
+            new_bass_train.append(new_song_bass)
+        
+        new_chord_validation = []
+        new_bass_validation = []
+        for song in chord_validation:
+            new_song_chords = []
+            new_song_bass = []
+            for chord in song:
+                # Only include four-notes chords
+                new_song_chords.append(NottinghamToMidiChords[chord][:4])
+                new_song_bass.append(NottinghamToMidiChords[chord][0])
+            new_chord_validation.append(new_song_chords)
+            new_bass_validation.append(new_song_bass)
+        
+        new_chord_test = []
+        new_bass_test = []
+        for song in chord_test:
+            new_song_chords = []
+            new_song_bass = []
+            for chord in song:
+                # Only include four-notes chords
+                new_song_chords.append(NottinghamToMidiChords[chord][:4])
+                new_song_bass.append(NottinghamToMidiChords[chord][0])
+            new_chord_test.append(new_song_chords)
+            new_bass_test.append(new_song_bass)
+        
+        chord_train = np.array(new_chord_train)
+        chord_validation = np.array(new_chord_validation)
+        chord_test = np.array(new_chord_test)
+        
+        bass_train = np.array(new_bass_train)
+        bass_validation = np.array(new_bass_validation)
+        bass_test = np.array(new_bass_test)
+        
+        beat_train = np.array(beat_train)
+        beat_validation = np.array(beat_validation)
+        beat_test = np.array(beat_test)
+        
+        
+        # Data augmentation
+        
+        if AUGMENTATION:
+            # augmentation is done by transposing the pitch
+            
+            print('Data augmentation...')
+            # ex. if augmentation_const = 4 the song will be transposed +4 and -4 times
+            
+            # training augmentation
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            for aug in range (1,augmentation_const):
+                for i in range(pitch_train.shape[0]):                
+                    new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_train[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
+                    new_duration.append(duration_train[i])
+                    new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_train[i]])
+                    new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_train[i]])
+                    new_beat.append(beat_train[i])
+    
+                    new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_train[i]])
+                    new_duration.append(duration_train[i])
+                    new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_train[i]])
+                    new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_train[i]])
+                    new_beat.append(beat_train[i])
+            
+            pitch_train = np.array(new_pitch)
+            duration_train = np.array(new_duration)
+            chord_train = np.array(new_chord)
+            bass_train = np.array(new_bass)
+            beat_train = np.array(new_beat)
+            
+            # validation augmentation
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            for aug in range (1,augmentation_const):
+                for i in range(pitch_validation.shape[0]):
+                    new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_validation[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
+                    new_duration.append(duration_validation[i])
+                    new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_validation[i]])
+                    new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_validation[i]])
+                    new_beat.append(beat_validation[i])
+    
+                    new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_validation[i]])
+                    new_duration.append(duration_validation[i])
+                    new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_validation[i]])
+                    new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_validation[i]])
+                    new_beat.append(beat_validation[i])
+            
+            pitch_validation = np.array(new_pitch)
+            duration_validation = np.array(new_duration)
+            chord_validation = np.array(new_chord)
+            bass_validation = np.array(new_bass)
+            beat_validation = np.array(new_beat)
+            
+            # test augmentation
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            for aug in range (1,augmentation_const):
+                for i in range(pitch_test.shape[0]):
+                    new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_test[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
+                    new_duration.append(duration_test[i])
+                    new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_test[i]])
+                    new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_test[i]])
+                    new_beat.append(beat_test[i])
+    
+                    new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_test[i]])
+                    new_duration.append(duration_test[i])
+                    new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_test[i]])
+                    new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_test[i]])
+                    new_beat.append(beat_test[i])
+            
+            pitch_test = np.array(new_pitch)
+            duration_test = np.array(new_duration)
+            chord_test = np.array(new_chord)
+            bass_test = np.array(new_bass)
+            beat_test = np.array(new_beat)
+        
+        
+        # Reshape according to sequence length
+        # At the end of this step the datasets should be composed 
+        # of equal length melodies
+        # SEGMENTATION --> padded segmented melodies
+        # !SEGMENTATION --> equal length not padded note sequences
+        
+        if SEGMENTATION:
+            print('Melody segmentation...')
+            
+            pitch_train, duration_train, chord_train, bass_train, beat_train = segmentDataset(pitch_train, 
+                                                                                              duration_train, 
+                                                                                              chord_train,
+                                                                                              bass_train,
+                                                                                              beat_train,
+                                                                                              BPTT)
+            pitch_validation, duration_validation, chord_validation, bass_validation, beat_validation = segmentDataset(pitch_validation, 
+                                                                                                                       duration_validation, 
+                                                                                                                       chord_validation,
+                                                                                                                       bass_validation,
+                                                                                                                       beat_validation,
+                                                                                                                       BPTT)
+            pitch_test, duration_test, chord_test, bass_test, beat_test = segmentDataset(pitch_test, 
+                                                                                         duration_test, 
+                                                                                         chord_test,
+                                                                                         bass_test,
+                                                                                         beat_test,
+                                                                                         BPTT)
+        else:
+            print('Reshaping...')
+            
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            for i in range(pitch_train.shape[0]):
+                for j in range(int(len(pitch_train[i])/BPTT)):
+                    new_pitch.append(pitch_train[i][j * BPTT:(j+1) * BPTT])
+                    new_duration.append(duration_train[i][j * BPTT:(j+1) * BPTT])
+                    new_chord.append(chord_train[i][j * BPTT:(j+1) * BPTT])
+                    new_bass.append(bass_train[i][j * BPTT:(j+1) * BPTT])
+                    new_beat.append(beat_train[i][j * BPTT:(j+1) * BPTT])
+        
+            pitch_train = (new_pitch)
+            duration_train = (new_duration)
+            chord_train = (new_chord)
+            bass_train = (new_bass)
+            beat_train = (new_beat)
+            
+            # reshape validation
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            for i in range(pitch_validation.shape[0]):
+                for j in range(int(len(pitch_validation[i])/BPTT)):
+                    new_pitch.append(pitch_validation[i][j * BPTT:(j+1) * BPTT])
+                    new_duration.append(duration_validation[i][j * BPTT:(j+1) * BPTT])
+                    new_chord.append(chord_validation[i][j * BPTT:(j+1) * BPTT])
+                    new_bass.append(bass_validation[i][j * BPTT:(j+1) * BPTT])
+                    new_beat.append(beat_validation[i][j * BPTT:(j+1) * BPTT])
+        
+            pitch_validation = (new_pitch)
+            duration_validation = (new_duration)
+            chord_validation = (new_chord)
+            bass_validation = (new_bass)
+            beat_validation = (new_beat)
+            
+            # reshape test
+            new_pitch = []
+            new_duration = []
+            new_chord = []
+            new_bass = []
+            new_beat = []
+            for i in range(pitch_test.shape[0]):
+                for j in range(int(len(pitch_test[i])/BPTT)):
+                    new_pitch.append(pitch_test[i][j * BPTT:(j+1) * BPTT])
+                    new_duration.append(duration_test[i][j * BPTT:(j+1) * BPTT])
+                    new_chord.append(chord_test[i][j * BPTT:(j+1) * BPTT])
+                    new_bass.append(bass_test[i][j * BPTT:(j+1) * BPTT])
+                    new_beat.append(beat_test[i][j * BPTT:(j+1) * BPTT])
+        
+            pitch_test = (new_pitch)
+            duration_test = (new_duration)
+            chord_test = (new_chord)
+            bass_test = (new_bass)
+            beat_test = (new_beat)
+        
+        
+        # TOKENIZE AND BATCHIFY
+        
+        print('Batching...')
+        
+        train_pitch_batched = batchify(pitch_train, TRAIN_BATCH_SIZE, pitch_to_ix, device)
+        val_pitch_batched = batchify(pitch_validation, EVAL_BATCH_SIZE, pitch_to_ix, device)
+        test_pitch_batched = batchify(pitch_test, EVAL_BATCH_SIZE, pitch_to_ix, device)
+        
+        train_duration_batched = batchify(duration_train, TRAIN_BATCH_SIZE, duration_to_ix, device)
+        val_duration_batched = batchify(duration_validation, EVAL_BATCH_SIZE, duration_to_ix, device)
+        test_duration_batched = batchify(duration_test, EVAL_BATCH_SIZE, duration_to_ix, device)  
+        
+        train_chord_batched = batchify(chord_train, TRAIN_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+        val_chord_batched = batchify(chord_validation, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+        test_chord_batched = batchify(chord_test, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+        
+        train_bass_batched = batchify(bass_train, TRAIN_BATCH_SIZE, pitch_to_ix, device)
+        val_bass_batched = batchify(bass_validation, EVAL_BATCH_SIZE, pitch_to_ix, device)
+        test_bass_batched = batchify(bass_test, EVAL_BATCH_SIZE, pitch_to_ix, device)
+        
+        train_beat_batched = batchify(beat_train, TRAIN_BATCH_SIZE, beat_to_ix, device)
+        val_beat_batched = batchify(beat_validation, EVAL_BATCH_SIZE, beat_to_ix, device)
+        test_beat_batched = batchify(beat_test, EVAL_BATCH_SIZE, beat_to_ix, device)
+        
+        self.train_pitch_batched = train_pitch_batched
+        self.val_pitch_batched = val_pitch_batched
+        self.test_pitch_batched = test_pitch_batched
+        
+        self.train_duration_batched = train_duration_batched
+        self.val_duration_batched = val_duration_batched
+        self.test_duration_batched = test_duration_batched
+        
+        self.train_chord_batched = train_chord_batched
+        self.val_chord_batched = val_chord_batched
+        self.test_chord_batched = test_chord_batched
+        
+        self.train_bass_batched = train_bass_batched
+        self.val_bass_batched = val_bass_batched
+        self.test_bass_batched = test_bass_batched
+        
+        self.train_beat_batched = train_beat_batched
+        self.val_beat_batched = val_beat_batched
+        self.test_beat_batched = test_beat_batched
+        
+    def getVocabs(self):
+        return self.vocabPitch, self.vocabDuration, self.vocabBeat
+    
+    def getInverseVocabs(self):
+        return self.pitch_to_ix, self.duration_to_ix, self.beat_to_ix
+    
+    def getTrainingData(self):
+        return self.train_pitch_batched, self.train_duration_batched, self.train_chord_batched, self.train_bass_batched, self.train_beat_batched
+    
+    def getValidationData(self):
+        return self.val_pitch_batched, self.val_duration_batched, self.val_chord_batched, self.val_bass_batched, self.val_beat_batched
+    
+    def getTestData(self):
+        return self.test_pitch_batched, self.test_duration_batched, self.test_chord_batched, self.test_bass_batched, self.test_beat_batched
+        
+    def getChordDicts(self):
+        return self.NottinghamChords, self.NottinghamToMusic21, self.NottinghamToChordComposition, self.NottinghamToMidiChords
+    
+    def getOriginalSongDict(self):
+        return self.songs
+    
+    
+
