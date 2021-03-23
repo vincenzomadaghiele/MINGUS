@@ -1418,5 +1418,6 @@ class NottinghamDB():
     def getOriginalSongDict(self):
         return self.songs
     
-    
+    def getStructuredSongs(self):
+        return self.songs['structured for generation']
 
