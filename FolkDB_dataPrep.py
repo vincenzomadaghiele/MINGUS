@@ -22,7 +22,6 @@ if __name__=="__main__":
         for abcSong in abcSongbook[0].values():
             # ensure there is only one time signiture
             # ensure that the song is in 4/4
-            #abcSong = abcSongbook[0][8]
             time_signatures = abcSong.time_signatures
             tempos = abcSong.tempos
             chords_times = []
