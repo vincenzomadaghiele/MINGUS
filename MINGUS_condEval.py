@@ -124,6 +124,7 @@ if __name__ == '__main__':
     with open(path) as f:
         generated_structuredSongs = json.load(f)
     
+    # get arrays from structured songs
     original_tunes_pitch = []
     original_tunes_duration = []
     for tune in original_structuredSongs:
