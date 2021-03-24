@@ -7,6 +7,7 @@ Created on Wed Mar 24 07:09:14 2021
 """
 
 import pretty_midi
+import glob
 import numpy as np
 import torch
 import torch.nn as nn
@@ -134,12 +135,13 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
                 duration.append(beat['duration'][i])
                 chord.append(NottinghamToMidiChords[beat['chord']][:4])
                 bass.append(NottinghamToMidiChords[beat['chord']][0])
-    
+        
+    new_chord = beat['chord']
     while len(bars) < len(tune['bars']):
         
         # batchify
-        pitch4gen = batch4gen(np.array(pitch), len(pitch), pitch_to_ix, device)
-        duration4gen = batch4gen(np.array(duration), len(duration), duration_to_ix, device)
+        pitch4gen = batch4gen(pitch, len(pitch), pitch_to_ix, device)
+        duration4gen = batch4gen(duration, len(duration), duration_to_ix, device)
         chord4gen = batch4gen(chord, len(chord), pitch_to_ix, device, isChord=True)
         bass4gen = batch4gen(bass, len(bass), pitch_to_ix, device)
         # reshape to column vectors
@@ -185,7 +187,8 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
                 beat = {}
                 beat['num beat'] = beat_num + 1
                 # check for chords
-                new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                if len(tune['bars']) > bar_num:
+                    new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
                 beat['chord'] = new_chord
                 beat['pitch'] = beat_pitch 
                 beat['duration'] = beat_duration 
@@ -212,7 +215,8 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
                 beat['num beat'] = beat_num + 1
                 # at most one chord per beat
                 # check for chords
-                new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                if len(tune['bars']) > bar_num:
+                    new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
                 beat['chord'] = new_chord
                 # pitch of notes which START in this beat
                 beat['pitch'] = beat_pitch 
@@ -434,4 +438,20 @@ if __name__ == '__main__':
     pm.write('output/'+ title + '.mid')
     
     
+    #%% BUILD A DATASET OF GENERATED TUNES
+    
+    # Set to True to generate dataset of songs
+    generate_dataset = False
+    
+    if generate_dataset:
+        out_path = 'output/gen4eval_' + con.DATASET + '/'
+        num_tunes = 20
+
+        for tune in structuredSongs[:num_tunes]:
+            new_structured_song = generateCond(tune, num_bars, temperature, 
+                                       modelPitch, modelDuration)
+            title = new_structured_song['title']
+            pm = structuredSongsToPM(new_structured_song)
+            pm.write(out_path + title + '.mid')
+
     
