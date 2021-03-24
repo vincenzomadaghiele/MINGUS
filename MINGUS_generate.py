@@ -60,6 +60,8 @@ def generate(model, melody4gen, dict_to_ix, device, bptt=35, next_notes=10, temp
             if melody4gen_batch.size(0) != bptt:
                 src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
     
+            print(melody4gen_batch.shape)
+    
             y_pred = model(melody4gen_batch, src_mask)
             
             word_weights = y_pred[-1].squeeze().div(temperature).exp().cpu()
@@ -177,7 +179,7 @@ def generateEqual(model, melody4gen, dict_to_ix, device, bptt=35, next_notes=10)
             
         if melody4gen_batch.size(0) != bptt:
             src_mask = model.generate_square_subsequent_mask(melody4gen_batch.size(0)).to(device)
-    
+        
         y_pred = model(melody4gen_batch, src_mask)
         #print(y_pred.size(0))
         for j in range(y_pred.size(0)):
@@ -203,7 +205,9 @@ def generateEqual(model, melody4gen, dict_to_ix, device, bptt=35, next_notes=10)
 
 if __name__ == '__main__':
     
-    # DATA LOADING
+    a = 0
+    
+    #%% DATA LOADING
     
     
     # LOAD PITCH DATASET
