@@ -830,7 +830,7 @@ class NottinghamDB():
                  augmentation_const = 4):
         
         # DATA LOADING
-        print('Loading data from the Weimar Jazz Database...')
+        print('Loading data from the Nottingham Database...')
         songs_path = 'data/NottinghamDB.json'
         with open(songs_path) as f:
             songs = json.load(f)

@@ -54,6 +54,8 @@ if __name__=="__main__":
                 else:
                     song['avgtempo'] = abcSong.tempos[0]
         
+                structured_song['tempo'] = song['avgtempo']
+        
                 beat_duration_sec = 1 / (song['avgtempo'] / 60)
         
                 # sampling of the measure
@@ -115,7 +117,7 @@ if __name__=="__main__":
                     beat_duration = []
                     offset_sec = 0
                     beat_counter = 0
-                                    
+                    
                     next_beat_sec = (beat_counter + 1) * beat_duration_sec 
                     # iterate over the note_sequence notes
                     for i in range(len(abcSong.notes)):
