@@ -10,7 +10,7 @@ ToDo:
     - check if in midi WjazzDB files there is chords information with note_seq
     - check if in midi folkDB files there is chords information with note_seq
     - if no chord information on folkDB try to open abc files with other library
-    - modify generation function for Wjazz to include different bass (same as chord)
+    - modify generation function for WjazzDB to include different bass (same as chord)
     - fine tune parameters for NottinghamDB training 
     - generation/evaluation on EURECOM machine for NottinghamDB
     - implement harmonic coherence metric
@@ -18,7 +18,9 @@ ToDo:
     - export midi to audio and evaluate long-term coherence with Jazz Transformer metric (Matlab)
     - consider note_seq pipeline with quantization to obtain better results on WjazzDB
     - evaluate implementation of Transformer-XL / Relative attention (and comparison)
-    - live interface (chord recognition in max) - note generation in python (communication via osc)
+    - live interface (chord recognition in max from audio or midi) - note generation in python (communication via osc)
+    - bass line generation on WjazzDB (given only chord and given melody)
+    - melody harmonization
     
 """
 
