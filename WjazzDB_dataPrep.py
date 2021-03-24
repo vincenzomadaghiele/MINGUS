@@ -17,6 +17,7 @@ if __name__=="__main__":
     solos_cur = con.cursor()
     
     songs = []
+    structured_songs = []
     
     solos_cur.execute('SELECT * FROM solo_info') 
     for row in solos_cur:
@@ -32,6 +33,13 @@ if __name__=="__main__":
             song['style'] = row[9]
             song['avgtempo'] = row[10]
             song['chord changes'] = row[15]
+            
+            structured_song = {}
+            structured_song['title'] = row[5]
+            structured_song['tempo'] = row[10]
+            structured_song['chord changes'] = row[15]
+            bars = []
+            beats = []
             
             pitch_array = []
             duration_array = []
@@ -57,13 +65,14 @@ if __name__=="__main__":
                 if beat_row[6] != '':
                     chord = beat_row[6]
                 
+                beat_pitch = []
+                beat_duration = []
+                
                 if bar != -1:
                     # SELECT ALL EVENTS IN THIS melid WITH THIS bar NUMBER AND beat NUMBER
                     events_cur = con.cursor()
                     events_cur.execute("SELECT * FROM melody WHERE melid = %d AND bar = %d AND beat = %d ORDER BY eventid" % (melid, bar, beat)) 
                     for event_row in events_cur:
-                        
-                        print(event_row)
                         
                         # duration count could be adjusted to take into account
                         # of swing timing and far smaller durations!!
@@ -125,6 +134,10 @@ if __name__=="__main__":
                                 bar_array.append(bar)
                                 #velocity_array.append(velocity)                    
                                 #offset_array.append(offset)
+                                
+                                # append to structured song
+                                beat_pitch.append('R')
+                                beat_duration.append(duration)
                             
                             # calculate distance from each duration
                             distance = np.abs(np.array(possible_durations) - intra_note_time)
@@ -139,6 +152,10 @@ if __name__=="__main__":
                             bar_array.append(bar)
                             #velocity_array.append(velocity)                    
                             #offset_array.append(offset)
+                            
+                            # append to structured song
+                            beat_pitch.append('R')
+                            beat_duration.append(duration)
                         
                         pitch = event_row[3]
                         duration_sec = event_row[4]
@@ -160,6 +177,54 @@ if __name__=="__main__":
                         #velocity_array.append(velocity)                    
                         #offset_array.append(offset)
                         last_onset = beat_duration_sec + onset
+                        
+                        # append to structured song
+                        beat_pitch.append(pitch)
+                        beat_duration.append(duration)
+                
+                
+                    if not events_cur:
+                        # if the list of events for this bar is empty 
+                        # use onset and last note duration to check for rests
+                        # update global onset
+                        pass
+                    
+                    new_beat = {}
+                    new_beat['num beat'] = beat 
+                    new_beat['chord'] = chord 
+                    new_beat['pitch'] = beat_pitch 
+                    new_beat['duration'] = beat_duration 
+                    new_beat['offset'] = []
+                    new_beat['scale'] = []
+                    new_beat['bass'] = bass_pitch
+                    new_beat['this beat duration [sec]'] = beat_duration_sec
+                    # append beat
+                    beats.append(new_beat)
+                    if beat == 4:
+                        # append bar
+                        new_bar = {}
+                        new_bar['num bar'] = bar # over all song
+                        new_bar['beats'] = beats # beats 1,2,3,4
+                        bars.append(new_bar)
+                        beats = []
+            
+            
+            # before appending the bars check for long rests at the start 
+            # (they might be removed as they are not useful for the song structure)
+            # it might be necessary to locate the position of the first bar in the standard
+            # by extracting the chord sequence and comparing it (but atm is not useful)
+            # also not useful for generation because later we go with the standard
+            # but using a new function
+            # ----
+            # just remove rests of full duration from first beat (not all!!)
+            # check with entire beat duration
+            # ----
+            # to solve: the rests are not in the right beat
+            # if in a beat there are no events the rests are not counted!!!
+            # when solving take into account last note duration:
+            # not blindly put a rest on empty beats
+            structured_song['bars'] = bars
+            structured_song['beat duration [sec]'] = np.mean(beat_dur_array) 
 
             # all these vector should have the same length
             # each element corresponds to a note event
@@ -174,6 +239,7 @@ if __name__=="__main__":
 
             # how to represent rest?
             songs.append(song)
+            structured_songs.append(structured_song)
     
     # split into train, validation and test
     songs_split = {}
@@ -183,6 +249,8 @@ if __name__=="__main__":
     songs_split['validation'] = songs[int(len(songs)*0.7)+1:int(len(songs)*0.7)+1+int(len(songs)*0.1)]
     # train: 20%
     songs_split['test'] = songs[int(len(songs)*0.7)+1+int(len(songs)*0.1):]
+    # structured songs (ordered by bar and beats)
+    songs_split['structured for generation'] = structured_songs
     
     
     # Convert dict to JSON and SAVE IT

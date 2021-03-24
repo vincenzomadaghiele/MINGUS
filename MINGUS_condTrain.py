@@ -15,13 +15,24 @@ ToDo:
     - generation/evaluation on EURECOM machine for NottinghamDB
     - implement harmonic coherence metric
     - include offset (maybe it improves duration inference)
-    - export midi to audio and evaluate long-term coherence with Jazz Transformer metric (Matlab)
+    - export midi to audio and evaluate long-term coherence 
+        with Jazz Transformer metric (Matlab)
     - consider note_seq pipeline with quantization to obtain better results on WjazzDB
     - evaluate implementation of Transformer-XL / Relative attention (and comparison)
-    - live interface (chord recognition in max from audio or midi) - note generation in python (communication via osc)
+    - live interface (chord recognition in max from audio or midi), 
+        note generation in python (communication via osc)
     - bass line generation on WjazzDB (given only chord and given melody)
     - melody harmonization
     
+Training instruction:
+    - to train with different dataset create a json file in the same format 
+        of the three given song datasets:
+            divided in train, validation, test and structured songs
+            give clear information about the format
+        different datasets can be automatically transcribed with the functions provided
+    - to train with the given datasets just modify the MINGUS_const file,
+        which contains the training parameters
+        
 """
 
 import torch
