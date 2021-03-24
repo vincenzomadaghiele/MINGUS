@@ -184,7 +184,7 @@ if __name__=="__main__":
                 
                 
                     if not events_cur:
-                        # if the list of events for this bar is empty 
+                        # if the list of events for this beat is empty 
                         # use onset and last note duration to check for rests
                         # update global onset
                         pass
@@ -209,20 +209,38 @@ if __name__=="__main__":
                         beats = []
             
             
-            # before appending the bars check for long rests at the start 
-            # (they might be removed as they are not useful for the song structure)
             # it might be necessary to locate the position of the first bar in the standard
             # by extracting the chord sequence and comparing it (but atm is not useful)
             # also not useful for generation because later we go with the standard
             # but using a new function
             # ----
-            # just remove rests of full duration from first beat (not all!!)
-            # check with entire beat duration
-            # ----
             # to solve: the rests are not in the right beat
             # if in a beat there are no events the rests are not counted!!!
             # when solving take into account last note duration:
             # not blindly put a rest on empty beats
+            
+            # Remove longer rests from first beat
+            new_pitch = []
+            new_duration = []
+            beat_offset = 0
+            for i in range(len(bars[0]['beats'][0]['pitch'])):
+                if bars[0]['beats'][0]['pitch'][i] == 'R':
+                    pass
+                else:
+                    new_pitch.append(bars[0]['beats'][0]['pitch'][i])
+                    new_duration.append(bars[0]['beats'][0]['duration'][i])
+                    beat_offset += inv_dur_dict[bars[0]['beats'][0]['duration'][i]]
+            
+            rest_duration_sec = bars[0]['beats'][0]['this beat duration [sec]'] - beat_offset
+            distance = np.abs(np.array(possible_durations) - rest_duration_sec)
+            idx = distance.argmin()
+            new_rest_duration = dur_dict[possible_durations[idx]]
+            new_pitch.insert (0, 'R')
+            new_duration.insert (0, new_rest_duration) 
+            bars[0]['beats'][0]['pitch'] = new_pitch
+            bars[0]['beats'][0]['duration'] = new_duration
+
+            
             structured_song['bars'] = bars
             structured_song['beat duration [sec]'] = np.mean(beat_dur_array) 
 
