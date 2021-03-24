@@ -271,9 +271,9 @@ if __name__=="__main__":
                                         chord_array.append(chord)
                                     
                                     # calculate at which second there is a new beat
-                                    next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
+                                    #next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
                                     while offset_sec >= next_beat_sec:
-                                        if beat_num == 3:
+                                        if beat_num >= 3:
                                             # end of bar
                                             # append beat
                                             beat = {}
@@ -284,6 +284,10 @@ if __name__=="__main__":
                                                 if chords_times[j+1][1] >= next_beat_sec and chords_times[j][1] < next_beat_sec:
                                                     chord = chords_times[j][0]
                                                     nochord = False
+                                                elif chords_times[-1][1] < next_beat_sec:
+                                                    chord = chords_times[-1][0]
+                                                    nochord = False
+                                                    break
                                             if nochord:
                                                 chord = 'NC'
                                             beat['chord'] = chord 
@@ -297,28 +301,32 @@ if __name__=="__main__":
                                             beat_duration = []
                                             # append bar
                                             bar = {}
-                                            bar['num bar'] = bar_num # over all song
+                                            bar['num bar'] = bar_num + 1 # over all song
                                             bar['beats'] = beats # beats 1,2,3,4
                                             bars.append(bar)
                                             beats = []
                                             beat_num = 0
                                             bar_num += 1
-                                            next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
-        
-                                        else: 
+                                            beat_counter += 1
+                                            next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                                        else:
                                             # end of beat
                                             beat = {}
                                             # number of beat in the bar [1,4]
                                             beat['num beat'] = beat_num + 1
+                                            # at most one chord per beat
                                             # check for chords
                                             nochord = True
                                             for j in range(len(chords_times)-1):
                                                 if chords_times[j+1][1] >= next_beat_sec and chords_times[j][1] < next_beat_sec:
                                                     chord = chords_times[j][0]
                                                     nochord = False
+                                                elif chords_times[-1][1] < next_beat_sec:
+                                                    chord = chords_times[-1][0]
+                                                    nochord = False
+                                                    break
                                             if nochord:
                                                 chord = 'NC'
-                                            # at most one chord per beat
                                             beat['chord'] = chord 
                                             # pitch of notes which START in this beat
                                             beat['pitch'] = beat_pitch 
@@ -334,9 +342,8 @@ if __name__=="__main__":
                                             beat_pitch = []
                                             beat_duration = []
                                             beat_num += 1
-                                            next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
-        
-                                
+                                            beat_counter += 1
+                                            next_beat_sec = (beat_counter + 1) * beat_duration_sec 
                                 
                                 pitch_array.append('R')
                                 beat_pitch.append('R')
@@ -365,9 +372,9 @@ if __name__=="__main__":
                                     chord_array.append(chord)
                                 
                                 # calculate at which second there is a new beat
-                                next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
+                                #next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
                                 while offset_sec >= next_beat_sec:
-                                    if beat_num == 3:
+                                    if beat_num >= 3:
                                         # end of bar
                                         # append beat
                                         beat = {}
@@ -378,6 +385,10 @@ if __name__=="__main__":
                                             if chords_times[j+1][1] >= next_beat_sec and chords_times[j][1] < next_beat_sec:
                                                 chord = chords_times[j][0]
                                                 nochord = False
+                                            elif chords_times[-1][1] < next_beat_sec:
+                                                chord = chords_times[-1][0]
+                                                nochord = False
+                                                break
                                         if nochord:
                                             chord = 'NC'
                                         beat['chord'] = chord 
@@ -391,28 +402,32 @@ if __name__=="__main__":
                                         beat_duration = []
                                         # append bar
                                         bar = {}
-                                        bar['num bar'] = bar_num # over all song
+                                        bar['num bar'] = bar_num + 1 # over all song
                                         bar['beats'] = beats # beats 1,2,3,4
                                         bars.append(bar)
                                         beats = []
                                         beat_num = 0
                                         bar_num += 1
-                                        next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
-        
-                                    else: 
+                                        beat_counter += 1
+                                        next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                                    else:
                                         # end of beat
                                         beat = {}
                                         # number of beat in the bar [1,4]
                                         beat['num beat'] = beat_num + 1
+                                        # at most one chord per beat
                                         # check for chords
                                         nochord = True
                                         for j in range(len(chords_times)-1):
                                             if chords_times[j+1][1] >= next_beat_sec and chords_times[j][1] < next_beat_sec:
                                                 chord = chords_times[j][0]
                                                 nochord = False
+                                            elif chords_times[-1][1] < next_beat_sec:
+                                                chord = chords_times[-1][0]
+                                                nochord = False
+                                                break
                                         if nochord:
                                             chord = 'NC'
-                                        # at most one chord per beat
                                         beat['chord'] = chord 
                                         # pitch of notes which START in this beat
                                         beat['pitch'] = beat_pitch 
@@ -428,9 +443,10 @@ if __name__=="__main__":
                                         beat_pitch = []
                                         beat_duration = []
                                         beat_num += 1
-                                        next_beat_sec = (bar_num * 4 + beat_num + 1) * beat_duration_sec 
-        
-                    
+                                        beat_counter += 1
+                                        next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                                
+                                
                     # append last bar in case it has not 4 beats
                     if beats:
                         # end of bar

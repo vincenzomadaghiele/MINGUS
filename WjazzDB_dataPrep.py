@@ -63,6 +63,8 @@ if __name__=="__main__":
                     events_cur.execute("SELECT * FROM melody WHERE melid = %d AND bar = %d AND beat = %d ORDER BY eventid" % (melid, bar, beat)) 
                     for event_row in events_cur:
                         
+                        print(event_row)
+                        
                         # duration count could be adjusted to take into account
                         # of swing timing and far smaller durations!!
                         beat_duration_sec = event_row[14]
@@ -73,18 +75,10 @@ if __name__=="__main__":
                         # possible note durations in seconds 
                         # (it is possible to add representations - include 32nds, quintuplets...):
                         # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
-                        possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 72, 
-                                              unit * 36, unit * 18, unit * 9, unit * 32, unit * 16, unit * 8]
-                        
-                        unit = beat_duration_sec * 4 / 192.
-                        #unit = beat_duration_sec * 4 / 96.
-                        # possible note durations in seconds 
-                        # (it is possible to add representations - include 32nds, quintuplets...):
-                        # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
-                        possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
-                                              unit * 144, unit * 72, unit * 36, unit * 18, unit * 9, 
-                                              unit * 64, unit * 32, unit * 16, unit * 8, unit * 4, unit * 2]
-                        
+                        possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
+                                              unit * 72, unit * 36, unit * 18, unit * 9, 
+                                              unit * 32, unit * 16, unit * 8, unit * 4]
+        
                         # Define durations dictionary
                         dur_dict = {}
                         dur_dict[possible_durations[0]] = 'full'
@@ -93,18 +87,15 @@ if __name__=="__main__":
                         dur_dict[possible_durations[3]] = '8th'
                         dur_dict[possible_durations[4]] = '16th'
                         dur_dict[possible_durations[5]] = '32th'
-                        dur_dict[possible_durations[6]] = '64th'
-                        dur_dict[possible_durations[7]] = 'dot half'
-                        dur_dict[possible_durations[8]] = 'dot quarter'
-                        dur_dict[possible_durations[9]] = 'dot 8th'
-                        dur_dict[possible_durations[10]] = 'dot 16th'
-                        dur_dict[possible_durations[11]] = 'dot 32th'
-                        dur_dict[possible_durations[12]] = 'half note triplet'
-                        dur_dict[possible_durations[13]] = 'quarter note triplet'
-                        dur_dict[possible_durations[14]] = '8th note triplet'
-                        dur_dict[possible_durations[15]] = '16th note triplet'
-                        dur_dict[possible_durations[16]] = '32th note triplet'
-                        dur_dict[possible_durations[17]] = '64th note triplet'
+                        dur_dict[possible_durations[6]] = 'dot half'
+                        dur_dict[possible_durations[7]] = 'dot quarter'
+                        dur_dict[possible_durations[8]] = 'dot 8th'
+                        dur_dict[possible_durations[9]] = 'dot 16th'
+                        dur_dict[possible_durations[10]] = 'half note triplet'
+                        dur_dict[possible_durations[11]] = 'quarter note triplet'
+                        dur_dict[possible_durations[12]] = '8th note triplet'
+                        dur_dict[possible_durations[13]] = '16th note triplet'
+                        inv_dur_dict = {v: k for k, v in dur_dict.items()}
                         
                         
                         # Detect rest by onset subtraction 
@@ -115,7 +106,7 @@ if __name__=="__main__":
                         intra_note_time = onset - last_onset
                         # if the interval between notes is greater than the smallest duration ('16th')
                         # and smaller than the greatest duration ('full') then there is a rest
-                        if intra_note_time >= possible_durations[17]:
+                        if intra_note_time >= possible_durations[13]:
                             # there is a rest!
                             
                             # handle the possibility of rests longer than a full note

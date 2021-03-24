@@ -279,19 +279,15 @@ class WjazzDB():
         duration_to_ix['8th'] = 3
         duration_to_ix['16th'] = 4
         duration_to_ix['32th'] = 5
-        duration_to_ix['64th'] = 6
-        duration_to_ix['dot half'] = 7
-        duration_to_ix['dot quarter'] = 8
-        duration_to_ix['dot 8th'] = 9
-        duration_to_ix['dot 16th'] = 10
-        duration_to_ix['dot 32th'] = 11
-        duration_to_ix['half note triplet'] = 12
-        duration_to_ix['quarter note triplet'] = 13
-        duration_to_ix['8th note triplet'] = 14
-        duration_to_ix['16th note triplet'] = 15
-        duration_to_ix['32th note triplet'] = 16
-        duration_to_ix['64th note triplet'] = 17
-        duration_to_ix['<pad>'] = 18
+        duration_to_ix['dot half'] = 6
+        duration_to_ix['dot quarter'] = 7
+        duration_to_ix['dot 8th'] = 8
+        duration_to_ix['dot 16th'] = 9
+        duration_to_ix['half note triplet'] = 10
+        duration_to_ix['quarter note triplet'] = 11
+        duration_to_ix['8th note triplet'] = 12
+        duration_to_ix['16th note triplet'] = 13
+        duration_to_ix['<pad>'] = 14
         # inverse dictionary
         vocabDuration = {v: k for k, v in duration_to_ix.items()}
         
