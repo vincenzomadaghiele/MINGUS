@@ -7,7 +7,7 @@ Created on Wed Mar 24 07:09:14 2021
 """
 
 import pretty_midi
-import glob
+import json
 import numpy as np
 import torch
 import torch.nn as nn
@@ -441,17 +441,30 @@ if __name__ == '__main__':
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = False
+    generate_dataset = True
     
     if generate_dataset:
         out_path = 'output/gen4eval_' + con.DATASET + '/'
+        generated_path = 'generated/'
+        original_path = 'original/'
         num_tunes = 20
+        generated_structuredSongs = []
+        original_structuredSongs = []
 
         for tune in structuredSongs[:num_tunes]:
             new_structured_song = generateCond(tune, num_bars, temperature, 
                                        modelPitch, modelDuration)
-            title = new_structured_song['title']
             pm = structuredSongsToPM(new_structured_song)
-            pm.write(out_path + title + '.mid')
+            pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
+            pm = structuredSongsToPM(tune)
+            pm.write(out_path + original_path + tune['title'] + '.mid')
+            generated_structuredSongs.append(new_structured_song)
+            original_structuredSongs.append(tune)
+            
+        # Convert dict to JSON and SAVE IT
+        with open(out_path + generated_path + con.DATASET + '_generated.json', 'w') as fp:
+            json.dump(generated_structuredSongs, fp, indent=4)
+        with open(out_path + original_path + con.DATASET + '_original.json', 'w') as fp:
+            json.dump(generated_structuredSongs, fp, indent=4)
 
     
