@@ -139,11 +139,11 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
     for i in range(0, len(metrics_list)):
             
         # mean and std of the reference set
-        results[metrics_list[i]]['ref_mean'] = np.mean(set1_eval[metrics_list[i]]).tolist()
-        results[metrics_list[i]]['ref_std'] = np.std(set1_eval[metrics_list[i]]).tolist()
+        results[metrics_list[i]]['ref_mean'] = np.round_(np.mean(set1_eval[metrics_list[i]]).tolist(), decimals=4)
+        results[metrics_list[i]]['ref_std'] = np.round_(np.std(set1_eval[metrics_list[i]]).tolist(), decimals=4)
         # mean and std of the generated set
-        results[metrics_list[i]]['gen_mean'] = np.mean(set2_eval[metrics_list[i]]).tolist()
-        results[metrics_list[i]]['gen_std'] = np.std(set2_eval[metrics_list[i]]).tolist()
+        results[metrics_list[i]]['gen_mean'] = np.round_(np.mean(set2_eval[metrics_list[i]]).tolist(), decimals=4)
+        results[metrics_list[i]]['gen_std'] = np.round_(np.std(set2_eval[metrics_list[i]]).tolist(), decimals=4)
             
         # print the results
         print( metrics_list[i] + ':')
@@ -203,11 +203,11 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
     for i in range(0, len(metrics_list)):
         
         # mean and std of the reference set
-        results[metrics_list[i]]['ref_KL-div'] = utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i])
-        results[metrics_list[i]]['ref_overlap-area'] = utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i])
+        results[metrics_list[i]]['ref_KL-div'] = np.round_(utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i]), decimals=4)
+        results[metrics_list[i]]['ref_overlap-area'] = np.round_(utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i]), decimals=4)
         # mean and std of the generated set
-        results[metrics_list[i]]['gen_KL-div'] = utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i])
-        results[metrics_list[i]]['gen_overlap-area'] = utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i])
+        results[metrics_list[i]]['gen_KL-div'] = np.round_(utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i]), decimals=4)
+        results[metrics_list[i]]['gen_overlap-area'] = np.round_(utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]), decimals=4)
             
         print(metrics_list[i] + ':')
         print('------------------------')
