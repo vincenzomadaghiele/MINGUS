@@ -16,6 +16,6 @@ AUGMENTATION = False
 SEGMENTATION = True
 augmentation_const = 10
 
-DATASET = 'NottinghamDB'
+DATASET = 'WjazzDB'
 
 EPOCHS = 10
