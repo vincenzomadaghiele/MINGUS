@@ -56,12 +56,197 @@ def batch4gen(data, bsz, dict_to_ix, device, isChord=False):
     data = data.view(bsz, -1).t().contiguous()
     return data.to(device)
 
+def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
+    
+    # select a tune
+    #tune = structuredSongs[0]
+    # choose how many starting bars
+    #num_bars = 4
+    # define temperature
+    #temperature = 1   
+    
+    # copy bars into a new_structured_song
+    new_structured_song = {}
+    new_structured_song['title'] = tune['title'] + '_generated'
+    new_structured_song['total time [sec]'] = tune['total time [sec]']
+    new_structured_song['quantization [sec]'] = tune['quantization [sec]']
+    new_structured_song['quantization [beat]'] = tune['quantization [beat]']
+    new_structured_song['tempo'] = tune['tempo']
+    new_structured_song['beat duration [sec]'] = tune['beat duration [sec]']
+    beat_duration_sec = new_structured_song['beat duration [sec]'] 
+    bars = []
+    beats = []
+    
+    # define duration dictionary
+    unit = beat_duration_sec * 4 / 96.
+    # possible note durations in seconds 
+    # (it is possible to add representations - include 32nds, quintuplets...):
+    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
+                          unit * 72, unit * 36, unit * 18, unit * 9, 
+                          unit * 32, unit * 16, unit * 8, unit * 4]
+
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = '32th'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'dot 16th'
+    dur_dict[possible_durations[10]] = 'half note triplet'
+    dur_dict[possible_durations[11]] = 'quarter note triplet'
+    dur_dict[possible_durations[12]] = '8th note triplet'
+    dur_dict[possible_durations[13]] = '16th note triplet'
+    inv_dur_dict = {v: k for k, v in dur_dict.items()}
+    
+    # initialize counters
+    bar_num = num_bars
+    beat_counter = 0
+    offset_sec = 0
+    beat_num = 0
+    for bar in tune['bars'][:num_bars]:
+        bars.append(bar)
+        for beat in bar['beats']:
+            beat_counter += 1
+            #beat_num = beat['num beat'] - 1
+            for duration in beat['duration']:
+                duration_sec = inv_dur_dict[duration]
+                offset_sec += duration_sec
+    
+    beat_pitch = []
+    beat_duration = []
+    next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+    
+    # extract starting bars pitch, duration, chord, bass and put into array
+    pitch = []
+    duration = []
+    chord = []
+    bass = []
+    for bar in bars:
+        for beat in bar['beats']:
+            for i in range(len(beat['pitch'])):
+                pitch.append(beat['pitch'][i])
+                duration.append(beat['duration'][i])
+                chord.append(NottinghamToMidiChords[beat['chord']][:4])
+                bass.append(NottinghamToMidiChords[beat['chord']][0])
+    
+    while len(bars) < len(tune['bars']):
+        
+        # batchify
+        pitch4gen = batch4gen(np.array(pitch), len(pitch), pitch_to_ix, device)
+        duration4gen = batch4gen(np.array(duration), len(duration), duration_to_ix, device)
+        chord4gen = batch4gen(chord, len(chord), pitch_to_ix, device, isChord=True)
+        bass4gen = batch4gen(bass, len(bass), pitch_to_ix, device)
+        # reshape to column vectors
+        pitch4gen = pitch4gen.t()
+        duration4gen = duration4gen.t()
+        chord4gen = chord4gen.t()
+        chord4gen = chord4gen.reshape(chord4gen.shape[0], 1,chord4gen.shape[1])
+        bass4gen = bass4gen.t()
+        
+        # generate new note conditioning on old arrays
+        modelPitch.eval()
+        modelDuration.eval()
+        src_mask_pitch = modelPitch.generate_square_subsequent_mask(con.BPTT).to(device)
+        src_mask_duration = modelDuration.generate_square_subsequent_mask(con.BPTT).to(device)
+        if pitch4gen.size(0) != con.BPTT:
+            src_mask_pitch = modelPitch.generate_square_subsequent_mask(pitch4gen.size(0)).to(device)
+            src_mask_duration = modelDuration.generate_square_subsequent_mask(duration4gen.size(0)).to(device)
+        
+        # generate new pitch note
+        pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen,
+                                bass4gen, None, src_mask_pitch)
+        word_weights = pitch_pred[-1].squeeze().div(temperature).exp().cpu()
+        word_idx = torch.multinomial(word_weights, 1)[0].item()
+        new_pitch = vocabPitch[word_idx]
+        # generate new duration note
+        duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen,
+                                   bass4gen, None, src_mask_duration)
+        word_weights = duration_pred[-1].squeeze().div(temperature).exp().cpu()
+        word_idx = torch.multinomial(word_weights, 1)[0].item()
+        new_duration = vocabDuration[word_idx]
+        
+        # append note to new arrays
+        beat_pitch.append(new_pitch)
+        beat_duration.append(new_duration)
+        duration_sec = inv_dur_dict[new_duration]
+        offset_sec += duration_sec
+        
+        # check if the note is in a new beat / bar
+        while offset_sec >= next_beat_sec:
+            if beat_num >= 3:
+                # end of bar
+                # append beat
+                beat = {}
+                beat['num beat'] = beat_num + 1
+                # check for chords
+                new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                beat['chord'] = new_chord
+                beat['pitch'] = beat_pitch 
+                beat['duration'] = beat_duration 
+                beat['offset'] = []
+                beat['scale'] = []
+                beat['bass'] = []
+                beats.append(beat)
+                beat_pitch = []
+                beat_duration = []
+                # append bar
+                bar = {}
+                bar['num bar'] = bar_num + 1 # over all song
+                bar['beats'] = beats # beats 1,2,3,4
+                bars.append(bar)
+                beats = []
+                beat_num = 0
+                bar_num += 1
+                beat_counter += 1
+                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+            else:
+                # end of beat
+                beat = {}
+                # number of beat in the bar [1,4]
+                beat['num beat'] = beat_num + 1
+                # at most one chord per beat
+                # check for chords
+                new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                beat['chord'] = new_chord
+                # pitch of notes which START in this beat
+                beat['pitch'] = beat_pitch 
+                # duration of notes which START in this beat
+                beat['duration'] = beat_duration 
+                # offset of notes which START in this beat wrt the start of the bar
+                beat['offset'] = []
+                # get from chord with m21
+                beat['scale'] = []
+                beat['bass'] = []
+                # append beat
+                beats.append(beat)
+                beat_pitch = []
+                beat_duration = []
+                beat_num += 1
+                beat_counter += 1
+                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+        
+        # add note pitch and duration into new_structured_song
+        # change chord conditioning from tune based on beat
+        # add note to pitch, duration, chord, bass array
+        pitch.append(new_pitch)
+        duration.append(new_duration)
+        chord.append(NottinghamToMidiChords[new_chord][:4])
+        bass.append(NottinghamToMidiChords[new_chord][0])
+    
+    new_structured_song['bars'] = bars
+    return new_structured_song
+
+
 
 if __name__ == '__main__':
 
-    a = 0    
-
-    #%% LOAD DATA
+    # LOAD DATA
     
     NottinghamDB = dataset.NottinghamDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                  con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
@@ -148,13 +333,15 @@ if __name__ == '__main__':
 
     
     #%% GENERATE A TUNE
-    
+    '''
     # select a tune
     tune = structuredSongs[0]
     # choose how many starting bars
     num_bars = 4
     # define temperature
     temperature = 1
+    
+    notes2gen = 20
     
     # copy bars into a new_structured_song
     new_structured_song = {}
@@ -196,7 +383,7 @@ if __name__ == '__main__':
     inv_dur_dict = {v: k for k, v in dur_dict.items()}
     
     # initialize counters
-    bar_num = num_bars - 1
+    bar_num = num_bars
     beat_counter = 0
     offset_sec = 0
     beat_num = 0
@@ -204,7 +391,7 @@ if __name__ == '__main__':
         bars.append(bar)
         for beat in bar['beats']:
             beat_counter += 1
-            beat_num = beat['num beat'] - 1
+            #beat_num = beat['num beat'] - 1
             for duration in beat['duration']:
                 duration_sec = inv_dur_dict[duration]
                 offset_sec += duration_sec
@@ -225,116 +412,124 @@ if __name__ == '__main__':
                 duration.append(beat['duration'][i])
                 chord.append(NottinghamToMidiChords[beat['chord']][:4])
                 bass.append(NottinghamToMidiChords[beat['chord']][0])
-    # batchify
-    pitch4gen = batch4gen(np.array(pitch), len(pitch), pitch_to_ix, device)
-    duration4gen = batch4gen(np.array(duration), len(duration), duration_to_ix, device)
-    chord4gen = batch4gen(chord, len(chord), pitch_to_ix, device, isChord=True)
-    bass4gen = batch4gen(bass, len(bass), pitch_to_ix, device)
-    # reshape to column vectors
-    pitch4gen = pitch4gen.t()
-    duration4gen = duration4gen.t()
-    chord4gen = chord4gen.t()
-    chord4gen = chord4gen.reshape(chord4gen.shape[0], 1,chord4gen.shape[1])
-    bass4gen = bass4gen.t()
     
-    # generate new note conditioning on old arrays
-    modelPitch.eval()
-    modelDuration.eval()
-    src_mask_pitch = modelPitch.generate_square_subsequent_mask(con.BPTT).to(device)
-    src_mask_duration = modelDuration.generate_square_subsequent_mask(con.BPTT).to(device)
-    if pitch4gen.size(0) != con.BPTT:
-        src_mask_pitch = modelPitch.generate_square_subsequent_mask(pitch4gen.size(0)).to(device)
-        src_mask_duration = modelDuration.generate_square_subsequent_mask(duration4gen.size(0)).to(device)
+    while len(bars) < len(tune['bars']):
+        
+        # batchify
+        pitch4gen = batch4gen(np.array(pitch), len(pitch), pitch_to_ix, device)
+        duration4gen = batch4gen(np.array(duration), len(duration), duration_to_ix, device)
+        chord4gen = batch4gen(chord, len(chord), pitch_to_ix, device, isChord=True)
+        bass4gen = batch4gen(bass, len(bass), pitch_to_ix, device)
+        # reshape to column vectors
+        pitch4gen = pitch4gen.t()
+        duration4gen = duration4gen.t()
+        chord4gen = chord4gen.t()
+        chord4gen = chord4gen.reshape(chord4gen.shape[0], 1,chord4gen.shape[1])
+        bass4gen = bass4gen.t()
+        
+        # generate new note conditioning on old arrays
+        modelPitch.eval()
+        modelDuration.eval()
+        src_mask_pitch = modelPitch.generate_square_subsequent_mask(con.BPTT).to(device)
+        src_mask_duration = modelDuration.generate_square_subsequent_mask(con.BPTT).to(device)
+        if pitch4gen.size(0) != con.BPTT:
+            src_mask_pitch = modelPitch.generate_square_subsequent_mask(pitch4gen.size(0)).to(device)
+            src_mask_duration = modelDuration.generate_square_subsequent_mask(duration4gen.size(0)).to(device)
+        
+        # generate new pitch note
+        pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen,
+                                bass4gen, None, src_mask_pitch)
+        word_weights = pitch_pred[-1].squeeze().div(temperature).exp().cpu()
+        word_idx = torch.multinomial(word_weights, 1)[0].item()
+        new_pitch = vocabPitch[word_idx]
+        # generate new duration note
+        duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen,
+                                   bass4gen, None, src_mask_duration)
+        word_weights = duration_pred[-1].squeeze().div(temperature).exp().cpu()
+        word_idx = torch.multinomial(word_weights, 1)[0].item()
+        new_duration = vocabDuration[word_idx]
+        
+        # append note to new arrays
+        beat_pitch.append(new_pitch)
+        beat_duration.append(new_duration)
+        duration_sec = inv_dur_dict[new_duration]
+        offset_sec += duration_sec
+        
+        # check if the note is in a new beat / bar
+        while offset_sec >= next_beat_sec:
+            if beat_num >= 3:
+                # end of bar
+                # append beat
+                beat = {}
+                beat['num beat'] = beat_num + 1
+                # check for chords
+                new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                beat['chord'] = new_chord
+                beat['pitch'] = beat_pitch 
+                beat['duration'] = beat_duration 
+                beat['offset'] = []
+                beat['scale'] = []
+                beat['bass'] = []
+                beats.append(beat)
+                beat_pitch = []
+                beat_duration = []
+                # append bar
+                bar = {}
+                bar['num bar'] = bar_num + 1 # over all song
+                bar['beats'] = beats # beats 1,2,3,4
+                bars.append(bar)
+                beats = []
+                beat_num = 0
+                bar_num += 1
+                beat_counter += 1
+                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+            else:
+                # end of beat
+                beat = {}
+                # number of beat in the bar [1,4]
+                beat['num beat'] = beat_num + 1
+                # at most one chord per beat
+                # check for chords
+                new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                beat['chord'] = new_chord
+                # pitch of notes which START in this beat
+                beat['pitch'] = beat_pitch 
+                # duration of notes which START in this beat
+                beat['duration'] = beat_duration 
+                # offset of notes which START in this beat wrt the start of the bar
+                beat['offset'] = []
+                # get from chord with m21
+                beat['scale'] = []
+                beat['bass'] = []
+                # append beat
+                beats.append(beat)
+                beat_pitch = []
+                beat_duration = []
+                beat_num += 1
+                beat_counter += 1
+                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+        
+        # add note pitch and duration into new_structured_song
+        # change chord conditioning from tune based on beat
+        # add note to pitch, duration, chord, bass array
+        pitch.append(new_pitch)
+        duration.append(new_duration)
+        chord.append(NottinghamToMidiChords[new_chord][:4])
+        bass.append(NottinghamToMidiChords[new_chord][0])
     
-    # generate new pitch note
-    pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen,
-                            bass4gen, None, src_mask_pitch)
-    word_weights = pitch_pred[-1].squeeze().div(temperature).exp().cpu()
-    word_idx = torch.multinomial(word_weights, 1)[0].item()
-    new_pitch = vocabPitch[word_idx]
-    # generate new duration note
-    duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen,
-                               bass4gen, None, src_mask_duration)
-    word_weights = duration_pred[-1].squeeze().div(temperature).exp().cpu()
-    word_idx = torch.multinomial(word_weights, 1)[0].item()
-    new_duration = vocabDuration[word_idx]
+    new_structured_song['bars'] = bars
+    '''
     
-    # append note to new arrays
-    beat_pitch.append(new_pitch)
-    beat_duration.append(new_duration)
-    duration_sec = inv_dur_dict[new_duration]
-    offset_sec += duration_sec
-    
-    # check if the note is in a new beat / bar
-    while offset_sec >= next_beat_sec:
-        if beat_num >= 3:
-            # end of bar
-            # append beat
-            beat = {}
-            beat['num beat'] = beat_num + 1
-            # check for chords
-            new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
-            beat['chord'] = new_chord
-            beat['pitch'] = beat_pitch 
-            beat['duration'] = beat_duration 
-            beat['offset'] = []
-            beat['scale'] = []
-            beat['bass'] = []
-            beats.append(beat)
-            beat_pitch = []
-            beat_duration = []
-            # append bar
-            bar = {}
-            bar['num bar'] = bar_num + 1 # over all song
-            bar['beats'] = beats # beats 1,2,3,4
-            bars.append(bar)
-            beats = []
-            beat_num = 0
-            bar_num += 1
-            beat_counter += 1
-            next_beat_sec = (beat_counter + 1) * beat_duration_sec 
-        else:
-            # end of beat
-            beat = {}
-            # number of beat in the bar [1,4]
-            beat['num beat'] = beat_num + 1
-            # at most one chord per beat
-            # check for chords
-            new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
-            beat['chord'] = new_chord
-            # pitch of notes which START in this beat
-            beat['pitch'] = beat_pitch 
-            # duration of notes which START in this beat
-            beat['duration'] = beat_duration 
-            # offset of notes which START in this beat wrt the start of the bar
-            beat['offset'] = []
-            # get from chord with m21
-            beat['scale'] = []
-            beat['bass'] = []
-            # append beat
-            beats.append(beat)
-            beat_pitch = []
-            beat_duration = []
-            beat_num += 1
-            beat_counter += 1
-            next_beat_sec = (beat_counter + 1) * beat_duration_sec 
-    
-    # add note pitch and duration into new_structured_song
-    # change chord conditioning from tune based on beat
-    # add note to pitch, duration, chord, bass array
-    pitch.append(new_pitch)
-    duration.append(new_duration)
-    chord.append(NottinghamToMidiChords[new_chord][:4])
-    bass.append(NottinghamToMidiChords[new_chord][0])
-    
-    
-    
-    
+    num_bars = 4
+    temperature = 1
+    new_structured_song = generateCond(structuredSongs[0], num_bars, temperature, modelPitch, modelDuration)
+
 
     #%% Rewrite song from dataset
-    '''
+    
     # input : a structured song json
-    structured_song = structuredSongs[0]
+    #structured_song = structuredSongs[0]
+    structured_song = new_structured_song
     beat_duration_sec = structured_song['beat duration [sec]']
     tempo = structured_song['tempo']
     
@@ -420,6 +615,6 @@ if __name__ == '__main__':
             chords_inst.notes.append(pretty_midi.Note(velocity, chord_pitch, chord_start, next_beat_sec - beat_duration_sec))
     
     pm.write('output/equal.mid')
-    '''
+    
     
     
