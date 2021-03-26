@@ -12,6 +12,7 @@ import torch.nn as nn
 import math
 import time
 from sklearn.metrics import accuracy_score
+from torch.utils.tensorboard import SummaryWriter
 
 
 # TRANSFORMER MODEL
@@ -96,6 +97,9 @@ class TransformerModel(nn.Module):
         bass_embeds = self.pitch_embedding(bass)
         #beat_embeds = self.beat_embedding(beat)
 
+        #print(pitch.shape)
+        #print(pitch_embeds.shape)
+
         # Concatenate along 3rd dimension
         #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)
         src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
@@ -110,6 +114,15 @@ class TransformerModel(nn.Module):
         output = self.out_decoder(output)
         
         return output
+    
+    def getEmbeds(self, pitch, duration, chord, bass, beat):
+        # embed data
+        pitch_embeds = self.pitch_embedding(pitch)
+        duration_embeds = self.duration_embedding(duration)
+        #chord_embeds = self.pitch_embedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
+        #bass_embeds = self.pitch_embedding(bass)
+        
+        return pitch_embeds, duration_embeds
 
 
 # POSITIONAL ENCODING
@@ -135,7 +148,9 @@ class PositionalEncoding(nn.Module):
 def train(model, vocabTarget, 
           train_data_pitch, train_data_duration,  train_data_chord,
           train_data_bass, train_data_beat, 
-          criterion, optimizer, scheduler, epoch, bptt, device, isPitch=True):
+          criterion, optimizer, scheduler, epoch, bptt, device, 
+          writer, step, isPitch=True):
+    
     '''
 
     Parameters
@@ -210,6 +225,27 @@ def train(model, vocabTarget,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
+            
+            # Visualize embeddings
+            if isPitch:
+                pitch_embeds, _ = model.getEmbeds(data_pitch, data_duration, data_chord,
+                                                  data_bass, data_beat)
+                features = pitch_embeds.reshape(-1, pitch_embeds.shape[2])
+                pitch_classes = data_pitch.reshape(-1).numpy()
+                class_labels = [vocabTarget[pitch] for pitch in pitch_classes]
+                writer.add_embedding(features, metadata=class_labels, global_step=step)
+            else:
+                _, dur_embeds = model.getEmbeds(data_pitch, data_duration, data_chord,
+                                                  data_bass, data_beat)
+                features = dur_embeds.reshape(-1, dur_embeds.shape[2])
+                dur_classes = data_duration.reshape(-1).numpy()
+                class_labels = [vocabTarget[duration] for duration in dur_classes]
+                writer.add_embedding(features, metadata=class_labels, global_step=step)
+            
+        writer.add_scalar('Training loss', loss, global_step=step)
+        step += 1
+
+    return step
 
 
 def evaluate(eval_model, vocabTarget, 
