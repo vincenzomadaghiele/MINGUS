@@ -43,7 +43,7 @@ class TransformerModel(nn.Module):
         
         
         # Start the transformer structure with multidimensional data
-        encoder_input_dim = 6*pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
+        encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
         self.encoder = nn.Linear(encoder_input_dim, ninp)
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)

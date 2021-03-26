@@ -15,12 +15,11 @@ Metrics for evaluation:
             'pitch_range'
             'avg_IOI'
             'note_length_hist'
-    - Perplexity (calculated using eval function during training)
-    - Cross-Entropy loss (calculated using eval function during training)
-    - Accuracy (how to implement it?)
-    - BLEU score (implemented, but always get zero)
+    - Perplexity 
+    - Cross-Entropy loss 
+    - Accuracy
+    - BLEU score 
     
-Use tensorboard with pyTorch to obtain visualization of loss and perplexity
 """
 
 import pretty_midi

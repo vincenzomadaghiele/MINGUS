@@ -7,6 +7,7 @@ Created on Wed Mar 24 12:15:44 2021
 """
 
 import json
+import os
 import numpy as np
 import math
 import torch
@@ -15,7 +16,6 @@ import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
 import MINGUS_eval_funct as ev
-from nltk.translate.bleu_score import corpus_bleu
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -134,6 +134,7 @@ if __name__ == '__main__':
     
     #%% BLEU score
     
+    
     gen_common_path = 'output/gen4eval_' + con.DATASET + '/'
     original_subpath = 'original/'
     generated_subpath = 'generated/'
@@ -145,47 +146,15 @@ if __name__ == '__main__':
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
-    
-    # get arrays from structured songs
-    original_tunes_pitch = []
-    original_tunes_duration = []
-    for tune in original_structuredSongs:
-        newtune_pitch = []
-        newtune_duration = []
-        for bar in tune['bars']:
-            for beat in bar['beats']:
-                for pitch in beat['pitch']:
-                    newtune_pitch.append(pitch)
-                for duration in beat['duration']:
-                    newtune_duration.append(duration)
-        original_tunes_pitch.append(newtune_pitch)
-        original_tunes_duration.append(newtune_duration)
-    
-    generated_tunes_pitch = []
-    generated_tunes_duration = []
-    for tune in original_structuredSongs:
-        newtune_pitch = []
-        newtune_duration = []
-        for bar in tune['bars']:
-            for beat in bar['beats']:
-                for pitch in beat['pitch']:
-                    newtune_pitch.append(pitch)
-                for duration in beat['duration']:
-                    newtune_duration.append(duration)
-        generated_tunes_pitch.append(newtune_pitch)
-        generated_tunes_duration.append(newtune_duration)
-    
-    num_seq = len(generated_tunes_pitch) # number of generated sequences
-    num_ref = 4 # number of reference examples for each generated sequence
-    
-    reference_pitch = [original_tunes_pitch[i:i+num_ref-1] for i in range(0,num_ref*num_seq,num_ref)]
-    reference_duration = [original_tunes_duration[i:i+num_ref-1] for i in range(0,num_ref*num_seq,num_ref)]
-    
-    bleu_pitch = corpus_bleu(reference_pitch[:4], generated_tunes_pitch[:4])
-    bleu_duration = corpus_bleu(reference_duration[:4], generated_tunes_duration[:4])
 
     
     #%% METRICS DICTIONARY
+    
+    # Make directory to save metrics file
+    parent_directory = 'metrics/'
+    new_directory = '' # model name and params
+    path = os.path.join(parent_directory, new_directory)
+    os.mkdir(path)
     
     # Instanciate dictionary
     metrics_result = {}
@@ -215,6 +184,9 @@ if __name__ == '__main__':
                                                                 test_pitch_batched, test_duration_batched, test_chord_batched,
                                                                 test_bass_batched, test_beat_batched,
                                                                 criterion, con.BPTT, device, isPitch)
+    
+    # BLEU score
+    bleu_pitch, bleu_duration = ev.BLEUscore(original_structuredSongs, generated_structuredSongs)
     
     metrics_result['Pitch']['Pitch_test-loss'] = np.round_(testLoss_results_pitch, decimals=4)
     metrics_result['Pitch']['Pitch_perplexity'] = np.round_(math.exp(testLoss_results_pitch), decimals=4)

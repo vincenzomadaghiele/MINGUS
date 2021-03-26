@@ -13,6 +13,7 @@ import math
 import json
 import MINGUS_dataset_funct as dataset
 import MINGUS_model as mod
+from nltk.translate.bleu_score import corpus_bleu
 
 
 def lossPerplexityAccuracy(eval_model, data_source, vocab, criterion, bptt, device):
@@ -222,3 +223,45 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
         
     return results
 
+
+def BLEUscore(original_structuredSongs, generated_structuredSongs):
+        
+    # get arrays from structured songs
+    original_tunes_pitch = []
+    original_tunes_duration = []
+    for tune in original_structuredSongs:
+        newtune_pitch = []
+        newtune_duration = []
+        for bar in tune['bars']:
+            for beat in bar['beats']:
+                for pitch in beat['pitch']:
+                    newtune_pitch.append(pitch)
+                for duration in beat['duration']:
+                    newtune_duration.append(duration)
+        original_tunes_pitch.append(newtune_pitch)
+        original_tunes_duration.append(newtune_duration)
+        
+    generated_tunes_pitch = []
+    generated_tunes_duration = []
+    for tune in original_structuredSongs:
+        newtune_pitch = []
+        newtune_duration = []
+        for bar in tune['bars']:
+            for beat in bar['beats']:
+                for pitch in beat['pitch']:
+                    newtune_pitch.append(pitch)
+                for duration in beat['duration']:
+                    newtune_duration.append(duration)
+        generated_tunes_pitch.append(newtune_pitch)
+        generated_tunes_duration.append(newtune_duration)
+    
+    num_seq = len(generated_tunes_pitch) # number of generated sequences
+    num_ref = 4 # number of reference examples for each generated sequence
+    
+    reference_pitch = [original_tunes_pitch[i:i+num_ref-1] for i in range(0,num_ref*num_seq,num_ref)]
+    reference_duration = [original_tunes_duration[i:i+num_ref-1] for i in range(0,num_ref*num_seq,num_ref)]
+    
+    bleu_pitch = corpus_bleu(reference_pitch[:4], generated_tunes_pitch[:4])
+    bleu_duration = corpus_bleu(reference_duration[:4], generated_tunes_duration[:4])
+    
+    return bleu_pitch, bleu_duration

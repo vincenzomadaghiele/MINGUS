@@ -6,24 +6,34 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    - adapt WjazzDB to structured song json
-    - check if in midi WjazzDB files there is chords information with note_seq
-    - check if in midi folkDB files there is chords information with note_seq
-    - if no chord information on folkDB try to open abc files with other library
-    - modify generation function for WjazzDB to include different bass (same as chord)
-    - fine tune parameters for NottinghamDB training 
-    - generation/evaluation on EURECOM machine for NottinghamDB
-    - implement harmonic coherence metric
-    - include offset (maybe it improves duration inference)
-    - export midi to audio and evaluate long-term coherence 
-        with Jazz Transformer metric (Matlab)
-    - consider note_seq pipeline with quantization to obtain better results on WjazzDB
-    - evaluate implementation of Transformer-XL / Relative attention (and comparison)
-    - live interface (chord recognition in max from audio or midi), 
-        note generation in python (communication via osc)
-    - bass line generation on WjazzDB (given only chord and given melody)
+    Model:
+        - implement chord embedding
+        - fine tune parameters for NottinghamDB training 
+        - fine tune parameters for WjazzDB training 
+        - modular model to compare training with or without parameters
+        - include offset (maybe it improves duration inference)
+        - include tensorboard (?)
+
+    Evaluation:
+        - automate image saving (MGEval) and folder for metrics json file
+        - implement harmonic coherence metric
+        - generation/evaluation on EURECOM machine
+        - export midi to audio and evaluate long-term coherence 
+            with Jazz Transformer metric (Matlab)
+    
+    Future steps:
+        - consider note_seq pipeline with quantization to obtain better results on WjazzDB
+        - evaluate implementation of Transformer-XL / Relative attention (and comparison)
+        - live interface (chord recognition in max from audio or midi), 
+            note generation in python (communication via osc)
+        - bass line generation on WjazzDB (given only chord and given melody)
         might require training with different bass embedding layer
-    - melody harmonization
+        - melody harmonization
+    
+    FolkDB:
+        - check if in midi folkDB files there is chords information with note_seq
+        - if no chord information on folkDB try to open abc files with other library
+
     
 Training instruction:
     - to train with different dataset create a json file in the same format 
