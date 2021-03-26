@@ -6,6 +6,7 @@ Created on Thu Dec 10 09:35:11 2020
 @author: vincenzomadaghiele
 """
 import pretty_midi
+import music21 as m21
 import torch
 import torch.nn as nn
 import numpy as np
@@ -56,7 +57,7 @@ def lossPerplexityAccuracy(eval_model, data_source, vocab, criterion, bptt, devi
     return loss, perplexity, accuracy
 
 
-def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
+def MGEval(training_midi_path, generated_midi_path, fig_savePath, num_samples = 20):
     '''
 
     Parameters
@@ -175,7 +176,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
         j += 1
         
         
-        # exhaustive cross-validation for inter-set distances measurement
+    # exhaustive cross-validation for inter-set distances measurement
     loo = LeaveOneOut()
     loo.get_n_splits(np.arange(num_samples))
     sets_inter = np.zeros((num_samples, len(metrics_list), num_samples))
@@ -192,6 +193,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
     plot_set2_intra = np.transpose(set2_intra,(1, 0, 2)).reshape(len(metrics_list), -1)
     plot_sets_inter = np.transpose(sets_inter,(1, 0, 2)).reshape(len(metrics_list), -1)
     for i in range(0,len(metrics_list)):
+        fig = plt.figure()
         sns.kdeplot(plot_set1_intra[i], label='intra_set1')
         sns.kdeplot(plot_sets_inter[i], label='inter')
         sns.kdeplot(plot_set2_intra[i], label='intra_set2')
@@ -199,6 +201,7 @@ def MGEval(training_midi_path, generated_midi_path, num_samples = 20):
         plt.title(metrics_list[i])
         plt.xlabel('Euclidean distance')
         plt.show()
+        fig.savefig(fig_savePath + metrics_list[i] + '.png')
         
     # Calculate divergence between measures
     for i in range(0, len(metrics_list)):
@@ -265,3 +268,48 @@ def BLEUscore(original_structuredSongs, generated_structuredSongs):
     bleu_duration = corpus_bleu(reference_duration[:4], generated_tunes_duration[:4])
     
     return bleu_pitch, bleu_duration
+
+def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
+    scale_coherence = 0
+    chord_coherence = 0
+    count_pitch = 0
+    for tune in structuredSongs:
+        for bar in tune['bars']:
+            for beat in bar['beats']:
+                chord = beat['chord']
+                if chord != 'NC':
+                    # derive chord scale
+                    m21chord = chordToMusic21[chord]
+                    h = m21.harmony.ChordSymbol(m21chord)
+                    hd = m21.harmony.ChordStepModification('add', 2)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    hd = m21.harmony.ChordStepModification('add', 3)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    hd = m21.harmony.ChordStepModification('add', 4)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    hd = m21.harmony.ChordStepModification('add', 5)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    hd = m21.harmony.ChordStepModification('add', 6)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    hd = m21.harmony.ChordStepModification('add', 7)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    hd = m21.harmony.ChordStepModification('add', 8)
+                    h.addChordStepModification(hd, updatePitches=True)
+                    scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
+                    
+                    # derive chord pitch
+                    midiChord = datasetToMidiChord[chord]
+                    chordPitch = [m21.pitch.Pitch(midiPitch).name for midiPitch in midiChord if midiPitch != 'R']
+                    
+                    for pitch in beat['pitch']:
+                        if pitch != 'R':
+                            pitchName = m21.pitch.Pitch(pitch).name
+                            if pitchName in scale:
+                                scale_coherence += 1
+                            if pitchName in chordPitch:
+                                chord_coherence += 1
+                            count_pitch += 1
+    
+    scale_coherence = scale_coherence / count_pitch
+    chord_coherence = chord_coherence / count_pitch
+    return scale_coherence, chord_coherence

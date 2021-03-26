@@ -10,6 +10,7 @@ import json
 import os
 import numpy as np
 import math
+import music21 as m21
 import torch
 import torch.nn as nn
 import loadDBs as dataset
@@ -132,8 +133,7 @@ if __name__ == '__main__':
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
-    #%% BLEU score
-    
+    #%% Open generated structured songs
     
     gen_common_path = 'output/gen4eval_' + con.DATASET + '/'
     original_subpath = 'original/'
@@ -146,19 +146,116 @@ if __name__ == '__main__':
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
-
+        
+        
+    #%% Harmonic coherence
+    
+    '''
+    def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
+        scale_coherence = 0
+        chord_coherence = 0
+        count_pitch = 0
+        for tune in structuredSongs:
+            for bar in tune['bars']:
+                for beat in bar['beats']:
+                    chord = beat['chord']
+                    if chord != 'NC':
+                        # derive chord scale
+                        m21chord = chordToMusic21[chord]
+                        h = m21.harmony.ChordSymbol(m21chord)
+                        hd = m21.harmony.ChordStepModification('add', 2)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        hd = m21.harmony.ChordStepModification('add', 3)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        hd = m21.harmony.ChordStepModification('add', 4)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        hd = m21.harmony.ChordStepModification('add', 5)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        hd = m21.harmony.ChordStepModification('add', 6)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        hd = m21.harmony.ChordStepModification('add', 7)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        hd = m21.harmony.ChordStepModification('add', 8)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
+                        
+                        # derive chord pitch
+                        midiChord = datasetToMidiChord[chord]
+                        chordPitch = [m21.pitch.Pitch(midiPitch).name for midiPitch in midiChord if midiPitch != 'R']
+                        
+                        for pitch in beat['pitch']:
+                            if pitch != 'R':
+                                pitchName = m21.pitch.Pitch(pitch).name
+                                if pitchName in scale:
+                                    scale_coherence += 1
+                                if pitchName in chordPitch:
+                                    chord_coherence += 1
+                                count_pitch += 1
+        
+        scale_coherence = scale_coherence / count_pitch
+        chord_coherence = chord_coherence / count_pitch
+        return scale_coherence, chord_coherence
+    
+    original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
+                                                                           WjazzToMusic21, 
+                                                                           WjazzToMidiChords)
+    scale_coherence = 0
+    chord_coherence = 0
+    count_pitch = 0
+    for tune in original_structuredSongs:
+        for bar in tune['bars']:
+            for beat in bar['beats']:
+                chord = beat['chord']
+                
+                # derive chord scale
+                m21chord = WjazzToMusic21[chord]
+                h = m21.harmony.ChordSymbol(m21chord)
+                hd = m21.harmony.ChordStepModification('add', 2)
+                h.addChordStepModification(hd, updatePitches=True)
+                hd = m21.harmony.ChordStepModification('add', 3)
+                h.addChordStepModification(hd, updatePitches=True)
+                hd = m21.harmony.ChordStepModification('add', 4)
+                h.addChordStepModification(hd, updatePitches=True)
+                hd = m21.harmony.ChordStepModification('add', 5)
+                h.addChordStepModification(hd, updatePitches=True)
+                hd = m21.harmony.ChordStepModification('add', 6)
+                h.addChordStepModification(hd, updatePitches=True)
+                hd = m21.harmony.ChordStepModification('add', 7)
+                h.addChordStepModification(hd, updatePitches=True)
+                hd = m21.harmony.ChordStepModification('add', 8)
+                h.addChordStepModification(hd, updatePitches=True)
+                scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
+                
+                # derive chord pitch
+                midiChord = WjazzToMidiChords[chord]
+                chordPitch = [m21.pitch.Pitch(midiPitch).name for midiPitch in midiChord if midiPitch != 'R']
+                
+                for pitch in beat['pitch']:
+                    if pitch != 'R':
+                        pitchName = m21.pitch.Pitch(pitch).name
+                        if pitchName in scale:
+                            scale_coherence += 1
+                        if pitchName in chordPitch:
+                            chord_coherence += 1
+                        count_pitch += 1
+    
+    scale_coherence = scale_coherence / count_pitch
+    chord_coherence = chord_coherence / count_pitch
+    '''
     
     #%% METRICS DICTIONARY
     
     # Make directory to save metrics file
-    parent_directory = 'metrics/'
-    new_directory = '' # model name and params
-    path = os.path.join(parent_directory, new_directory)
-    os.mkdir(path)
+    parent_directory = 'metrics/conditional_models/'
+    model_id = str(con.EPOCHS) + 'epochs_' + str(con.BPTT) + 'seqlen_' + con.DATASET 
+    path = os.path.join(parent_directory, model_id + '/')
+    if not os.path.isdir(path):
+        os.mkdir(path)
     
     # Instanciate dictionary
     metrics_result = {}
     metrics_result['MGEval'] = {}
+    metrics_result['Harmonic coherence'] = {}
     metrics_result['Pitch'] = {}
     metrics_result['Duration'] = {}
     metrics_result['Pitch']['Pitch_accuracy'] = {}
@@ -174,8 +271,29 @@ if __name__ == '__main__':
     num_of_generations = 10
     original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
     generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
-    MGEresults = ev.MGEval(original_path, generated_path, num_of_generations)
+    MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
+    
+    # Harmonic coherence of generated samples
+    if con.DATASET == 'WjazzDB':
+        original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
+                                                                               WjazzToMusic21, 
+                                                                               WjazzToMidiChords)
+        generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
+                                                                                    WjazzToMusic21, 
+                                                                                    WjazzToMidiChords)
+    elif con.DATASET == 'NottinghamDB':
+        original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
+                                                                               NottinghamToMusic21, 
+                                                                               NottinghamToMidiChords)
+        generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
+                                                                                    NottinghamToMusic21, 
+                                                                                    NottinghamToMidiChords)
+
+    metrics_result['Harmonic coherence']['Original scale coherence'] = np.round_(original_scale_coherence, decimals=4)
+    metrics_result['Harmonic coherence']['Original chord coherence'] = np.round_(original_chord_coherence, decimals=4)
+    metrics_result['Harmonic coherence']['Generated scale coherence'] = np.round_(generated_scale_coherence, decimals=4)
+    metrics_result['Harmonic coherence']['Generated chord coherence'] = np.round_(generated_chord_coherence, decimals=4)
     
     # loss, perplexity and accuracy of pitch model
     isPitch = True
@@ -206,8 +324,9 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
     metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
     
+    
     # Convert metrics dict to JSON and SAVE IT    
-    with open('metrics/metrics_result.json', 'w') as fp:
+    with open(path + 'metrics' + model_id + '.json', 'w') as fp:
         json.dump(metrics_result, fp, indent=4)
     
 

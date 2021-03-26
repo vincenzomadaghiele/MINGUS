@@ -7,26 +7,25 @@ Created on Tue Mar 16 08:56:16 2021
 
 ToDo:
     Model:
-        - implement chord embedding
+        - implement chord embedding        
+        - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - fine tune parameters for WjazzDB training 
-        - modular model to compare training with or without parameters
         - include offset (maybe it improves duration inference)
         - include tensorboard (?)
 
     Evaluation:
-        - automate image saving (MGEval) and folder for metrics json file
         - implement harmonic coherence metric
         - generation/evaluation on EURECOM machine
         - export midi to audio and evaluate long-term coherence 
             with Jazz Transformer metric (Matlab)
     
     Future steps:
+        - bass line generation on WjazzDB (given only chord and given melody)
         - consider note_seq pipeline with quantization to obtain better results on WjazzDB
         - evaluate implementation of Transformer-XL / Relative attention (and comparison)
         - live interface (chord recognition in max from audio or midi), 
             note generation in python (communication via osc)
-        - bass line generation on WjazzDB (given only chord and given melody)
         might require training with different bass embedding layer
         - melody harmonization
     
