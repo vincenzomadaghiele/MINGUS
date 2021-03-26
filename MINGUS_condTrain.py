@@ -12,9 +12,10 @@ ToDo:
         - fine tune parameters for NottinghamDB training 
         - fine tune parameters for WjazzDB training 
         - include offset (maybe it improves duration inference)
+        - include tensorboard (?)
 
     Evaluation:
-        - solve problem with harmonic coherence metric
+        - implement harmonic coherence metric
         - generation/evaluation on EURECOM machine
         - export midi to audio and evaluate long-term coherence 
             with Jazz Transformer metric (Matlab)
@@ -51,12 +52,9 @@ import torch
 import torch.nn as nn
 import math
 import time
-import os
-import shutil
 import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
-from torch.utils.tensorboard import SummaryWriter
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -92,6 +90,7 @@ if __name__ == '__main__':
         train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = NottinghamDB.getTrainingData()
         val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = NottinghamDB.getValidationData()
         test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = NottinghamDB.getTestData()
+        
     
     
     #%% PITCH MODEL TRAINING
@@ -135,14 +134,6 @@ if __name__ == '__main__':
     best_val_loss = float("inf")
     epochs = con.EPOCHS # The number of epochs
     best_model = None
-    
-    # INITIALIZE TENSORBOARD
-    path = f'runs/{con.DATASET}/pitchModel/Epochs {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}'
-    if os.path.isdir(path):
-        # Remove folder with same parameters
-        shutil.rmtree(path)
-    writer = SummaryWriter(f'runs/{con.DATASET}/pitchModel/Epochs {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}')
-    step = 0
 
     pitch_start_time = time.time()
     # TRAINING LOOP
@@ -150,11 +141,10 @@ if __name__ == '__main__':
     for epoch in range(1, epochs + 1):
         
         epoch_start_time = time.time()
-        step = mod.train(modelPitch, vocabPitch, 
+        mod.train(modelPitch, pitch_to_ix, 
                   train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
-                  criterion, optimizer, scheduler, epoch, con.BPTT, device, 
-                  writer, step, isPitch)
+                  criterion, optimizer, scheduler, epoch, con.BPTT, device, isPitch)
         
         val_loss, val_acc = mod.evaluate(modelPitch, pitch_to_ix, 
                                 val_pitch_batched, val_duration_batched, val_chord_batched,
@@ -240,26 +230,16 @@ if __name__ == '__main__':
     epochs = con.EPOCHS # The number of epochs
     best_model = None
 
-    # INITIALIZE TENSORBOARD
-    path = f'runs/{con.DATASET}/durationModel/EPOCHS {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}'
-    if os.path.isdir(path):
-        # Remove folder with same parameters
-        shutil.rmtree(path)
-    writer = SummaryWriter(f'runs/{con.DATASET}/durationModel/EPOCHS {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}')
-    step = 0
-
     duration_start_time = time.time()
     # TRAINING LOOP
     print('Starting training...')
     for epoch in range(1, epochs + 1):
         
         epoch_start_time = time.time()
-        step = mod.train(modelDuration, vocabDuration, 
+        mod.train(modelDuration, duration_to_ix, 
                   train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
-                  criterion, optimizer, scheduler, epoch, con.BPTT, device, 
-                  writer, step,
-                  isPitch)
+                  criterion, optimizer, scheduler, epoch, con.BPTT, device, isPitch)
         
         val_loss, val_acc = mod.evaluate(modelDuration, duration_to_ix, 
                                 val_pitch_batched, val_duration_batched, val_chord_batched,

@@ -297,8 +297,6 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
                     h.addChordStepModification(hd, updatePitches=True)
                     scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
                     
-                    #print(chord + ': ' + scale)
-                    
                     # derive chord pitch
                     midiChord = datasetToMidiChord[chord]
                     chordPitch = [m21.pitch.Pitch(midiPitch).name for midiPitch in midiChord if midiPitch != 'R']
