@@ -133,7 +133,7 @@ if __name__ == '__main__':
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
-    #%% Open generated structured songs
+    #%% Load generated structured songs
     
     gen_common_path = 'output/gen4eval_' + con.DATASET + '/'
     original_subpath = 'original/'
@@ -147,101 +147,6 @@ if __name__ == '__main__':
     with open(path) as f:
         generated_structuredSongs = json.load(f)
         
-        
-    #%% Harmonic coherence
-    
-    '''
-    def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
-        scale_coherence = 0
-        chord_coherence = 0
-        count_pitch = 0
-        for tune in structuredSongs:
-            for bar in tune['bars']:
-                for beat in bar['beats']:
-                    chord = beat['chord']
-                    if chord != 'NC':
-                        # derive chord scale
-                        m21chord = chordToMusic21[chord]
-                        h = m21.harmony.ChordSymbol(m21chord)
-                        hd = m21.harmony.ChordStepModification('add', 2)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        hd = m21.harmony.ChordStepModification('add', 3)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        hd = m21.harmony.ChordStepModification('add', 4)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        hd = m21.harmony.ChordStepModification('add', 5)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        hd = m21.harmony.ChordStepModification('add', 6)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        hd = m21.harmony.ChordStepModification('add', 7)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        hd = m21.harmony.ChordStepModification('add', 8)
-                        h.addChordStepModification(hd, updatePitches=True)
-                        scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
-                        
-                        # derive chord pitch
-                        midiChord = datasetToMidiChord[chord]
-                        chordPitch = [m21.pitch.Pitch(midiPitch).name for midiPitch in midiChord if midiPitch != 'R']
-                        
-                        for pitch in beat['pitch']:
-                            if pitch != 'R':
-                                pitchName = m21.pitch.Pitch(pitch).name
-                                if pitchName in scale:
-                                    scale_coherence += 1
-                                if pitchName in chordPitch:
-                                    chord_coherence += 1
-                                count_pitch += 1
-        
-        scale_coherence = scale_coherence / count_pitch
-        chord_coherence = chord_coherence / count_pitch
-        return scale_coherence, chord_coherence
-    
-    original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
-                                                                           WjazzToMusic21, 
-                                                                           WjazzToMidiChords)
-    scale_coherence = 0
-    chord_coherence = 0
-    count_pitch = 0
-    for tune in original_structuredSongs:
-        for bar in tune['bars']:
-            for beat in bar['beats']:
-                chord = beat['chord']
-                
-                # derive chord scale
-                m21chord = WjazzToMusic21[chord]
-                h = m21.harmony.ChordSymbol(m21chord)
-                hd = m21.harmony.ChordStepModification('add', 2)
-                h.addChordStepModification(hd, updatePitches=True)
-                hd = m21.harmony.ChordStepModification('add', 3)
-                h.addChordStepModification(hd, updatePitches=True)
-                hd = m21.harmony.ChordStepModification('add', 4)
-                h.addChordStepModification(hd, updatePitches=True)
-                hd = m21.harmony.ChordStepModification('add', 5)
-                h.addChordStepModification(hd, updatePitches=True)
-                hd = m21.harmony.ChordStepModification('add', 6)
-                h.addChordStepModification(hd, updatePitches=True)
-                hd = m21.harmony.ChordStepModification('add', 7)
-                h.addChordStepModification(hd, updatePitches=True)
-                hd = m21.harmony.ChordStepModification('add', 8)
-                h.addChordStepModification(hd, updatePitches=True)
-                scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
-                
-                # derive chord pitch
-                midiChord = WjazzToMidiChords[chord]
-                chordPitch = [m21.pitch.Pitch(midiPitch).name for midiPitch in midiChord if midiPitch != 'R']
-                
-                for pitch in beat['pitch']:
-                    if pitch != 'R':
-                        pitchName = m21.pitch.Pitch(pitch).name
-                        if pitchName in scale:
-                            scale_coherence += 1
-                        if pitchName in chordPitch:
-                            chord_coherence += 1
-                        count_pitch += 1
-    
-    scale_coherence = scale_coherence / count_pitch
-    chord_coherence = chord_coherence / count_pitch
-    '''
     
     #%% METRICS DICTIONARY
     

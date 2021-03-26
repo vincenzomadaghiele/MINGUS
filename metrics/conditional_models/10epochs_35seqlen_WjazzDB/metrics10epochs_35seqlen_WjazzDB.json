@@ -51,6 +51,12 @@
             "gen_overlap-area": 0.761
         }
     },
+    "Harmonic coherence": {
+        "Original scale coherence": 0.6833,
+        "Original chord coherence": 0.4372,
+        "Generated scale coherence": 0.6833,
+        "Generated chord coherence": 0.4372
+    },
     "Pitch": {
         "Pitch_accuracy": 15.1311,
         "Pitch_perplexity": 11.7856,
