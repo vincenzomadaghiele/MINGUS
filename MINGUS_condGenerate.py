@@ -55,7 +55,9 @@ def batch4gen(data, bsz, dict_to_ix, device, isChord=False):
     data = data.view(bsz, -1).t().contiguous()
     return data.to(device)
 
-def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
+def generateCond(tune, num_bars, temperature, 
+                 modelPitch, modelDuration, 
+                 datasetToMidiChords, isJazz = False):
         
     # select a tune
     #tune = structuredSongs[0]
@@ -67,12 +69,11 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
     # copy bars into a new_structured_song
     new_structured_song = {}
     new_structured_song['title'] = tune['title'] + '_gen'
-    new_structured_song['total time [sec]'] = tune['total time [sec]']
-    new_structured_song['quantization [sec]'] = tune['quantization [sec]']
-    new_structured_song['quantization [beat]'] = tune['quantization [beat]']
     new_structured_song['tempo'] = tune['tempo']
     new_structured_song['beat duration [sec]'] = tune['beat duration [sec]']
     beat_duration_sec = new_structured_song['beat duration [sec]'] 
+    if isJazz:
+        new_structured_song['chord changes'] = tune['chord changes']
     bars = []
     beats = []
     
@@ -133,10 +134,15 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
             for i in range(len(beat['pitch'])):
                 pitch.append(beat['pitch'][i])
                 duration.append(beat['duration'][i])
-                chord.append(NottinghamToMidiChords[beat['chord']][:4])
-                bass.append(NottinghamToMidiChords[beat['chord']][0])
+                chord.append(datasetToMidiChords[beat['chord']][:4])
+                if isJazz:
+                    bass.append(beat['bass'])
+                else:
+                    bass.append(datasetToMidiChords[beat['chord']][0])
         
     new_chord = beat['chord']
+    if isJazz:
+        new_bass = beat['bass']
     while len(bars) < len(tune['bars']):
         
         # batchify
@@ -194,7 +200,12 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
                 beat['duration'] = beat_duration 
                 beat['offset'] = []
                 beat['scale'] = []
-                beat['bass'] = []
+                if isJazz:
+                    if len(tune['bars']) > bar_num:
+                        new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
+                    beat['bass'] = new_bass
+                else:
+                    beat['bass'] = []
                 beats.append(beat)
                 beat_pitch = []
                 beat_duration = []
@@ -226,7 +237,12 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
                 beat['offset'] = []
                 # get from chord with m21
                 beat['scale'] = []
-                beat['bass'] = []
+                if isJazz:
+                    if len(tune['bars']) > bar_num:
+                        new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
+                    beat['bass'] = new_bass
+                else:
+                    beat['bass'] = []
                 # append beat
                 beats.append(beat)
                 beat_pitch = []
@@ -240,13 +256,16 @@ def generateCond(tune, num_bars, temperature, modelPitch, modelDuration):
         # add note to pitch, duration, chord, bass array
         pitch.append(new_pitch)
         duration.append(new_duration)
-        chord.append(NottinghamToMidiChords[new_chord][:4])
-        bass.append(NottinghamToMidiChords[new_chord][0])
+        chord.append(datasetToMidiChords[new_chord][:4])
+        if isJazz:
+            bass.append(new_bass)
+        else:
+            bass.append(datasetToMidiChords[new_chord][0])
     
     new_structured_song['bars'] = bars
     return new_structured_song
 
-def structuredSongsToPM(structured_song):
+def structuredSongsToPM(structured_song, datasetToMidiChords):
     
     # input : a structured song json
     #structured_song = structuredSongs[0]
@@ -289,12 +308,18 @@ def structuredSongsToPM(structured_song):
     chords_inst = pretty_midi.Instrument(program=1, is_drum=False, name='piano')
     pm.instruments.append(inst)
     pm.instruments.append(chords_inst)
+    if isJazz:
+        bass_inst = pretty_midi.Instrument(program=1, is_drum=False, name='piano')
+        pm.instruments.append(bass_inst)
     velocity = 90    
     offset_sec = 0
     beat_counter = 0
     next_beat_sec = (beat_counter + 1) * beat_duration_sec
     last_chord = structured_song['bars'][0]['beats'][0]['chord']
     chord_start = 0
+    if isJazz:
+        last_bass = structured_song['bars'][0]['beats'][0]['bass']
+        bass_start = 0
     
     for bar in structured_song['bars']:
         
@@ -308,11 +333,20 @@ def structuredSongsToPM(structured_song):
             if beat['chord'] != last_chord:
                 # append last chord to pm inst
                 if last_chord != 'NC':
-                    for chord_pitch in NottinghamToMidiChords[last_chord][:3]:
-                        chords_inst.notes.append(pretty_midi.Note(velocity, chord_pitch, chord_start, next_beat_sec - beat_duration_sec))
+                    for chord_pitch in datasetToMidiChords[last_chord][:3]:
+                        chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
                 # update next chord start
                 last_chord = beat['chord']
                 chord_start = next_beat_sec - beat_duration_sec
+
+            if isJazz:
+                if beat['bass'] != last_bass:
+                    # append last chord to pm inst
+                    if last_bass != 'R': 
+                        bass_inst.notes.append(pretty_midi.Note(velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
+                    # update next chord start
+                    last_bass = beat['bass']
+                    bass_start = next_beat_sec - beat_duration_sec
 
             pitch = beat['pitch']
             duration = beat['duration']
@@ -324,7 +358,7 @@ def structuredSongsToPM(structured_song):
                         duration_sec = inv_dur_dict[duration[i]]
                         start = offset_sec
                         end = offset_sec + duration_sec
-                        inst.notes.append(pretty_midi.Note(velocity, pitch[i], start, end))
+                        inst.notes.append(pretty_midi.Note(velocity, int(pitch[i]), start, end))
                     offset_sec += duration_sec
             
             beat_counter += 1
@@ -332,9 +366,11 @@ def structuredSongsToPM(structured_song):
     
     # append last chord
     if last_chord != 'NC':
-        for chord_pitch in NottinghamToMidiChords[last_chord][:3]:
-            chords_inst.notes.append(pretty_midi.Note(velocity, chord_pitch, chord_start, next_beat_sec - beat_duration_sec))
-    
+        for chord_pitch in datasetToMidiChords[last_chord][:3]:
+            chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
+    if last_bass != 'R':
+        bass_inst.notes.append(pretty_midi.Note(velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
+   
     return pm
 
 
@@ -342,19 +378,35 @@ def structuredSongsToPM(structured_song):
 if __name__ == '__main__':
 
     # LOAD DATA
-    
-    NottinghamDB = dataset.NottinghamDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
-                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
-    
-    #train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
-    #val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
-    #test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
-    
-    songs = NottinghamDB.getOriginalSongDict()
-    structuredSongs = NottinghamDB.getStructuredSongs()
-    vocabPitch, vocabDuration, vocabBeat = NottinghamDB.getVocabs()
-    pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
-    NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
+    if con.DATASET == 'WjazzDB':
+            
+        WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                     con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        #train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
+        #val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
+        #test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+        
+        songs = WjazzDB.getOriginalSongDict()
+        structuredSongs = WjazzDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+        WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = WjazzDB.getChordDicts()
+
+    elif con.DATASET == 'NottinghamDB':
+        
+        NottinghamDB = dataset.NottinghamDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                     con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        #train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
+        #val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
+        #test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+        
+        songs = NottinghamDB.getOriginalSongDict()
+        structuredSongs = NottinghamDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat = NottinghamDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
+        NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
 
 
     #%% LOAD PRE-TRAINED MODELS
@@ -388,10 +440,12 @@ if __name__ == '__main__':
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
                                       device, dropout, isPitch).to(device)
     
-    # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_NottinghamDB.pt'
+    if con.DATASET == 'WjazzDB':
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
+    elif con.DATASET == 'NottinghamDB':
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
-    
+        
     
     # DURATION MODEL
     isPitch = False
@@ -422,26 +476,37 @@ if __name__ == '__main__':
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
                                       device, dropout, isPitch).to(device)
     
-    # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_NottinghamDB.pt'
+    if con.DATASET == 'WjazzDB':
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
+    elif con.DATASET == 'NottinghamDB':
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
     #%% GENERATE ON A TUNE
     
-    num_bars = 4
+    num_bars = 8
     temperature = 1
-    new_structured_song = generateCond(structuredSongs[0], num_bars, temperature, 
-                                       modelPitch, modelDuration)
-    title = new_structured_song['title']
-    pm = structuredSongsToPM(new_structured_song)
-    pm.write('output/'+ title + '.mid')
+    
+    if con.DATASET == 'WjazzDB':
+        isJazz = True
+        new_structured_song = generateCond(structuredSongs[50], num_bars, temperature, 
+                                       modelPitch, modelDuration, WjazzToMidiChords, isJazz)
+        title = new_structured_song['title']
+        pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
+        pm.write('output/'+ title + '.mid')
+    elif con.DATASET == 'NottinghamDB':
+        new_structured_song = generateCond(structuredSongs[0], num_bars, temperature, 
+                                       modelPitch, modelDuration, NottinghamToMidiChords)
+        title = new_structured_song['title']
+        pm = structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
+        pm.write('output/'+ title + '.mid')
     
     
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = True
+    generate_dataset = False
     
     if generate_dataset:
         out_path = 'output/gen4eval_' + con.DATASET + '/'
@@ -452,14 +517,29 @@ if __name__ == '__main__':
         original_structuredSongs = []
 
         for tune in structuredSongs[:num_tunes]:
-            new_structured_song = generateCond(tune, num_bars, temperature, 
-                                       modelPitch, modelDuration)
-            pm = structuredSongsToPM(new_structured_song)
-            pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
-            pm = structuredSongsToPM(tune)
-            pm.write(out_path + original_path + tune['title'] + '.mid')
-            generated_structuredSongs.append(new_structured_song)
-            original_structuredSongs.append(tune)
+            
+            if con.DATASET == 'WjazzDB':
+                isJazz = True
+                new_structured_song = generateCond(tune, num_bars, temperature, 
+                                           modelPitch, modelDuration, WjazzToMidiChords, isJazz)
+                
+                pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
+                pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
+                pm = structuredSongsToPM(tune, WjazzToMidiChords)
+                pm.write(out_path + original_path + tune['title'] + '.mid')
+                generated_structuredSongs.append(new_structured_song)
+                original_structuredSongs.append(tune)
+                
+            elif con.DATASET == 'NottinghamDB':
+                new_structured_song = generateCond(tune, num_bars, temperature, 
+                                           modelPitch, modelDuration, NottinghamToMidiChords)
+                
+                pm = structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
+                pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
+                pm = structuredSongsToPM(tune, NottinghamToMidiChords)
+                pm.write(out_path + original_path + tune['title'] + '.mid')
+                generated_structuredSongs.append(new_structured_song)
+                original_structuredSongs.append(tune)
             
         # Convert dict to JSON and SAVE IT
         with open(out_path + generated_path + con.DATASET + '_generated.json', 'w') as fp:

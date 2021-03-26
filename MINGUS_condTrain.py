@@ -22,6 +22,7 @@ ToDo:
     - live interface (chord recognition in max from audio or midi), 
         note generation in python (communication via osc)
     - bass line generation on WjazzDB (given only chord and given melody)
+        might require training with different bass embedding layer
     - melody harmonization
     
 Training instruction:
@@ -32,7 +33,10 @@ Training instruction:
         different datasets can be automatically transcribed with the functions provided
     - to train with the given datasets just modify the MINGUS_const file,
         which contains the training parameters
-        
+    - do not train with structured song data:
+        the rests duration are not the same! 
+        OR take data from structured song but implement function to 'sum' rests
+    
 """
 
 import torch

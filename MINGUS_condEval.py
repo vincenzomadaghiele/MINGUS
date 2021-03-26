@@ -25,21 +25,37 @@ torch.manual_seed(1)
 if __name__ == '__main__':
 
     # LOAD DATA
-    
-    NottinghamDB = dataset.NottinghamDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
-                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
-    
-    train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = NottinghamDB.getTrainingData()
-    val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = NottinghamDB.getValidationData()
-    test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = NottinghamDB.getTestData()
-    
-    songs = NottinghamDB.getOriginalSongDict()
-    structuredSongs = NottinghamDB.getStructuredSongs()
-    vocabPitch, vocabDuration, vocabBeat = NottinghamDB.getVocabs()
-    pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
-    NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
+    if con.DATASET == 'WjazzDB':
+            
+        WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                     con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+        
+        songs = WjazzDB.getOriginalSongDict()
+        structuredSongs = WjazzDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+        WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = WjazzDB.getChordDicts()
 
-
+    elif con.DATASET == 'NottinghamDB':
+        
+        NottinghamDB = dataset.NottinghamDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                     con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = NottinghamDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = NottinghamDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = NottinghamDB.getTestData()
+        
+        songs = NottinghamDB.getOriginalSongDict()
+        structuredSongs = NottinghamDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat = NottinghamDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
+        NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
+        
+        
     #%% LOAD PRE-TRAINED MODELS
     
     # PITCH MODEL
@@ -72,7 +88,10 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     # Import model
-    savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_NottinghamDB.pt'
+    if con.DATASET == 'WjazzDB':
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
+    elif con.DATASET == 'NottinghamDB':
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -106,21 +125,24 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     # Import model
-    savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_NottinghamDB.pt'
+    if con.DATASET == 'WjazzDB':
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
+    elif con.DATASET == 'NottinghamDB':
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
     #%% BLEU score
     
-    gen_common_path = 'output/gen4eval_NottinghamDB/'
+    gen_common_path = 'output/gen4eval_' + con.DATASET + '/'
     original_subpath = 'original/'
     generated_subpath = 'generated/'
     
-    path = gen_common_path + original_subpath + 'NottinghamDB_original.json'
+    path = gen_common_path + original_subpath + con.DATASET + '_original.json'
     with open(path) as f:
         original_structuredSongs = json.load(f)
         
-    path = gen_common_path + generated_subpath + 'NottinghamDB_generated.json'
+    path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
     
@@ -181,8 +203,8 @@ if __name__ == '__main__':
     
     # MGEval on generated midi files
     num_of_generations = 10
-    original_path = 'output/gen4eval_NottinghamDB/original/*.mid'
-    generated_path = 'output/gen4eval_NottinghamDB/generated/*.mid'
+    original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
+    generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
