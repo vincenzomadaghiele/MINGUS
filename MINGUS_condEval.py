@@ -182,15 +182,15 @@ if __name__ == '__main__':
     # Harmonic coherence of generated samples
     if con.DATASET == 'WjazzDB':
         original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
-                                                                               WjazzToMusic21, 
-                                                                               WjazzToMidiChords)
+                                                                                  WjazzToMusic21, 
+                                                                                  WjazzToMidiChords)
         generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
                                                                                     WjazzToMusic21, 
                                                                                     WjazzToMidiChords)
     elif con.DATASET == 'NottinghamDB':
         original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
-                                                                               NottinghamToMusic21, 
-                                                                               NottinghamToMidiChords)
+                                                                                  NottinghamToMusic21, 
+                                                                                  NottinghamToMidiChords)
         generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
                                                                                     NottinghamToMusic21, 
                                                                                     NottinghamToMidiChords)
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
     
     
-    # Convert metrics dict to JSON and SAVE IT    
+    # Convert metrics dict to JSON and SAVE IT
     with open(path + 'metrics' + model_id + '.json', 'w') as fp:
         json.dump(metrics_result, fp, indent=4)
     

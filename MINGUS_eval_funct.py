@@ -270,6 +270,7 @@ def BLEUscore(original_structuredSongs, generated_structuredSongs):
     return bleu_pitch, bleu_duration
 
 def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
+    
     scale_coherence = 0
     chord_coherence = 0
     count_pitch = 0

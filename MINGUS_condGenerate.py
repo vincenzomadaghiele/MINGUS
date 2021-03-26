@@ -368,9 +368,10 @@ def structuredSongsToPM(structured_song, datasetToMidiChords):
     if last_chord != 'NC':
         for chord_pitch in datasetToMidiChords[last_chord][:3]:
             chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
-    if last_bass != 'R':
-        bass_inst.notes.append(pretty_midi.Note(velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
-   
+    if isJazz:
+        if last_bass != 'R':
+            bass_inst.notes.append(pretty_midi.Note(velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
+       
     return pm
 
 
@@ -496,6 +497,7 @@ if __name__ == '__main__':
         pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
         pm.write('output/'+ title + '.mid')
     elif con.DATASET == 'NottinghamDB':
+        isJazz = False
         new_structured_song = generateCond(structuredSongs[0], num_bars, temperature, 
                                        modelPitch, modelDuration, NottinghamToMidiChords)
         title = new_structured_song['title']
@@ -531,6 +533,7 @@ if __name__ == '__main__':
                 original_structuredSongs.append(tune)
                 
             elif con.DATASET == 'NottinghamDB':
+                isJazz = False
                 new_structured_song = generateCond(tune, num_bars, temperature, 
                                            modelPitch, modelDuration, NottinghamToMidiChords)
                 
@@ -545,6 +548,6 @@ if __name__ == '__main__':
         with open(out_path + generated_path + con.DATASET + '_generated.json', 'w') as fp:
             json.dump(generated_structuredSongs, fp, indent=4)
         with open(out_path + original_path + con.DATASET + '_original.json', 'w') as fp:
-            json.dump(generated_structuredSongs, fp, indent=4)
+            json.dump(original_structuredSongs, fp, indent=4)
 
     

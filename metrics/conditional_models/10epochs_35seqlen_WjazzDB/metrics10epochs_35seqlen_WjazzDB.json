@@ -52,8 +52,8 @@
         }
     },
     "Harmonic coherence": {
-        "Original scale coherence": 0.6833,
-        "Original chord coherence": 0.4372,
+        "Original scale coherence": 0.7238,
+        "Original chord coherence": 0.5675,
         "Generated scale coherence": 0.6833,
         "Generated chord coherence": 0.4372
     },
@@ -61,12 +61,12 @@
         "Pitch_accuracy": 15.1311,
         "Pitch_perplexity": 11.7856,
         "Pitch_test-loss": 2.4669,
-        "Pitch_BLEU": 0.5559
+        "Pitch_BLEU": 0.5458
     },
     "Duration": {
         "Duration_accuracy": 20.6191,
         "Duration_perplexity": 7.2022,
         "Duration_test-loss": 1.9744,
-        "Duration_BLEU": 0.6462
+        "Duration_BLEU": 0.5858
     }
 }
