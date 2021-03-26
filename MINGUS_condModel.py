@@ -225,7 +225,8 @@ def train(model, vocabTarget,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
-            
+        
+        if i == 0:
             # Visualize embeddings
             if isPitch:
                 pitch_embeds, _ = model.getEmbeds(data_pitch, data_duration, data_chord,
@@ -240,7 +241,7 @@ def train(model, vocabTarget,
                 features = dur_embeds.reshape(-1, dur_embeds.shape[2])
                 dur_classes = data_duration.reshape(-1).numpy()
                 class_labels = [vocabTarget[duration] for duration in dur_classes]
-                writer.add_embedding(features, metadata=class_labels, global_step=step)
+                writer.add_embedding(features, metadata=class_labels, global_step=epoch)
             
         writer.add_scalar('Training loss', loss, global_step=step)
         step += 1

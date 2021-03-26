@@ -154,7 +154,8 @@ if __name__ == '__main__':
                   train_pitch_batched, train_duration_batched, train_chord_batched,
                   train_bass_batched, train_beat_batched,
                   criterion, optimizer, scheduler, epoch, con.BPTT, device, 
-                  writer, step, isPitch)
+                  writer, step, 
+                  isPitch)
         
         val_loss, val_acc = mod.evaluate(modelPitch, pitch_to_ix, 
                                 val_pitch_batched, val_duration_batched, val_chord_batched,
