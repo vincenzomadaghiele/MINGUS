@@ -43,6 +43,15 @@ class TransformerModel(nn.Module):
         self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim) # beat
         
         
+        
+        # Try out chord embeds
+        # chord embeds require a new chord dictionary or a linear layer!
+        #chord_embed_dim = 64
+        #self.chord_emedding = nn.Embedding(pitch_vocab_size, chord_embed_dim, padding_idx=self.pitch_pad_idx) 
+        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_embed_dim #+ beat_embed_dim
+        
+        
+        
         # Start the transformer structure with multidimensional data
         encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
         self.encoder = nn.Linear(encoder_input_dim, ninp)
@@ -78,6 +87,7 @@ class TransformerModel(nn.Module):
         self.pitch_embedding.weight.data.uniform_(-initrange, initrange)
         self.duration_embedding.weight.data.uniform_(-initrange, initrange)
         self.bass_embedding.weight.data.uniform_(-initrange, initrange)
+        #self.chord_emedding.weight.data.uniform_(-initrange, initrange)
         self.beat_embedding.weight.data.uniform_(-initrange, initrange)
         
         # initialize transformer structure weigths
@@ -97,13 +107,15 @@ class TransformerModel(nn.Module):
         bass_embeds = self.pitch_embedding(bass)
         #beat_embeds = self.beat_embedding(beat)
 
-        #print(pitch.shape)
-        #print(pitch_embeds.shape)
+        #chord_embeds = self.chord_emedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
+        #print(chord.shape)
+        #print(chord_embeds.shape)
+        #print(exp_chord_embeds.shape)
 
         # Concatenate along 3rd dimension
         #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)
         src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
-
+        
         #src_padding_mask = self.make_src_pad_mask(src) # PROBLEM
         
         # Positional encoding

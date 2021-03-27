@@ -304,14 +304,16 @@ def structuredSongsToPM(structured_song, datasetToMidiChords):
     # Construct a PrettyMIDI object.
     pm = pretty_midi.PrettyMIDI(initial_tempo=tempo)
     # Add a piano instrument
-    inst = pretty_midi.Instrument(program=1, is_drum=False, name='piano')
+    inst = pretty_midi.Instrument(program=67, is_drum=False, name='Tenor Sax')
     chords_inst = pretty_midi.Instrument(program=1, is_drum=False, name='piano')
     pm.instruments.append(inst)
     pm.instruments.append(chords_inst)
     if isJazz:
-        bass_inst = pretty_midi.Instrument(program=1, is_drum=False, name='piano')
+        bass_inst = pretty_midi.Instrument(program=44, is_drum=False, name='Contrabass')
         pm.instruments.append(bass_inst)
-    velocity = 90    
+    velocity = 95
+    chord_velocity = 60
+    bass_velocity = 85
     offset_sec = 0
     beat_counter = 0
     next_beat_sec = (beat_counter + 1) * beat_duration_sec
@@ -334,7 +336,7 @@ def structuredSongsToPM(structured_song, datasetToMidiChords):
                 # append last chord to pm inst
                 if last_chord != 'NC':
                     for chord_pitch in datasetToMidiChords[last_chord][:3]:
-                        chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
+                        chords_inst.notes.append(pretty_midi.Note(chord_velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
                 # update next chord start
                 last_chord = beat['chord']
                 chord_start = next_beat_sec - beat_duration_sec
@@ -343,7 +345,7 @@ def structuredSongsToPM(structured_song, datasetToMidiChords):
                 if beat['bass'] != last_bass:
                     # append last chord to pm inst
                     if last_bass != 'R': 
-                        bass_inst.notes.append(pretty_midi.Note(velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
+                        bass_inst.notes.append(pretty_midi.Note(bass_velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
                     # update next chord start
                     last_bass = beat['bass']
                     bass_start = next_beat_sec - beat_duration_sec
@@ -358,7 +360,7 @@ def structuredSongsToPM(structured_song, datasetToMidiChords):
                         duration_sec = inv_dur_dict[duration[i]]
                         start = offset_sec
                         end = offset_sec + duration_sec
-                        inst.notes.append(pretty_midi.Note(velocity, int(pitch[i]), start, end))
+                        inst.notes.append(pretty_midi.Note(chord_velocity, int(pitch[i]), start, end))
                     offset_sec += duration_sec
             
             beat_counter += 1
@@ -370,7 +372,7 @@ def structuredSongsToPM(structured_song, datasetToMidiChords):
             chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
     if isJazz:
         if last_bass != 'R':
-            bass_inst.notes.append(pretty_midi.Note(velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
+            bass_inst.notes.append(pretty_midi.Note(bass_velocity, int(last_bass), bass_start, next_beat_sec - beat_duration_sec))
        
     return pm
 
