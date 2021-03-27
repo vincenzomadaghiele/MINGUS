@@ -242,6 +242,9 @@ def train(model, vocabTarget,
                 dur_classes = data_duration.reshape(-1).numpy()
                 class_labels = [vocabTarget[duration] for duration in dur_classes]
                 writer.add_embedding(features, metadata=class_labels, global_step=epoch)
+            if epoch == 1:
+                writer.add_graph(model, input_to_model = (data_pitch, data_duration, data_chord,
+                                                          data_bass, data_beat, src_mask))
             
         writer.add_scalar('Training loss', loss, global_step=step)
         step += 1

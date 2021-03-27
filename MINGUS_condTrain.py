@@ -198,6 +198,7 @@ if __name__ == '__main__':
     
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
+    #writer.close()
     
     
     #%% DURATION MODEL TRAINING
@@ -303,6 +304,7 @@ if __name__ == '__main__':
     
     state_dictPitch = best_model_duration.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
+    #writer.close()
     
     
     print('Total training time for pitch model: ', pitch_end_time - pitch_start_time )
