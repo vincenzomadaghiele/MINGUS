@@ -8,6 +8,7 @@ Created on Tue Mar 16 08:56:16 2021
 ToDo:
     Model:
         - implement chord embedding
+        - tensorboard visualization of chord embedding for inference
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - fine tune parameters for WjazzDB training 
