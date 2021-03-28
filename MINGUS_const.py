@@ -20,4 +20,4 @@ augmentation_const = 4
 
 DATASET = 'NottinghamDB'
 
-EPOCHS = 10
+EPOCHS = 100
