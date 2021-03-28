@@ -20,7 +20,7 @@ class TransformerModel(nn.Module):
 
     def __init__(self, pitch_vocab_size, pitch_embed_dim,
                      duration_vocab_size, duration_embed_dim, 
-                     bass_embed_dim, 
+                     bass_embed_dim, chord_encod_dim,
                      beat_vocab_size, beat_embed_dim, 
                      ninp, nhead, nhid, nlayers, 
                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, 
@@ -42,7 +42,7 @@ class TransformerModel(nn.Module):
         self.bass_embedding = nn.Embedding(pitch_vocab_size, bass_embed_dim, padding_idx=self.pitch_pad_idx) # bass
         self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim) # beat
         
-        chord_encod_dim = 64
+        #chord_encod_dim = 64
         self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
         encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
         

@@ -13,7 +13,9 @@ ToDo:
         
     To ask:
         - robinson not working
-        - how to optimize model (reduce dictionary?)
+        - how to optimize model
+            reduce dictionary (?)
+            quantize durations (?)
     
     Model:
         - change number of dimensions for pitch and duration model
@@ -113,6 +115,8 @@ if __name__ == '__main__':
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
     duration_embed_dim = 64
     
+    chord_encod_dim = 64
+
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 32
     bass_embed_dim = 32
@@ -128,7 +132,7 @@ if __name__ == '__main__':
     beat_pad_idx = beat_to_ix['<pad>']
     modelPitch = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, 
+                                      bass_embed_dim, chord_encod_dim,
                                       beat_vocab_size, beat_embed_dim,  
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
@@ -223,6 +227,8 @@ if __name__ == '__main__':
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
     duration_embed_dim = 64
     
+    chord_encod_dim = 64
+    
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 32
     bass_embed_dim = 32
@@ -238,7 +244,7 @@ if __name__ == '__main__':
     beat_pad_idx = beat_to_ix['<pad>']
     modelDuration = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, 
+                                      bass_embed_dim, chord_encod_dim,
                                       beat_vocab_size, beat_embed_dim,  
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
