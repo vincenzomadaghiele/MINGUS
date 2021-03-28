@@ -42,18 +42,19 @@ class TransformerModel(nn.Module):
         self.bass_embedding = nn.Embedding(pitch_vocab_size, bass_embed_dim, padding_idx=self.pitch_pad_idx) # bass
         self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim) # beat
         
-        
+        chord_encod_dim = 64
+        self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
+        encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
         
         # Try out chord embeds
         # chord embeds require a new chord dictionary or a linear layer!
         #chord_embed_dim = 64
         #self.chord_emedding = nn.Embedding(pitch_vocab_size, chord_embed_dim, padding_idx=self.pitch_pad_idx) 
-        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_embed_dim #+ beat_embed_dim
         
         
         
         # Start the transformer structure with multidimensional data
-        encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
+        #encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
         self.encoder = nn.Linear(encoder_input_dim, ninp)
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
@@ -90,7 +91,9 @@ class TransformerModel(nn.Module):
         #self.chord_emedding.weight.data.uniform_(-initrange, initrange)
         self.beat_embedding.weight.data.uniform_(-initrange, initrange)
         
-        # initialize transformer structure weigths
+        # initialize linear layers weigths
+        self.chord_encoder.bias.data.zero_()
+        self.chord_encoder.weight.data.uniform_(-initrange, initrange)
         self.encoder.bias.data.zero_()
         self.encoder.weight.data.uniform_(-initrange, initrange)
         self.out_linear.bias.data.zero_()
@@ -111,6 +114,8 @@ class TransformerModel(nn.Module):
         #print(chord.shape)
         #print(chord_embeds.shape)
         #print(exp_chord_embeds.shape)
+
+        chord_embeds = self.chord_encoder(chord_embeds)
 
         # Concatenate along 3rd dimension
         #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)

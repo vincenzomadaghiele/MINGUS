@@ -9,8 +9,6 @@ ToDo:
     Model:
         - implement chord embedding
         - evaluate the effect of batchNorm layers and ReLUs
-        - tensorboard visualization of chord embedding for inference 
-            (depends if chord embedding is implemented with linear or with embedding)
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - fine tune parameters for WjazzDB training 
