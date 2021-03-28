@@ -6,8 +6,17 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
+    Done:
+        - Tensorboard
+        - Audio rendition
+        - Wjazz generations
+        
+    To ask:
+        - robinson not working
+        - how to optimize model (reduce dictionary?)
+    
     Model:
-        - evaluate the effect of batchNorm layers and ReLUs
+        - change number of dimensions for pitch and duration model
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - fine tune parameters for WjazzDB training 
@@ -164,6 +173,8 @@ if __name__ == '__main__':
                                 val_bass_batched, val_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
         
+        writer.add_scalar('Validation accuracy', val_acc, global_step=epoch)
+        
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
               'valid ppl {:5.2f} | valid acc {:5.2f}'.format(epoch, (time.time() - epoch_start_time),
@@ -271,6 +282,8 @@ if __name__ == '__main__':
                                 val_pitch_batched, val_duration_batched, val_chord_batched,
                                 val_bass_batched, val_beat_batched,
                                 criterion, con.BPTT, device, isPitch)
+        
+        writer.add_scalar('Validation accuracy', val_acc, global_step=epoch)
         
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
