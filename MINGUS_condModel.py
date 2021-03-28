@@ -62,11 +62,9 @@ class TransformerModel(nn.Module):
         
         if isPitch:
             self.out_linear = nn.Linear(ninp, pitch_embed_dim)
-            # consider ReLU here
             self.out_decoder = nn.Linear(pitch_embed_dim, pitch_vocab_size)
         else:
             self.out_linear = nn.Linear(ninp, duration_embed_dim)
-            # consider ReLU here
             self.out_decoder = nn.Linear(duration_embed_dim, duration_vocab_size)
 
         self.init_weights()

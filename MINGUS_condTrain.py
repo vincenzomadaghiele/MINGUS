@@ -7,7 +7,6 @@ Created on Tue Mar 16 08:56:16 2021
 
 ToDo:
     Model:
-        - implement chord embedding
         - evaluate the effect of batchNorm layers and ReLUs
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
@@ -131,6 +130,7 @@ if __name__ == '__main__':
     lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr, momentum=0.9,  nesterov=True)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
@@ -139,10 +139,11 @@ if __name__ == '__main__':
     
     # INITIALIZE TENSORBOARD
     path = f'runs/{con.DATASET}/pitchModel/Epochs {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}'
+    #path = f'runs/{con.DATASET}/pitchModel/REDUCE LR ON PLATEAU'
     if os.path.isdir(path):
         # Remove folder with same parameters
         shutil.rmtree(path)
-    writer = SummaryWriter(f'runs/{con.DATASET}/pitchModel/Epochs {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}')
+    writer = SummaryWriter(path)
     step = 0
 
     pitch_start_time = time.time()
@@ -237,6 +238,7 @@ if __name__ == '__main__':
     lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelDuration.parameters(), lr=lr, momentum=0.9,  nesterov=True)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
@@ -245,10 +247,11 @@ if __name__ == '__main__':
 
     # INITIALIZE TENSORBOARD
     path = f'runs/{con.DATASET}/durationModel/EPOCHS {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}'
+    #path = f'runs/{con.DATASET}/durationModel/REDUCE LR ON PLATEAU'    
     if os.path.isdir(path):
         # Remove folder with same parameters
         shutil.rmtree(path)
-    writer = SummaryWriter(f'runs/{con.DATASET}/durationModel/EPOCHS {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}')
+    writer = SummaryWriter(path)
     step = 0
 
     duration_start_time = time.time()
