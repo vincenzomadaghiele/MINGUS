@@ -182,7 +182,7 @@ def generateCond(tune, num_bars, temperature,
         # append note to new arrays
         beat_pitch.append(new_pitch)
         beat_duration.append(new_duration)
-        duration_sec = inv_dur_dict[new_duration]
+        duration_sec = inv_dur_dict[new_duration] # problem: might generate padding here
         offset_sec += duration_sec
         
         # check if the note is in a new beat / bar
