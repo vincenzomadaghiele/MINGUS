@@ -16,7 +16,7 @@ import MINGUS_condModel as mod
 import MINGUS_const as con
 
 # Device configuration
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(1)
 
 # This is used in the generate() function
