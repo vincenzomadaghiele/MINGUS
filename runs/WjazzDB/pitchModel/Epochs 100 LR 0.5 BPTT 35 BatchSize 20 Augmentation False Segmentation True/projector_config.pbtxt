@@ -468,3 +468,23 @@ embeddings {
   metadata_path: "30876/default/metadata.tsv"
   tensor_path: "30876/default/tensors.tsv"
 }
+embeddings {
+  tensor_name: "default:31208"
+  metadata_path: "31208/default/metadata.tsv"
+  tensor_path: "31208/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:31540"
+  metadata_path: "31540/default/metadata.tsv"
+  tensor_path: "31540/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:31872"
+  metadata_path: "31872/default/metadata.tsv"
+  tensor_path: "31872/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:32204"
+  metadata_path: "32204/default/metadata.tsv"
+  tensor_path: "32204/default/tensors.tsv"
+}
