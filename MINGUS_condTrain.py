@@ -14,11 +14,12 @@ ToDo:
     To ask:
         - robinson not working
         - how to optimize model
+            change transformer layer (?)
             reduce dictionary (?)
             quantize durations (?)
     
     Model:
-        - change number of dimensions for pitch and duration model
+        - change dimensions for pitch and duration model
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - fine tune parameters for WjazzDB training 
@@ -70,7 +71,7 @@ import MINGUS_const as con
 from torch.utils.tensorboard import SummaryWriter
 
 # Device configuration
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(1)
 
 
@@ -110,16 +111,16 @@ if __name__ == '__main__':
     isPitch = True
     # HYPERPARAMETERS
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
-    pitch_embed_dim = 64
+    pitch_embed_dim = 512
     
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
-    duration_embed_dim = 64
+    duration_embed_dim = 512
     
     chord_encod_dim = 64
 
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
-    beat_embed_dim = 32
-    bass_embed_dim = 32
+    beat_embed_dim = 64
+    bass_embed_dim = 64
 
 
     emsize = 200 # embedding dimension
@@ -222,16 +223,16 @@ if __name__ == '__main__':
     isPitch = False
     # HYPERPARAMETERS
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
-    pitch_embed_dim = 64
+    pitch_embed_dim = 512
     
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
-    duration_embed_dim = 64
+    duration_embed_dim = 512
     
     chord_encod_dim = 64
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
-    beat_embed_dim = 32
-    bass_embed_dim = 32
+    beat_embed_dim = 64
+    bass_embed_dim = 64
 
 
     emsize = 200 # embedding dimension
