@@ -10,6 +10,7 @@ ToDo:
         - Tensorboard
         - Audio rendition
         - Wjazz generations
+        - Wjazz pitch model params optimized
         
     To ask:
         - robinson not working
@@ -19,6 +20,7 @@ ToDo:
             quantize durations (?)
     
     Model:
+        - optimize wjazz duration model
         - change dimensions for pitch and duration model
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
@@ -143,7 +145,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)
     lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr, momentum=0.9,  nesterov=True)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 5.0, gamma=0.95)
 
     
     # TRAIN AND EVALUATE LOSS
