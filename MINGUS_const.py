@@ -16,7 +16,7 @@ EVAL_BATCH_SIZE = 10
 BPTT = 35
 AUGMENTATION = True
 SEGMENTATION = True
-augmentation_const = 3
+augmentation_const = 2
 
 DATASET = 'WjazzDB'
 
