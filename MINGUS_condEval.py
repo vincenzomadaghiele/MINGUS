@@ -62,14 +62,16 @@ if __name__ == '__main__':
     # PITCH MODEL
     isPitch = True
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
-    pitch_embed_dim = 64
+    pitch_embed_dim = 512
     
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
-    duration_embed_dim = 64
+    duration_embed_dim = 512
+    
+    chord_encod_dim = 64
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
-    beat_embed_dim = 32
-    bass_embed_dim = 32
+    beat_embed_dim = 64
+    bass_embed_dim = 64
 
 
     emsize = 200 # embedding dimension
@@ -82,7 +84,7 @@ if __name__ == '__main__':
     beat_pad_idx = beat_to_ix['<pad>']
     modelPitch = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, 
+                                      bass_embed_dim, chord_encod_dim,
                                       beat_vocab_size, beat_embed_dim,  
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
@@ -99,14 +101,16 @@ if __name__ == '__main__':
     # DURATION MODEL
     isPitch = False
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
-    pitch_embed_dim = 64
+    pitch_embed_dim = 512
     
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
-    duration_embed_dim = 64
+    duration_embed_dim = 512
+    
+    chord_encod_dim = 64
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
-    beat_embed_dim = 32
-    bass_embed_dim = 32
+    beat_embed_dim = 64
+    bass_embed_dim = 64
 
 
     emsize = 200 # embedding dimension
@@ -119,7 +123,7 @@ if __name__ == '__main__':
     beat_pad_idx = beat_to_ix['<pad>']
     modelDuration = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, 
+                                      bass_embed_dim, chord_encod_dim,
                                       beat_vocab_size, beat_embed_dim,  
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
