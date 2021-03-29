@@ -71,7 +71,7 @@ import MINGUS_const as con
 from torch.utils.tensorboard import SummaryWriter
 
 # Device configuration
-device = torch.device('cuda:2' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(1)
 
 

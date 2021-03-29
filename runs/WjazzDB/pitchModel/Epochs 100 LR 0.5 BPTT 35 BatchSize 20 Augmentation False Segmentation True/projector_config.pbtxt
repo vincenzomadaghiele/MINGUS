@@ -388,3 +388,83 @@ embeddings {
   metadata_path: "25564/default/metadata.tsv"
   tensor_path: "25564/default/tensors.tsv"
 }
+embeddings {
+  tensor_name: "default:25896"
+  metadata_path: "25896/default/metadata.tsv"
+  tensor_path: "25896/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:26228"
+  metadata_path: "26228/default/metadata.tsv"
+  tensor_path: "26228/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:26560"
+  metadata_path: "26560/default/metadata.tsv"
+  tensor_path: "26560/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:26892"
+  metadata_path: "26892/default/metadata.tsv"
+  tensor_path: "26892/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:27224"
+  metadata_path: "27224/default/metadata.tsv"
+  tensor_path: "27224/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:27556"
+  metadata_path: "27556/default/metadata.tsv"
+  tensor_path: "27556/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:27888"
+  metadata_path: "27888/default/metadata.tsv"
+  tensor_path: "27888/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:28220"
+  metadata_path: "28220/default/metadata.tsv"
+  tensor_path: "28220/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:28552"
+  metadata_path: "28552/default/metadata.tsv"
+  tensor_path: "28552/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:28884"
+  metadata_path: "28884/default/metadata.tsv"
+  tensor_path: "28884/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:29216"
+  metadata_path: "29216/default/metadata.tsv"
+  tensor_path: "29216/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:29548"
+  metadata_path: "29548/default/metadata.tsv"
+  tensor_path: "29548/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:29880"
+  metadata_path: "29880/default/metadata.tsv"
+  tensor_path: "29880/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:30212"
+  metadata_path: "30212/default/metadata.tsv"
+  tensor_path: "30212/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:30544"
+  metadata_path: "30544/default/metadata.tsv"
+  tensor_path: "30544/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:30876"
+  metadata_path: "30876/default/metadata.tsv"
+  tensor_path: "30876/default/tensors.tsv"
+}
