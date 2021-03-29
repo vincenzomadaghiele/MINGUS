@@ -148,7 +148,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = con.EPOCHS # The number of epochs
+    epochs = 1 #con.EPOCHS # The number of epochs
     best_model = None
     
     # INITIALIZE TENSORBOARD
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = con.EPOCHS # The number of epochs
+    epochs = 30 #con.EPOCHS # The number of epochs
     best_model = None
 
     # INITIALIZE TENSORBOARD
