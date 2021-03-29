@@ -477,7 +477,7 @@ if __name__ == '__main__':
     beat_pad_idx = beat_to_ix['<pad>']
     modelDuration = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, 
+                                      bass_embed_dim, chord_encod_dim,
                                       beat_vocab_size, beat_embed_dim,  
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx,
