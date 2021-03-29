@@ -148,7 +148,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 1 #con.EPOCHS # The number of epochs
+    epochs = con.EPOCHS # The number of epochs
     best_model = None
     
     # INITIALIZE TENSORBOARD
@@ -253,14 +253,14 @@ if __name__ == '__main__':
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
-    lr = 0.005 # learning rate
+    lr = 0.05 # learning rate
     optimizer = torch.optim.SGD(modelDuration.parameters(), lr=lr, momentum=0.9,  nesterov=True)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 30 #con.EPOCHS # The number of epochs
+    epochs = con.EPOCHS # The number of epochs
     best_model = None
 
     # INITIALIZE TENSORBOARD
