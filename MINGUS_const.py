@@ -20,4 +20,4 @@ augmentation_const = 4
 
 DATASET = 'WjazzDB'
 
-EPOCHS = 100
+EPOCHS = 200
