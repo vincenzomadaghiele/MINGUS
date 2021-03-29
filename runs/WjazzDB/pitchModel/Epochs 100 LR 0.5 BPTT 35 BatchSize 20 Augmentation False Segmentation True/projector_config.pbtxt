@@ -488,3 +488,13 @@ embeddings {
   metadata_path: "32204/default/metadata.tsv"
   tensor_path: "32204/default/tensors.tsv"
 }
+embeddings {
+  tensor_name: "default:32536"
+  metadata_path: "32536/default/metadata.tsv"
+  tensor_path: "32536/default/tensors.tsv"
+}
+embeddings {
+  tensor_name: "default:32868"
+  metadata_path: "32868/default/metadata.tsv"
+  tensor_path: "32868/default/tensors.tsv"
+}
