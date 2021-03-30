@@ -12,17 +12,17 @@ ToDo:
         - Wjazz generations
         - Wjazz pitch model params optimized
         - beat conditioned model
-    
-    To ask:
+        
         - how to optimize model
             change transformer layer (?)
             reduce dictionary (?)
             quantize durations even more (?)
             condition on offset
             different embedding for bass (?)
+            some duration tokens are really similar (like 32nds and 16th triplets)
+            so model is very perplex and accuracy is low
             
     Model:
-        - optimize wjazz duration model
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - include offset (maybe it improves duration inference)

@@ -67,7 +67,7 @@ if __name__ == '__main__':
             bass.append(b)    
     
     
-    counter = collections.Counter(pitch)
+    counter = collections.Counter(duration)
     labels, values = zip(*counter.items())
     
     indexes = np.arange(len(labels))
