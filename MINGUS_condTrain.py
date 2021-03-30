@@ -12,6 +12,7 @@ ToDo:
         - Wjazz generations
         - Wjazz pitch model params optimized
         - beat conditioned model
+        - harmonic coherence metric
         
         - how to optimize model
             change transformer layer (?)

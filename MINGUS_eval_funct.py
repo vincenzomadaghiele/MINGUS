@@ -280,6 +280,7 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
                 chord = beat['chord']
                 if chord != 'NC':
                     # derive chord scale
+                    '''
                     m21chord = chordToMusic21[chord]
                     h = m21.harmony.ChordSymbol(m21chord)
                     hd = m21.harmony.ChordStepModification('add', 2)
@@ -297,7 +298,7 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
                     hd = m21.harmony.ChordStepModification('add', 8)
                     h.addChordStepModification(hd, updatePitches=True)
                     scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
-                    
+                    '''
                     #print(chord + ': ' + scale)
                     
                     # derive chord pitch
@@ -307,8 +308,8 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
                     for pitch in beat['pitch']:
                         if pitch != 'R':
                             pitchName = m21.pitch.Pitch(pitch).name
-                            if pitchName in scale:
-                                scale_coherence += 1
+                            #if pitchName in scale:
+                                #scale_coherence += 1
                             if pitchName in chordPitch:
                                 chord_coherence += 1
                             count_pitch += 1
