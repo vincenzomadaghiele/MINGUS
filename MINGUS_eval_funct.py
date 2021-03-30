@@ -331,8 +331,8 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
                     for pitch in beat['pitch']:
                         if pitch != 'R':
                             pitchName = m21.pitch.Pitch(pitch).name
-                            #if pitchName in scale:
-                                #scale_coherence += 1
+                            if pitchName in scale:
+                                scale_coherence += 1
                             if pitchName in chordPitch:
                                 chord_coherence += 1
                             count_pitch += 1
