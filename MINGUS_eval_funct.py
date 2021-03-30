@@ -271,6 +271,28 @@ def BLEUscore(original_structuredSongs, generated_structuredSongs):
 
 def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
     
+    datasetChordToScale = {}
+    for chord in datasetToMidiChord.keys():
+        if chord != 'NC':
+            m21chord = chordToMusic21[chord]
+            h = m21.harmony.ChordSymbol(m21chord)
+            hd = m21.harmony.ChordStepModification('add', 2)
+            h.addChordStepModification(hd, updatePitches=True)
+            hd = m21.harmony.ChordStepModification('add', 3)
+            h.addChordStepModification(hd, updatePitches=True)
+            hd = m21.harmony.ChordStepModification('add', 4)
+            h.addChordStepModification(hd, updatePitches=True)
+            hd = m21.harmony.ChordStepModification('add', 5)
+            h.addChordStepModification(hd, updatePitches=True)
+            hd = m21.harmony.ChordStepModification('add', 6)
+            h.addChordStepModification(hd, updatePitches=True)
+            hd = m21.harmony.ChordStepModification('add', 7)
+            h.addChordStepModification(hd, updatePitches=True)
+            hd = m21.harmony.ChordStepModification('add', 8)
+            h.addChordStepModification(hd, updatePitches=True)
+            scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
+            datasetChordToScale[chord] = scale
+    
     scale_coherence = 0
     chord_coherence = 0
     count_pitch = 0
@@ -299,6 +321,7 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
                     h.addChordStepModification(hd, updatePitches=True)
                     scale = [m21.pitch.Pitch(pitch).name for pitch in h.pitches]
                     '''
+                    scale = datasetChordToScale[chord]
                     #print(chord + ': ' + scale)
                     
                     # derive chord pitch
