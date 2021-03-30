@@ -11,24 +11,21 @@ ToDo:
         - Audio rendition
         - Wjazz generations
         - Wjazz pitch model params optimized
-        
+    
     To ask:
-        - robinson not working
         - how to optimize model
             change transformer layer (?)
             reduce dictionary (?)
-            quantize durations (?)
-    
+            quantize durations even more (?)
+            condition on offset
+            
     Model:
         - optimize wjazz duration model
-        - change dimensions for pitch and duration model
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
-        - fine tune parameters for WjazzDB training 
         - include offset (maybe it improves duration inference)
 
     Evaluation:
-        - generation/evaluation on EURECOM machine
         - export midi to audio and evaluate long-term coherence 
             with Jazz Transformer metric (Matlab)
 
@@ -41,11 +38,6 @@ ToDo:
             note generation in python (communication via osc)
         might require training with different bass embedding layer
         - melody harmonization
-
-    FolkDB:
-        - check if in midi folkDB files there is chords information with note_seq
-        - if no chord information on folkDB try to open abc files with other library
-
 
 Training instruction:
     - to train with different dataset create a json file in the same format 
@@ -150,7 +142,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 1 #con.EPOCHS # The number of epochs
+    epochs = con.EPOCHS # The number of epochs
     best_model = None
     
     # INITIALIZE TENSORBOARD

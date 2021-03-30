@@ -40,7 +40,7 @@ class TransformerModel(nn.Module):
         self.pitch_embedding = nn.Embedding(pitch_vocab_size, pitch_embed_dim, padding_idx=self.pitch_pad_idx) # pitch
         self.duration_embedding = nn.Embedding(duration_vocab_size, duration_embed_dim, padding_idx=self.duration_pad_idx) # duration
         self.bass_embedding = nn.Embedding(pitch_vocab_size, bass_embed_dim, padding_idx=self.pitch_pad_idx) # bass
-        self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim) # beat
+        self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim, padding_idx=self.beat_pad_idx) # beat
         
         #chord_encod_dim = 64
         self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
@@ -51,7 +51,8 @@ class TransformerModel(nn.Module):
         #chord_embed_dim = 64
         #self.chord_emedding = nn.Embedding(pitch_vocab_size, chord_embed_dim, padding_idx=self.pitch_pad_idx) 
         
-        
+        encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim + beat_embed_dim
+
         
         # Start the transformer structure with multidimensional data
         #encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
@@ -106,7 +107,7 @@ class TransformerModel(nn.Module):
         duration_embeds = self.duration_embedding(duration)
         chord_embeds = self.pitch_embedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
         bass_embeds = self.pitch_embedding(bass)
-        #beat_embeds = self.beat_embedding(beat)
+        beat_embeds = self.beat_embedding(beat)
 
         #chord_embeds = self.chord_emedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
         #print(chord.shape)
@@ -116,8 +117,8 @@ class TransformerModel(nn.Module):
         chord_embeds = self.chord_encoder(chord_embeds)
 
         # Concatenate along 3rd dimension
-        #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)
-        src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
+        #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
+        src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)
         
         #src_padding_mask = self.make_src_pad_mask(src) # PROBLEM
         

@@ -241,14 +241,14 @@ class WjazzDB():
             chord_train.append(song['chords'])
             bass_train.append(song['bass pitch'])
             beat_train.append(song['beats'])
-                
+        
         for song in songs['validation']:
             pitch_validation.append(song['pitch'])
             duration_validation.append(song['duration'])
             chord_validation.append(song['chords'])
             bass_validation.append(song['bass pitch'])
             beat_validation.append(song['beats'])
-                
+        
         for song in songs['test']:
             pitch_test.append(song['pitch'])
             duration_test.append(song['duration'])
@@ -298,7 +298,7 @@ class WjazzDB():
         vocabBeat = {} 
         for i in range(0,5): 
             vocabBeat[i] = i+1
-        vocabBeat[6] = '<pad>'
+        vocabBeat[5] = '<pad>'
         # inverse dictionary
         beat_to_ix = {v: k for k, v in vocabBeat.items()}     
         
@@ -920,7 +920,7 @@ class NottinghamDB():
         vocabBeat = {}
         for i in range(0,5): 
             vocabBeat[i] = i+1
-        vocabBeat[6] = '<pad>'
+        vocabBeat[5] = '<pad>'
         # inverse dictionary
         beat_to_ix = {v: k for k, v in vocabBeat.items()}     
         
