@@ -92,25 +92,25 @@ if __name__ == '__main__':
     
     # Import model
     if con.DATASET == 'WjazzDB':
-        savePATHpitch = 'models/MINGUSpitch_200epochs_seqLen35_WjazzDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
-        savePATHpitch = 'models/MINGUSpitch_200epochs_seqLen35_NottinghamDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
     # DURATION MODEL
     isPitch = False
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
-    pitch_embed_dim = 512
+    pitch_embed_dim = 64
     
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
-    duration_embed_dim = 512
+    duration_embed_dim = 64
     
-    chord_encod_dim = 64
+    chord_encod_dim = 32
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
-    beat_embed_dim = 64
-    bass_embed_dim = 64
+    beat_embed_dim = 32
+    bass_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -131,9 +131,9 @@ if __name__ == '__main__':
     
     # Import model
     if con.DATASET == 'WjazzDB':
-        savePATHduration = 'models/MINGUSduration_200epochs_seqLen35_WjazzDB.pt'
+        savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
-        savePATHduration = 'models/MINGUSduration_200epochs_seqLen35_NottinghamDB.pt'
+        savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
