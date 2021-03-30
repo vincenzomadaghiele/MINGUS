@@ -139,7 +139,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)
     lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr, momentum=0.9,  nesterov=True)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 2.0, gamma=0.95)
 
     
     # TRAIN AND EVALUATE LOSS
