@@ -58,6 +58,7 @@ if __name__=="__main__":
         
                 beat_duration_sec = 1 / (song['avgtempo'] / 60)
         
+                '''
                 # sampling of the measure
                 unit = beat_duration_sec * 4 / 96.
                 # possible note durations in seconds 
@@ -84,6 +85,34 @@ if __name__=="__main__":
                 dur_dict[possible_durations[12]] = '8th note triplet'
                 dur_dict[possible_durations[13]] = '16th note triplet'
                 inv_dur_dict = {v: k for k, v in dur_dict.items()}
+                '''
+                
+                # sampling of the measure
+                unit = beat_duration_sec * 4 / 96.
+                # possible note durations in seconds 
+                # (it is possible to add representations - include 32nds, quintuplets...):
+                # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+                possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
+                                      unit * 72, unit * 36, unit * 18, unit * 9, 
+                                      unit * 32]
+
+                # Define durations dictionary
+                dur_dict = {}
+                dur_dict[possible_durations[0]] = 'full'
+                dur_dict[possible_durations[1]] = 'half'
+                dur_dict[possible_durations[2]] = 'quarter'
+                dur_dict[possible_durations[3]] = '8th'
+                dur_dict[possible_durations[4]] = '16th'
+                dur_dict[possible_durations[5]] = '32th'
+                dur_dict[possible_durations[6]] = 'dot half'
+                dur_dict[possible_durations[7]] = 'dot quarter'
+                dur_dict[possible_durations[8]] = 'dot 8th'
+                dur_dict[possible_durations[9]] = 'dot 16th'
+                dur_dict[possible_durations[10]] = 'half note triplet'
+                inv_dur_dict = {v: k for k, v in dur_dict.items()}
+                        
+        
+        
         
                 chords_times = []
                 for textannotation in abcSong.text_annotations:
