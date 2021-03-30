@@ -136,7 +136,7 @@ if __name__=="__main__":
                         duration_array.append(dur_dict[possible_durations[idx]])
                         beat_duration.append(dur_dict[possible_durations[idx]])
                         offset_sec += duration_sec
-                        beat_array.append(1)
+                        beat_array.append(beat_num + 1)
                         
                         # check for chords
                         nochord = True
@@ -250,7 +250,7 @@ if __name__=="__main__":
                                     duration_array.append(dur_dict[possible_durations[idx]])
                                     beat_duration.append(dur_dict[possible_durations[idx]])
                                     offset_sec += duration_sec
-                                    beat_array.append(1)
+                                    beat_array.append(beat_num + 1)
                                     intra_note_time -= possible_durations[idx]
                                     
                                     # check for chords
@@ -353,7 +353,7 @@ if __name__=="__main__":
                                 duration_array.append(dur_dict[possible_durations[idx]])
                                 beat_duration.append(dur_dict[possible_durations[idx]])
                                 offset_sec += duration_sec
-                                beat_array.append(1)
+                                beat_array.append(beat_num + 1)
                                 # check for chords
                                 nochord = True
                                 for j in range(len(chords_times)-1):

@@ -129,6 +129,7 @@ def generateCond(tune, num_bars, temperature,
     duration = []
     chord = []
     bass = []
+    beat_ar = []
     for bar in bars:
         for beat in bar['beats']:
             for i in range(len(beat['pitch'])):
@@ -139,6 +140,7 @@ def generateCond(tune, num_bars, temperature,
                     bass.append(beat['bass'])
                 else:
                     bass.append(datasetToMidiChords[beat['chord']][0])
+                beat_ar.append(beat['num beat'])
         
     new_chord = beat['chord']
     if isJazz:
@@ -150,12 +152,14 @@ def generateCond(tune, num_bars, temperature,
         duration4gen = batch4gen(duration, len(duration), duration_to_ix, device)
         chord4gen = batch4gen(chord, len(chord), pitch_to_ix, device, isChord=True)
         bass4gen = batch4gen(bass, len(bass), pitch_to_ix, device)
+        beat4gen = batch4gen(beat_ar, len(beat_ar), beat_to_ix, device)
         # reshape to column vectors
         pitch4gen = pitch4gen.t()
         duration4gen = duration4gen.t()
         chord4gen = chord4gen.t()
         chord4gen = chord4gen.reshape(chord4gen.shape[0], 1,chord4gen.shape[1])
         bass4gen = bass4gen.t()
+        beat4gen = beat4gen.t()
         
         # generate new note conditioning on old arrays
         modelPitch.eval()
@@ -168,13 +172,13 @@ def generateCond(tune, num_bars, temperature,
         
         # generate new pitch note
         pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen,
-                                bass4gen, None, src_mask_pitch)
+                                bass4gen, beat4gen, src_mask_pitch)
         word_weights = pitch_pred[-1].squeeze().div(temperature).exp().cpu()
         word_idx = torch.multinomial(word_weights, 1)[0].item()
         new_pitch = vocabPitch[word_idx]
         # generate new duration note
         duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen,
-                                   bass4gen, None, src_mask_duration)
+                                   bass4gen, beat4gen, src_mask_duration)
         word_weights = duration_pred[-1].squeeze().div(temperature).exp().cpu()
         word_idx = torch.multinomial(word_weights, 1)[0].item()
         new_duration = vocabDuration[word_idx]
@@ -257,6 +261,7 @@ def generateCond(tune, num_bars, temperature,
         pitch.append(new_pitch)
         duration.append(new_duration)
         chord.append(datasetToMidiChords[new_chord][:4])
+        beat_ar.append(beat_num + 1)
         if isJazz:
             bass.append(new_bass)
         else:
@@ -446,25 +451,25 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHpitch = 'models/MINGUSpitch_200epochs_seqLen35_WjazzDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
-        savePATHpitch = 'models/MINGUSpitch_200epochs_seqLen35_NottinghamDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
         
     
     # DURATION MODEL
     isPitch = False
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
-    pitch_embed_dim = 512
+    pitch_embed_dim = 64
     
     duration_vocab_size = len(vocabDuration) # size of the duration vocabulary
-    duration_embed_dim = 512
+    duration_embed_dim = 64
     
     chord_encod_dim = 64
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
-    beat_embed_dim = 64
-    bass_embed_dim = 64
+    beat_embed_dim = 32
+    bass_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -484,9 +489,9 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHduration = 'models/MINGUSduration_200epochs_seqLen35_WjazzDB.pt'
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
-        savePATHduration = 'models/MINGUSduration_200epochs_seqLen35_NottinghamDB.pt'
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -514,7 +519,7 @@ if __name__ == '__main__':
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = True
+    generate_dataset = False
     
     if generate_dataset:
         out_path = 'output/gen4eval_' + con.DATASET + '/'

@@ -11,6 +11,7 @@ ToDo:
         - Audio rendition
         - Wjazz generations
         - Wjazz pitch model params optimized
+        - beat conditioned model
     
     To ask:
         - how to optimize model
@@ -18,6 +19,7 @@ ToDo:
             reduce dictionary (?)
             quantize durations even more (?)
             condition on offset
+            different embedding for bass (?)
             
     Model:
         - optimize wjazz duration model
@@ -142,7 +144,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = con.EPOCHS # The number of epochs
+    epochs = 1 #con.EPOCHS # The number of epochs
     best_model = None
     
     # INITIALIZE TENSORBOARD
@@ -254,7 +256,7 @@ if __name__ == '__main__':
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
-    epochs = 10 #con.EPOCHS # The number of epochs
+    epochs = con.EPOCHS # The number of epochs
     best_model = None
 
     # INITIALIZE TENSORBOARD
