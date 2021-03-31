@@ -572,7 +572,7 @@ if __name__ == '__main__':
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = True
+    generate_dataset = False
     
     if generate_dataset:
         out_path = 'output/gen4eval_' + con.DATASET + '/'

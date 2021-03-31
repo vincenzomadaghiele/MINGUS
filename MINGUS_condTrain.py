@@ -13,16 +13,16 @@ ToDo:
         - Wjazz pitch model params optimized
         - beat conditioned model
         - harmonic coherence metric
+        - reduced duration dict
         
-        - how to optimize model
-            change transformer layer (?)
-            reduce dictionary (?)
-            quantize durations even more (?)
-            condition on offset
-            different embedding for bass (?)
-            some duration tokens are really similar (like 32nds and 16th triplets)
-            so model is very perplex and accuracy is low
-            
+    - how to optimize model
+        change transformer layer (?)
+        reduce pitch dictionary (?)
+        condition on offset
+        condition on next chord
+        condition on velocity
+        different embedding for bass (?)
+    
     Model:
         - modular model to compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)
     lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr, momentum=0.9,  nesterov=True)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 2.0, gamma=0.95)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 
     
     # TRAIN AND EVALUATE LOSS
