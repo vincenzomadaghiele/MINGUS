@@ -14,7 +14,7 @@ EVAL_BATCH_SIZE = 10
 # length of one note sequence
 
 BPTT = 35
-AUGMENTATION = False
+AUGMENTATION = True
 SEGMENTATION = True
 augmentation_const = 2
 
