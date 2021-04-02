@@ -368,7 +368,7 @@ if __name__=="__main__":
                 # first beat
                 for i in range(len(new_pitch)):
                     duration_sec = inv_dur_dict[new_duration[i]]
-                    offset = min(int(bar_onset / (bars[0]['beats'][3]['this beat duration [sec]'] * 4) * 96),96)
+                    offset = min(int(bar_onset / (bars[0]['beats'][0]['this beat duration [sec]'] * 4) * 96),96)
                     bar_onset += duration_sec
                     new_offset.append(offset)
                     offset_array[offset_pos] = offset
@@ -384,7 +384,7 @@ if __name__=="__main__":
                     # first beat
                     for i in range(len(bars[0]['beats'][1]['pitch'])):
                         duration_sec = inv_dur_dict[bars[0]['beats'][1]['duration'][i]]
-                        offset = min(int(bar_onset / (bars[0]['beats'][3]['this beat duration [sec]'] * 4) * 96),96)
+                        offset = min(int(bar_onset / (bars[0]['beats'][1]['this beat duration [sec]'] * 4) * 96),96)
                         bar_onset += duration_sec
                         new_offset.append(offset)
                         offset_array[offset_pos] = offset
@@ -397,7 +397,7 @@ if __name__=="__main__":
                     # first beat
                     for i in range(len(bars[0]['beats'][2]['pitch'])):
                         duration_sec = inv_dur_dict[bars[0]['beats'][2]['duration'][i]]
-                        offset = min(int(bar_onset / (bars[0]['beats'][3]['this beat duration [sec]'] * 4) * 96),96)
+                        offset = min(int(bar_onset / (bars[0]['beats'][2]['this beat duration [sec]'] * 4) * 96),96)
                         bar_onset += duration_sec
                         new_offset.append(offset)
                         offset_array[offset_pos] = offset
@@ -429,21 +429,33 @@ if __name__=="__main__":
                 next_chords.append('')
                 next_chord_array = []
                 next_chord_pointer = 0
+                last_chord = chord_array[0]
                 for i in range(len(chord_array)):
                     if chord_array[i] != last_chord:
                         last_chord = chord_array[i]
                         next_chord_pointer += 1
                     next_chord_array.append(next_chords[next_chord_pointer])
                 
+                
+                # compute next chord 
+                last_chord = bars[0]['beats'][0]['chord']
+                next_chords2 = []
+                for bar in bars:
+                    for beat in bar['beats']:
+                        if beat['chord'] != last_chord:
+                            next_chords2.append(beat['chord'])
+                            last_chord = beat['chord']
+                
                 # add next chord to the beats
                 last_chord = bars[0]['beats'][0]['chord']
+                next_chords2.append('')
                 next_chord_pointer = 0
                 for bar in bars:
                     for beat in bar['beats']:
                         if beat['chord'] != last_chord:
                             last_chord = beat['chord']
                             next_chord_pointer += 1
-                        beat['next chord'] = next_chords[next_chord_pointer]
+                        beat['next chord'] = next_chords2[next_chord_pointer]
         
                 
                 # compute beats to next chord
