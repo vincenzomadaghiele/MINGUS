@@ -11,10 +11,11 @@ ToDo:
         condition on next chord
         condition on how many beat to next chord
     - add next chord 
-    - fix offset of first bar
     - add offset and next chord to dataset loader
     - condition on offset and train (remove if not useful)
     - condition on next chord and train (remove if not useful)
+    - consider aggregating quarter rests (?)
+    - embed next chord and beats to next chord together (?)
     
     App:
         - python flask
