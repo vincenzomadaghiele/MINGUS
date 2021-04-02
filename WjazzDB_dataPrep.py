@@ -426,7 +426,7 @@ if __name__=="__main__":
                         last_chord = chord_array[i]
                 
                 # compute array of next chords
-                next_chords.append('')
+                next_chords.append('NC')
                 next_chord_array = []
                 next_chord_pointer = 0
                 last_chord = chord_array[0]
@@ -448,7 +448,7 @@ if __name__=="__main__":
                 
                 # add next chord to the beats
                 last_chord = bars[0]['beats'][0]['chord']
-                next_chords2.append('')
+                next_chords2.append('NC')
                 next_chord_pointer = 0
                 for bar in bars:
                     for beat in bar['beats']:
@@ -470,6 +470,7 @@ if __name__=="__main__":
                 song['duration'] = duration_array
                 song['offset'] = offset_array
                 song['chords'] = chord_array
+                song['next chords'] = next_chord_array
                 song['bass pitch'] = bass_pitch_array
                 song['beats'] = beat_array
                 song['beat duration [sec]'] = np.mean(beat_dur_array)

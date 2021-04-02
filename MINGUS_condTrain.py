@@ -79,13 +79,13 @@ if __name__ == '__main__':
         WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                      con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
         
-        vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = WjazzDB.getVocabs()
         
-        pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = WjazzDB.getInverseVocabs()
         
-        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
-        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
-        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = WjazzDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = WjazzDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = WjazzDB.getTestData()
         
     elif con.DATASET == 'NottinghamDB':
         
@@ -112,10 +112,14 @@ if __name__ == '__main__':
     duration_embed_dim = 512
     
     chord_encod_dim = 64
+    next_chord_encod_dim = 32
 
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 64
     bass_embed_dim = 64
+    
+    offset_vocab_size = len(vocabOffset) # size of the duration vocabulary
+    offset_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -126,12 +130,14 @@ if __name__ == '__main__':
     pitch_pad_idx = pitch_to_ix['<pad>']
     duration_pad_idx = duration_to_ix['<pad>']
     beat_pad_idx = beat_to_ix['<pad>']
+    offset_pad_idx = offset_to_ix['<pad>']
     modelPitch = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, chord_encod_dim,
-                                      beat_vocab_size, beat_embed_dim,  
+                                      bass_embed_dim, chord_encod_dim, next_chord_encod_dim,
+                                      beat_vocab_size, beat_embed_dim,
+                                      offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
-                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx,
+                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
                                       device, dropout, isPitch).to(device)
     
     # LOSS FUNCTION
@@ -162,15 +168,17 @@ if __name__ == '__main__':
         
         epoch_start_time = time.time()
         step = mod.train(modelPitch, vocabPitch, 
-                  train_pitch_batched, train_duration_batched, train_chord_batched,
-                  train_bass_batched, train_beat_batched,
+                  train_pitch_batched, train_duration_batched, 
+                  train_chord_batched, train_next_chord_batched,
+                  train_bass_batched, train_beat_batched, train_offset_batched,
                   criterion, optimizer, scheduler, epoch, con.BPTT, device, 
                   writer, step, 
                   isPitch)
         
         val_loss, val_acc = mod.evaluate(modelPitch, pitch_to_ix, 
-                                val_pitch_batched, val_duration_batched, val_chord_batched,
-                                val_bass_batched, val_beat_batched,
+                                val_pitch_batched, val_duration_batched, 
+                                val_chord_batched, val_next_chord_batched,
+                                val_bass_batched, val_beat_batched, val_offset_batched,
                                 criterion, con.BPTT, device, isPitch)
         
         writer.add_scalar('Validation accuracy', val_acc, global_step=epoch)
@@ -192,8 +200,9 @@ if __name__ == '__main__':
     
     # TEST THE MODEL
     test_loss, test_acc = mod.evaluate(best_model_pitch, pitch_to_ix, 
-                                test_pitch_batched, test_duration_batched, test_chord_batched, 
-                                test_bass_batched, test_beat_batched,
+                                test_pitch_batched, test_duration_batched, 
+                                test_chord_batched, test_next_chord_batched,
+                                test_bass_batched, test_beat_batched, test_offset_batched,
                                 criterion, con.BPTT, device, isPitch)
     print('=' * 89)
     print('| End of training | test loss {:5.2f} | test ppl {:5.2f} | test acc {:5.2f}'.format(

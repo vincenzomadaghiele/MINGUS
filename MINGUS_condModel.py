@@ -20,10 +20,11 @@ class TransformerModel(nn.Module):
 
     def __init__(self, pitch_vocab_size, pitch_embed_dim,
                      duration_vocab_size, duration_embed_dim, 
-                     bass_embed_dim, chord_encod_dim,
+                     bass_embed_dim, chord_encod_dim, next_chord_encod_dim,
                      beat_vocab_size, beat_embed_dim, 
+                     offset_vocab_size, offset_embed_dim, 
                      ninp, nhead, nhid, nlayers, 
-                     pitch_pad_idx, duration_pad_idx, beat_pad_idx, 
+                     pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
                      device, dropout=0.5, isPitch=True):
         
         super(TransformerModel, self).__init__()
@@ -33,6 +34,7 @@ class TransformerModel(nn.Module):
         self.pitch_pad_idx = pitch_pad_idx
         self.duration_pad_idx = duration_pad_idx
         self.beat_pad_idx = beat_pad_idx
+        self.offset_pad_idx = offset_pad_idx
         self.device = device
         self.ninp = ninp
         
@@ -41,18 +43,21 @@ class TransformerModel(nn.Module):
         self.duration_embedding = nn.Embedding(duration_vocab_size, duration_embed_dim, padding_idx=self.duration_pad_idx) # duration
         self.bass_embedding = nn.Embedding(pitch_vocab_size, bass_embed_dim, padding_idx=self.pitch_pad_idx) # bass
         self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim, padding_idx=self.beat_pad_idx) # beat
+        self.offset_embedding = nn.Embedding(offset_vocab_size, offset_embed_dim, padding_idx=self.offset_pad_idx) # beat
         
         #chord_encod_dim = 64
         self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
-        encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
+        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
+        
+        self.next_chord_encoder = nn.Linear(4 * pitch_embed_dim, next_chord_encod_dim)
         
         # Try out chord embeds
         # chord embeds require a new chord dictionary or a linear layer!
         #chord_embed_dim = 64
         #self.chord_emedding = nn.Embedding(pitch_vocab_size, chord_embed_dim, padding_idx=self.pitch_pad_idx) 
         
-        encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim + beat_embed_dim
-
+        encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim + next_chord_encod_dim + beat_embed_dim + offset_embed_dim 
+        #print(encoder_input_dim)
         
         # Start the transformer structure with multidimensional data
         #encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
@@ -87,12 +92,14 @@ class TransformerModel(nn.Module):
         self.pitch_embedding.weight.data.uniform_(-initrange, initrange)
         self.duration_embedding.weight.data.uniform_(-initrange, initrange)
         self.bass_embedding.weight.data.uniform_(-initrange, initrange)
-        #self.chord_emedding.weight.data.uniform_(-initrange, initrange)
         self.beat_embedding.weight.data.uniform_(-initrange, initrange)
+        self.offset_embedding.weight.data.uniform_(-initrange, initrange)
         
         # initialize linear layers weigths
         self.chord_encoder.bias.data.zero_()
         self.chord_encoder.weight.data.uniform_(-initrange, initrange)
+        self.next_chord_encoder.bias.data.zero_()
+        self.next_chord_encoder.weight.data.uniform_(-initrange, initrange)
         self.encoder.bias.data.zero_()
         self.encoder.weight.data.uniform_(-initrange, initrange)
         self.out_linear.bias.data.zero_()
@@ -100,14 +107,16 @@ class TransformerModel(nn.Module):
         self.out_decoder.bias.data.zero_()
         self.out_decoder.weight.data.uniform_(-initrange, initrange)
 
-    def forward(self, pitch, duration, chord, bass, beat, src_mask):
+    def forward(self, pitch, duration, chord, next_chord, bass, beat, offset, src_mask):
         
         # embed data
         pitch_embeds = self.pitch_embedding(pitch)
         duration_embeds = self.duration_embedding(duration)
         chord_embeds = self.pitch_embedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
+        next_chord_embeds = self.pitch_embedding(next_chord).view(next_chord.shape[0], next_chord.shape[1], -1).contiguous()
         bass_embeds = self.pitch_embedding(bass)
         beat_embeds = self.beat_embedding(beat)
+        offset_embeds = self.offset_embedding(offset)
 
         #chord_embeds = self.chord_emedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
         #print(chord.shape)
@@ -115,10 +124,17 @@ class TransformerModel(nn.Module):
         #print(exp_chord_embeds.shape)
 
         chord_embeds = self.chord_encoder(chord_embeds)
+        next_chord_embeds = self.next_chord_encoder(next_chord_embeds)
+
+        #print(chord_embeds.shape)
+        #print(next_chord_embeds.shape)
 
         # Concatenate along 3rd dimension
         #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
-        src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds, beat_embeds], 2)) * math.sqrt(self.ninp)
+        src = self.encoder(torch.cat([pitch_embeds, duration_embeds, 
+                                      bass_embeds, chord_embeds, 
+                                      next_chord_embeds, beat_embeds, 
+                                      offset_embeds], 2)) * math.sqrt(self.ninp)
         
         #src_padding_mask = self.make_src_pad_mask(src) # PROBLEM
         
@@ -162,8 +178,9 @@ class PositionalEncoding(nn.Module):
 
 
 def train(model, vocabTarget, 
-          train_data_pitch, train_data_duration,  train_data_chord,
-          train_data_bass, train_data_beat, 
+          train_data_pitch, train_data_duration,  
+          train_data_chord, train_data_next_chord,
+          train_data_bass, train_data_beat, train_data_offset, 
           criterion, optimizer, scheduler, epoch, bptt, device, 
           writer, step, isPitch=True):
     
@@ -209,16 +226,18 @@ def train(model, vocabTarget,
             data_pitch, _, _ = get_batch(train_data_pitch, i, bptt)
             data_duration, targets, _ = get_batch(train_data_duration, i, bptt)
         data_chord, _, _ = get_batch(train_data_chord, i, bptt)
+        data_next_chord, _, _ = get_batch(train_data_next_chord, i, bptt)
         data_bass, _, _ = get_batch(train_data_bass, i, bptt)
         data_beat, _, _ = get_batch(train_data_beat, i, bptt)
+        data_offset, _, _ = get_batch(train_data_offset, i, bptt)
         
         
         if data_pitch.size(0) != bptt:
             src_mask = model.generate_square_subsequent_mask(data_pitch.size(0)).to(device)
         
         # pass the data trought the model
-        output = model(data_pitch, data_duration, data_chord,
-                       data_bass, data_beat, src_mask) 
+        output = model(data_pitch, data_duration, data_chord, data_next_chord,
+                       data_bass, data_beat, data_offset, src_mask) 
         loss = criterion(output.view(-1, ntokens), targets)
         
         # backpropagation step
@@ -259,8 +278,8 @@ def train(model, vocabTarget,
                 class_labels = [vocabTarget[duration] for duration in dur_classes]
                 writer.add_embedding(features, metadata=class_labels, global_step=epoch)
             if epoch == 1:
-                writer.add_graph(model, input_to_model = (data_pitch, data_duration, data_chord,
-                                                          data_bass, data_beat, src_mask))
+                writer.add_graph(model, input_to_model = (data_pitch, data_duration, data_chord, data_next_chord,
+                                                          data_bass, data_beat, data_offset, src_mask))
             
         writer.add_scalar('Training loss', loss, global_step=step)
         step += 1
@@ -269,8 +288,9 @@ def train(model, vocabTarget,
 
 
 def evaluate(eval_model, vocabTarget, 
-             eval_data_pitch, eval_data_duration, eval_data_chord, 
-             eval_data_bass, eval_data_beat, 
+             eval_data_pitch, eval_data_duration, 
+             eval_data_chord, eval_data_next_chord, 
+             eval_data_bass, eval_data_beat, eval_data_offset,
              criterion, bptt, device, isPitch=True):
     '''
 
@@ -313,14 +333,16 @@ def evaluate(eval_model, vocabTarget,
                 data_pitch, _, _ = get_batch(eval_data_pitch, i, bptt)
                 data_duration, targets, _ = get_batch(eval_data_duration, i, bptt)
             data_chord, _, _ = get_batch(eval_data_chord, i, bptt)
+            data_next_chord, _, _ = get_batch(eval_data_next_chord, i, bptt)
             data_bass, _, _ = get_batch(eval_data_bass, i, bptt)
             data_beat, _, _ = get_batch(eval_data_beat, i, bptt)
+            data_offset, _, _ = get_batch(eval_data_offset, i, bptt)
             
             if data_pitch.size(0) != bptt:
                 src_mask = eval_model.generate_square_subsequent_mask(data_pitch.size(0)).to(device)
             
-            output = eval_model(data_pitch, data_duration, data_chord,
-                                data_bass, data_beat, src_mask) 
+            output = eval_model(data_pitch, data_duration, data_chord, data_next_chord,
+                                data_bass, data_beat, data_offset, src_mask) 
             
             # cross-entropy loss
             output_flat = output.view(-1, ntokens)

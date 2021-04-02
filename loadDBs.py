@@ -103,7 +103,8 @@ def batchify(data, bsz, dict_to_ix, device, isChord=False):
     return data.to(device)
 
 def separateSeqs(seq_pitch, seq_duration,
-                 seq_chord, seq_bass, seq_beat,
+                 seq_chord, seq_next_chord,
+                 seq_bass, seq_beat, seq_offset,
                  segment_length = 35):
     # Separate the songs into single melodies in order to avoid 
     # full batches of pad tokens
@@ -111,14 +112,18 @@ def separateSeqs(seq_pitch, seq_duration,
     tot_pitch = []
     tot_duration = []
     tot_chord = []
+    tot_next_chord = []
     tot_bass = []
     tot_beat = []
+    tot_offset = []
 
     new_pitch = []
     new_duration = []
     new_chord = []
+    new_next_chord = []
     new_bass = []
     new_beat = []
+    new_offset = []
     
     long_dur = ['full', 'half', 'quarter', 'dot half', 'dot quarter', 
                 'dot 8th', 'half note triplet', 'quarter note triplet']
@@ -131,8 +136,10 @@ def separateSeqs(seq_pitch, seq_duration,
         new_pitch.append(seq_pitch[i])
         new_duration.append(seq_duration[i])
         new_chord.append(seq_chord[i])
+        new_next_chord.append(seq_next_chord[i])
         new_bass.append(seq_bass[i])
         new_beat.append(seq_beat[i])
+        new_offset.append(seq_offset[i])
         
         counter += 1
         if seq_pitch[i] == 'R' and seq_duration[i] in long_dur:
@@ -140,64 +147,83 @@ def separateSeqs(seq_pitch, seq_duration,
                 tot_pitch.append(np.array(new_pitch, dtype=object))
                 tot_duration.append(np.array(new_duration, dtype=object))
                 tot_chord.append(np.array(new_chord, dtype=object))
+                tot_next_chord.append(np.array(new_next_chord, dtype=object))
                 tot_bass.append(np.array(new_bass, dtype=object))
                 tot_beat.append(np.array(new_beat, dtype=object))
+                tot_offset.append(np.array(new_offset, dtype=object))
                 new_pitch = []
                 new_duration = []
                 new_chord = []
+                new_next_chord = []
                 new_bass = []
                 new_beat = []
+                new_offset = []
                 counter = 0
         elif counter == segment_length:
             tot_pitch.append(np.array(new_pitch, dtype=object))
             tot_duration.append(np.array(new_duration, dtype=object))
             tot_chord.append(np.array(new_chord, dtype=object))
+            tot_next_chord.append(np.array(new_next_chord, dtype=object))
             tot_bass.append(np.array(new_bass, dtype=object))
             tot_beat.append(np.array(new_beat, dtype=object))
+            tot_offset.append(np.array(new_offset, dtype=object))
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             counter = 0
             
-    return tot_pitch, tot_duration, tot_chord, tot_bass, tot_beat
+    return tot_pitch, tot_duration, tot_chord, tot_next_chord, tot_bass, tot_beat, tot_offset
     
 def segmentDataset(pitch_data, duration_data, 
-                   chord_data, bass_data, beat_data,
+                   chord_data, next_chord_data,
+                   bass_data, beat_data, offset_data,
                    segment_length = 35):
     
     pitch_segmented = []
     duration_segmented = []
     chord_segmented = []
+    next_chord_segmented = []
     bass_segmented = []
     beat_segmented = []
+    offset_segmented = []
     for i in range(len(pitch_data)):
         #print(len(pitch_data[i]))
-        pitch_sep, duration_sep, chord_sep, bass_sep, beat_sep = separateSeqs(pitch_data[i], 
-                                                                              duration_data[i], 
-                                                                              chord_data[i],
-                                                                              bass_data[i],
-                                                                              beat_data[i], 
-                                                                              segment_length)
+        pitch_sep, duration_sep, chord_sep, next_chord_sep, bass_sep, beat_sep, offset_sep = separateSeqs(pitch_data[i], 
+                                                                                                          duration_data[i], 
+                                                                                                          chord_data[i],
+                                                                                                          next_chord_data[i],
+                                                                                                          bass_data[i],
+                                                                                                          beat_data[i], 
+                                                                                                          offset_data[i], 
+                                                                                                          segment_length)
         for seq in pitch_sep:
             pitch_segmented.append(seq)
         for seq in duration_sep:
             duration_segmented.append(seq)
         for seq in chord_sep:
             chord_segmented.append(seq)
+        for seq in next_chord_sep:
+            next_chord_segmented.append(seq)
         for seq in bass_sep:
             bass_segmented.append(seq)
         for seq in beat_sep:
             beat_segmented.append(seq)
+        for seq in offset_sep:
+            offset_segmented.append(seq)
             
     pitch_segmented = np.array(pitch_segmented, dtype=object)
     duration_segmented = np.array(duration_segmented, dtype=object)
     chord_segmented = np.array(chord_segmented, dtype=object)
+    next_chord_segmented = np.array(next_chord_segmented, dtype=object)
     bass_segmented = np.array(bass_segmented, dtype=object)
     beat_segmented = np.array(beat_segmented, dtype=object)
+    offset_segmented = np.array(offset_segmented, dtype=object)
     
-    return pitch_segmented, duration_segmented, chord_segmented, bass_segmented, beat_segmented
+    return pitch_segmented, duration_segmented, chord_segmented, next_chord_segmented, bass_segmented, beat_segmented, offset_segmented
 
 
 class WjazzDB():
@@ -226,6 +252,10 @@ class WjazzDB():
         chord_validation = []
         chord_test = []
         
+        next_chord_train = []
+        next_chord_validation = []
+        next_chord_test = []
+        
         bass_train = []
         bass_validation = []
         bass_test = []
@@ -234,27 +264,37 @@ class WjazzDB():
         beat_validation = []
         beat_test = []
         
+        offset_train = []
+        offset_validation = []
+        offset_test = []
+        
         
         for song in songs['train']:
             pitch_train.append(song['pitch'])
             duration_train.append(song['duration'])
             chord_train.append(song['chords'])
+            next_chord_train.append(song['next chords'])
             bass_train.append(song['bass pitch'])
             beat_train.append(song['beats'])
+            offset_train.append(song['offset'])
         
         for song in songs['validation']:
             pitch_validation.append(song['pitch'])
             duration_validation.append(song['duration'])
             chord_validation.append(song['chords'])
+            next_chord_validation.append(song['next chords'])
             bass_validation.append(song['bass pitch'])
             beat_validation.append(song['beats'])
+            offset_validation.append(song['offset'])
         
         for song in songs['test']:
             pitch_test.append(song['pitch'])
             duration_test.append(song['duration'])
             chord_test.append(song['chords'])
+            next_chord_test.append(song['next chords'])
             bass_test.append(song['bass pitch'])
             beat_test.append(song['beats'])
+            offset_test.append(song['offset'])
         
         
         # COMPUTE VOCABS
@@ -300,7 +340,18 @@ class WjazzDB():
             vocabBeat[i] = i+1
         vocabBeat[5] = '<pad>'
         # inverse dictionary
-        beat_to_ix = {v: k for k, v in vocabBeat.items()}     
+        beat_to_ix = {v: k for k, v in vocabBeat.items()}
+        
+        # Offset dictionary
+        # some songs have 5 beats, it is probably an error
+        # I have added one beat but the two songs could be removed 
+        # or the beat substituted
+        vocabOffset = {} 
+        for i in range(0,97): 
+            vocabOffset[i] = i
+        vocabOffset[97] = '<pad>'
+        # inverse dictionary
+        offset_to_ix = {v: k for k, v in vocabOffset.items()}     
         
         for song in bass_train:
             for i in range(len(song)):
@@ -516,10 +567,12 @@ class WjazzDB():
         self.vocabPitch = vocabPitch
         self.vocabDuration = vocabDuration
         self.vocabBeat = vocabBeat
+        self.vocabOffset = vocabOffset
         
         self.pitch_to_ix = pitch_to_ix
         self.duration_to_ix = duration_to_ix
         self.beat_to_ix = beat_to_ix
+        self.offset_to_ix = offset_to_ix
         
         self.WjazzChords = WjazzChords
         self.WjazzToMusic21 = WjazzToMusic21
@@ -567,6 +620,34 @@ class WjazzDB():
         chord_validation = np.array(new_chord_validation)
         chord_test = np.array(new_chord_test)
         
+        new_next_chord_train = []
+        for song in next_chord_train:
+            new_song_chords = []
+            for chord in song:
+                # Only include four-notes chords
+                new_song_chords.append(WjazzToMidiChords[chord][:4])
+            new_next_chord_train.append(new_song_chords)
+        
+        new_next_chord_validation = []
+        for song in next_chord_validation:
+            new_song_chords = []
+            for chord in song:
+                # Only include four-notes chords
+                new_song_chords.append(WjazzToMidiChords[chord][:4])
+            new_next_chord_validation.append(new_song_chords)
+        
+        new_next_chord_test = []
+        for song in next_chord_test:
+            new_song_chords = []
+            for chord in song:
+                # Only include four-notes chords
+                new_song_chords.append(WjazzToMidiChords[chord][:4])
+            new_next_chord_test.append(new_song_chords)
+            
+        next_chord_train = np.array(new_next_chord_train)
+        next_chord_validation = np.array(new_next_chord_validation)
+        next_chord_test = np.array(new_next_chord_test)
+        
         bass_train = np.array(bass_train)
         bass_validation = np.array(bass_validation)
         bass_test = np.array(bass_test)
@@ -574,6 +655,10 @@ class WjazzDB():
         beat_train = np.array(beat_train)
         beat_validation = np.array(beat_validation)
         beat_test = np.array(beat_test)
+        
+        offset_train = np.array(offset_train)
+        offset_validation = np.array(offset_validation)
+        offset_test = np.array(offset_test)
         
         
         # Data augmentation
@@ -588,79 +673,103 @@ class WjazzDB():
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             for aug in range (1,augmentation_const):
                 for i in range(pitch_train.shape[0]):                
                     new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_train[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                     new_duration.append(duration_train[i])
                     new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_train[i]])
+                    new_next_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in next_chord_train[i]])
                     new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_train[i]])
                     new_beat.append(beat_train[i])
+                    new_offset.append(offset_train[i])
     
                     new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_train[i]])
                     new_duration.append(duration_train[i])
                     new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_train[i]])
+                    new_next_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in next_chord_train[i]])
                     new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_train[i]])
                     new_beat.append(beat_train[i])
+                    new_offset.append(offset_train[i])
             
             pitch_train = np.array(new_pitch)
             duration_train = np.array(new_duration)
             chord_train = np.array(new_chord)
             bass_train = np.array(new_bass)
             beat_train = np.array(new_beat)
+            offset_train = np.array(new_offset)
+            next_chord_train = np.array(new_next_chord)
             
             # validation augmentation
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             for aug in range (1,augmentation_const):
                 for i in range(pitch_validation.shape[0]):
                     new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_validation[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                     new_duration.append(duration_validation[i])
                     new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_validation[i]])
+                    new_next_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in next_chord_validation[i]])
                     new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_validation[i]])
                     new_beat.append(beat_validation[i])
+                    new_offset.append(offset_validation[i])
     
                     new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_validation[i]])
                     new_duration.append(duration_validation[i])
                     new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_validation[i]])
+                    new_next_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in next_chord_validation[i]])
                     new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_validation[i]])
                     new_beat.append(beat_validation[i])
+                    new_offset.append(offset_validation[i])
             
             pitch_validation = np.array(new_pitch)
             duration_validation = np.array(new_duration)
             chord_validation = np.array(new_chord)
             bass_validation = np.array(new_bass)
             beat_validation = np.array(new_beat)
+            offset_validation = np.array(new_offset)
+            next_chord_validation = np.array(new_next_chord)
             
             # test augmentation
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             for aug in range (1,augmentation_const):
                 for i in range(pitch_test.shape[0]):
                     new_pitch.append([pitch if pitch == 'R' or pitch == 127 else pitch + aug for pitch in pitch_test[i]]) # SOLVE: CANNOT SUM BECAUSE OF RESTS
                     new_duration.append(duration_test[i])
                     new_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in chord_test[i]])
+                    new_next_chord.append([[pitch if pitch == 'R' else pitch + aug for pitch in chord] for chord in next_chord_test[i]])
                     new_bass.append([pitch if pitch == 'R' else pitch + aug for pitch in bass_test[i]])
                     new_beat.append(beat_test[i])
+                    new_offset.append(offset_test[i])
     
                     new_pitch.append([pitch if pitch == 'R' or pitch == 0 else pitch - aug for pitch in pitch_test[i]])
                     new_duration.append(duration_test[i])
                     new_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in chord_test[i]])
+                    new_next_chord.append([[pitch if pitch == 'R' else pitch - aug for pitch in chord] for chord in next_chord_test[i]])
                     new_bass.append([pitch if pitch == 'R' else pitch - aug for pitch in bass_test[i]])
                     new_beat.append(beat_test[i])
+                    new_offset.append(offset_test[i])
             
             pitch_test = np.array(new_pitch)
             duration_test = np.array(new_duration)
             chord_test = np.array(new_chord)
             bass_test = np.array(new_bass)
             beat_test = np.array(new_beat)
+            offset_test = np.array(new_offset)
+            next_chord_test = np.array(new_next_chord)
         
         
         # Reshape according to sequence length
@@ -672,85 +781,109 @@ class WjazzDB():
         if SEGMENTATION:
             print('Melody segmentation...')
             
-            pitch_train, duration_train, chord_train, bass_train, beat_train = segmentDataset(pitch_train, 
-                                                                                              duration_train, 
-                                                                                              chord_train,
-                                                                                              bass_train,
-                                                                                              beat_train,
-                                                                                              BPTT)
-            pitch_validation, duration_validation, chord_validation, bass_validation, beat_validation = segmentDataset(pitch_validation, 
-                                                                                                                       duration_validation, 
-                                                                                                                       chord_validation,
-                                                                                                                       bass_validation,
-                                                                                                                       beat_validation,
-                                                                                                                       BPTT)
-            pitch_test, duration_test, chord_test, bass_test, beat_test = segmentDataset(pitch_test, 
-                                                                                         duration_test, 
-                                                                                         chord_test,
-                                                                                         bass_test,
-                                                                                         beat_test,
-                                                                                         BPTT)
+            pitch_train, duration_train, chord_train, next_chord_train, bass_train, beat_train, offset_train = segmentDataset(pitch_train, 
+                                                                                                                              duration_train, 
+                                                                                                                              chord_train,
+                                                                                                                              next_chord_train,
+                                                                                                                              bass_train,
+                                                                                                                              beat_train,
+                                                                                                                              offset_train,
+                                                                                                                              BPTT)
+            pitch_validation, duration_validation, chord_validation, next_chord_validation, bass_validation, beat_validation, offset_validation = segmentDataset(pitch_validation, 
+                                                                                                                                                               duration_validation, 
+                                                                                                                                                               chord_validation,
+                                                                                                                                                               next_chord_validation,
+                                                                                                                                                               bass_validation,
+                                                                                                                                                               beat_validation,
+                                                                                                                                                               offset_validation,
+                                                                                                                                                               BPTT)
+            pitch_test, duration_test, chord_test, next_chord_test, bass_test, beat_test, offset_test = segmentDataset(pitch_test, 
+                                                                                                                     duration_test, 
+                                                                                                                     chord_test,
+                                                                                                                     next_chord_test,
+                                                                                                                     bass_test,
+                                                                                                                     beat_test,
+                                                                                                                     offset_test,
+                                                                                                                     BPTT)
         else:
             print('Reshaping...')
             
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             for i in range(pitch_train.shape[0]):
                 for j in range(int(len(pitch_train[i])/BPTT)):
                     new_pitch.append(pitch_train[i][j * BPTT:(j+1) * BPTT])
                     new_duration.append(duration_train[i][j * BPTT:(j+1) * BPTT])
                     new_chord.append(chord_train[i][j * BPTT:(j+1) * BPTT])
+                    new_next_chord.append(next_chord_train[i][j * BPTT:(j+1) * BPTT])
                     new_bass.append(bass_train[i][j * BPTT:(j+1) * BPTT])
                     new_beat.append(beat_train[i][j * BPTT:(j+1) * BPTT])
+                    new_offset.append(offset_train[i][j * BPTT:(j+1) * BPTT])
         
             pitch_train = (new_pitch)
             duration_train = (new_duration)
             chord_train = (new_chord)
+            next_chord_train = (new_next_chord)
             bass_train = (new_bass)
             beat_train = (new_beat)
+            offset_train = (new_offset)
             
             # reshape validation
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             for i in range(pitch_validation.shape[0]):
                 for j in range(int(len(pitch_validation[i])/BPTT)):
                     new_pitch.append(pitch_validation[i][j * BPTT:(j+1) * BPTT])
                     new_duration.append(duration_validation[i][j * BPTT:(j+1) * BPTT])
                     new_chord.append(chord_validation[i][j * BPTT:(j+1) * BPTT])
+                    new_next_chord.append(next_chord_validation[i][j * BPTT:(j+1) * BPTT])
                     new_bass.append(bass_validation[i][j * BPTT:(j+1) * BPTT])
                     new_beat.append(beat_validation[i][j * BPTT:(j+1) * BPTT])
+                    new_offset.append(offset_validation[i][j * BPTT:(j+1) * BPTT])
         
             pitch_validation = (new_pitch)
             duration_validation = (new_duration)
             chord_validation = (new_chord)
+            next_chord_validation = (new_next_chord)
             bass_validation = (new_bass)
             beat_validation = (new_beat)
+            offset_validation = (new_offset)
             
             # reshape test
             new_pitch = []
             new_duration = []
             new_chord = []
+            new_next_chord = []
             new_bass = []
             new_beat = []
+            new_offset = []
             for i in range(pitch_test.shape[0]):
                 for j in range(int(len(pitch_test[i])/BPTT)):
                     new_pitch.append(pitch_test[i][j * BPTT:(j+1) * BPTT])
                     new_duration.append(duration_test[i][j * BPTT:(j+1) * BPTT])
                     new_chord.append(chord_test[i][j * BPTT:(j+1) * BPTT])
+                    new_next_chord.append(next_chord_test[i][j * BPTT:(j+1) * BPTT])
                     new_bass.append(bass_test[i][j * BPTT:(j+1) * BPTT])
                     new_beat.append(beat_test[i][j * BPTT:(j+1) * BPTT])
+                    new_offset.append(offset_test[i][j * BPTT:(j+1) * BPTT])
         
             pitch_test = (new_pitch)
             duration_test = (new_duration)
             chord_test = (new_chord)
+            next_chord_test = (new_next_chord)
             bass_test = (new_bass)
             beat_test = (new_beat)
+            offset_test = (new_offset)
         
         
         # TOKENIZE AND BATCHIFY
@@ -769,6 +902,10 @@ class WjazzDB():
         val_chord_batched = batchify(chord_validation, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
         test_chord_batched = batchify(chord_test, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
         
+        train_next_chord_batched = batchify(next_chord_train, TRAIN_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+        val_next_chord_batched = batchify(next_chord_validation, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+        test_next_chord_batched = batchify(next_chord_test, EVAL_BATCH_SIZE, pitch_to_ix, device, isChord=True)
+        
         train_bass_batched = batchify(bass_train, TRAIN_BATCH_SIZE, pitch_to_ix, device)
         val_bass_batched = batchify(bass_validation, EVAL_BATCH_SIZE, pitch_to_ix, device)
         test_bass_batched = batchify(bass_test, EVAL_BATCH_SIZE, pitch_to_ix, device)
@@ -776,6 +913,11 @@ class WjazzDB():
         train_beat_batched = batchify(beat_train, TRAIN_BATCH_SIZE, beat_to_ix, device)
         val_beat_batched = batchify(beat_validation, EVAL_BATCH_SIZE, beat_to_ix, device)
         test_beat_batched = batchify(beat_test, EVAL_BATCH_SIZE, beat_to_ix, device)
+        
+        train_offset_batched = batchify(offset_train, TRAIN_BATCH_SIZE, offset_to_ix, device)
+        val_offset_batched = batchify(offset_validation, EVAL_BATCH_SIZE, offset_to_ix, device)
+        test_offset_batched = batchify(offset_test, EVAL_BATCH_SIZE, offset_to_ix, device)
+        
         
         self.train_pitch_batched = train_pitch_batched
         self.val_pitch_batched = val_pitch_batched
@@ -789,6 +931,10 @@ class WjazzDB():
         self.val_chord_batched = val_chord_batched
         self.test_chord_batched = test_chord_batched
         
+        self.train_next_chord_batched = train_next_chord_batched
+        self.val_next_chord_batched = val_next_chord_batched
+        self.test_next_chord_batched = test_next_chord_batched
+        
         self.train_bass_batched = train_bass_batched
         self.val_bass_batched = val_bass_batched
         self.test_bass_batched = test_bass_batched
@@ -797,20 +943,25 @@ class WjazzDB():
         self.val_beat_batched = val_beat_batched
         self.test_beat_batched = test_beat_batched
         
+        self.train_offset_batched = train_offset_batched
+        self.val_offset_batched = val_offset_batched
+        self.test_offset_batched = test_offset_batched
+        
+        
     def getVocabs(self):
-        return self.vocabPitch, self.vocabDuration, self.vocabBeat
+        return self.vocabPitch, self.vocabDuration, self.vocabBeat, self.vocabOffset
     
     def getInverseVocabs(self):
-        return self.pitch_to_ix, self.duration_to_ix, self.beat_to_ix
+        return self.pitch_to_ix, self.duration_to_ix, self.beat_to_ix, self.offset_to_ix
     
     def getTrainingData(self):
-        return self.train_pitch_batched, self.train_duration_batched, self.train_chord_batched, self.train_bass_batched, self.train_beat_batched
+        return self.train_pitch_batched, self.train_duration_batched, self.train_chord_batched, self.train_next_chord_batched, self.train_bass_batched, self.train_beat_batched, self.train_offset_batched
     
     def getValidationData(self):
-        return self.val_pitch_batched, self.val_duration_batched, self.val_chord_batched, self.val_bass_batched, self.val_beat_batched
+        return self.val_pitch_batched, self.val_duration_batched, self.val_chord_batched, self.val_next_chord_batched , self.val_bass_batched, self.val_beat_batched, self.val_offset_batched
     
     def getTestData(self):
-        return self.test_pitch_batched, self.test_duration_batched, self.test_chord_batched, self.test_bass_batched, self.test_beat_batched
+        return self.test_pitch_batched, self.test_duration_batched, self.test_chord_batched, self.test_next_chord_batched, self.test_bass_batched, self.test_beat_batched, self.test_offset_batched
         
     def getChordDicts(self):
         return self.WjazzChords, self.WjazzToMusic21, self.WjazzToChordComposition, self.WjazzToMidiChords
