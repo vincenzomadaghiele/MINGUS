@@ -6,25 +6,22 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    Done:
-        - Tensorboard
-        - Audio rendition
-        - Wjazz generations
-        - Wjazz pitch model params optimized
-        - beat conditioned model
-        - harmonic coherence metric
-        - reduced duration dict
-        
-    - how to optimize model
-        change transformer layer (?)
-        reduce pitch dictionary (?)
+    - optimize model
         condition on offset
         condition on next chord
-        condition on velocity
-        different embedding for bass (?)
+        condition on how many beat to next chord
+    - add next chord 
+    - fix offset of first bar
+    - add offset and next chord to dataset loader
+    - condition on offset and train (remove if not useful)
+    - condition on next chord and train (remove if not useful)
+    
+    App:
+        - python flask
+        - node js
     
     Model:
-        - modular model to compare training with or without parameters
+        - compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
         - include offset (maybe it improves duration inference)
 

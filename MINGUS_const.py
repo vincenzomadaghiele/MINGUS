@@ -14,10 +14,10 @@ EVAL_BATCH_SIZE = 10
 # length of one note sequence
 
 BPTT = 35
-AUGMENTATION = True
+AUGMENTATION = False
 SEGMENTATION = True
 augmentation_const = 2
 
 DATASET = 'WjazzDB'
 
-EPOCHS = 200
+EPOCHS = 10

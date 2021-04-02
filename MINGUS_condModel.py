@@ -250,14 +250,14 @@ def train(model, vocabTarget,
                 features = pitch_embeds.reshape(-1, pitch_embeds.shape[2])
                 pitch_classes = data_pitch.cpu().reshape(-1).numpy()
                 class_labels = [vocabTarget[pitch] for pitch in pitch_classes]
-                #writer.add_embedding(features, metadata=class_labels, global_step=step)
+                writer.add_embedding(features, metadata=class_labels, global_step=step)
             else:
                 _, dur_embeds = model.getEmbeds(data_pitch, data_duration, data_chord,
                                                   data_bass, data_beat)
                 features = dur_embeds.reshape(-1, dur_embeds.shape[2])
                 dur_classes = data_duration.cpu().reshape(-1).numpy()
                 class_labels = [vocabTarget[duration] for duration in dur_classes]
-                #writer.add_embedding(features, metadata=class_labels, global_step=epoch)
+                writer.add_embedding(features, metadata=class_labels, global_step=epoch)
             if epoch == 1:
                 writer.add_graph(model, input_to_model = (data_pitch, data_duration, data_chord,
                                                           data_bass, data_beat, src_mask))
