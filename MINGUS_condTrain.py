@@ -14,6 +14,7 @@ ToDo:
     - add offset and next chord to dataset loader
     - condition on offset and train (remove if not useful)
     - condition on next chord and train (remove if not useful)
+    - update conditional generation function
     - consider aggregating quarter rests (?)
     - embed next chord and beats to next chord together (?)
     
