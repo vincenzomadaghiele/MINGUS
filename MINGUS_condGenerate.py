@@ -138,6 +138,7 @@ def generateCond(tune, num_bars, temperature,
     beat_counter = 0
     offset_sec = 0
     beat_num = 0
+    bar_onset = 0
     for bar in tune['bars'][:num_bars]:
         bars.append(bar)
         for beat in bar['beats']:
@@ -149,44 +150,59 @@ def generateCond(tune, num_bars, temperature,
     
     beat_pitch = []
     beat_duration = []
+    beat_offset = []
     next_beat_sec = (beat_counter + 1) * beat_duration_sec 
     
     # extract starting bars pitch, duration, chord, bass and put into array
     pitch = []
     duration = []
     chord = []
+    next_chord = []
     bass = []
     beat_ar = []
+    offset = []
     for bar in bars:
         for beat in bar['beats']:
             for i in range(len(beat['pitch'])):
                 pitch.append(beat['pitch'][i])
                 duration.append(beat['duration'][i])
                 chord.append(datasetToMidiChords[beat['chord']][:4])
+                next_chord.append(datasetToMidiChords[beat['next chord']][:4])
                 if isJazz:
                     bass.append(beat['bass'])
                 else:
                     bass.append(datasetToMidiChords[beat['chord']][0])
                 beat_ar.append(beat['num beat'])
+                offset.append(beat['offset'][i])
         
     new_chord = beat['chord']
+    new_next_chord = beat['next chord']
     if isJazz:
         new_bass = beat['bass']
     while len(bars) < len(tune['bars']):
         
+        # only give last 128 characters to speed up generation
+        last_char = -256
+        #print(len(pitch[last_char:]))
+        
         # batchify
-        pitch4gen = batch4gen(pitch, len(pitch), pitch_to_ix, device)
-        duration4gen = batch4gen(duration, len(duration), duration_to_ix, device)
-        chord4gen = batch4gen(chord, len(chord), pitch_to_ix, device, isChord=True)
-        bass4gen = batch4gen(bass, len(bass), pitch_to_ix, device)
-        beat4gen = batch4gen(beat_ar, len(beat_ar), beat_to_ix, device)
+        pitch4gen = batch4gen(pitch[last_char:], len(pitch[last_char:]), pitch_to_ix, device)
+        duration4gen = batch4gen(duration[last_char:], len(duration[last_char:]), duration_to_ix, device)
+        chord4gen = batch4gen(chord[last_char:], len(chord[last_char:]), pitch_to_ix, device, isChord=True)
+        next_chord4gen = batch4gen(chord[last_char:], len(next_chord[last_char:]), pitch_to_ix, device, isChord=True)
+        bass4gen = batch4gen(bass[last_char:], len(bass[last_char:]), pitch_to_ix, device)
+        beat4gen = batch4gen(beat_ar[last_char:], len(beat_ar[last_char:]), beat_to_ix, device)
+        offset4gen = batch4gen(offset[last_char:], len(offset[last_char:]), offset_to_ix, device)
         # reshape to column vectors
         pitch4gen = pitch4gen.t()
         duration4gen = duration4gen.t()
         chord4gen = chord4gen.t()
-        chord4gen = chord4gen.reshape(chord4gen.shape[0], 1,chord4gen.shape[1])
+        chord4gen = chord4gen.reshape(chord4gen.shape[0], 1, chord4gen.shape[1])
+        next_chord4gen = next_chord4gen.t()
+        next_chord4gen = next_chord4gen.reshape(next_chord4gen.shape[0], 1, next_chord4gen.shape[1])
         bass4gen = bass4gen.t()
         beat4gen = beat4gen.t()
+        offset4gen = offset4gen.t()
         
         # generate new note conditioning on old arrays
         modelPitch.eval()
@@ -198,23 +214,31 @@ def generateCond(tune, num_bars, temperature,
             src_mask_duration = modelDuration.generate_square_subsequent_mask(duration4gen.size(0)).to(device)
         
         # generate new pitch note
-        pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen,
-                                bass4gen, beat4gen, src_mask_pitch)
+        pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen, next_chord4gen,
+                                bass4gen, beat4gen, offset4gen, src_mask_pitch)
         word_weights = pitch_pred[-1].squeeze().div(temperature).exp().cpu()
         word_idx = torch.multinomial(word_weights, 1)[0].item()
         new_pitch = vocabPitch[word_idx]
         # generate new duration note
-        duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen,
-                                   bass4gen, beat4gen, src_mask_duration)
+        duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen, next_chord4gen,
+                                   bass4gen, beat4gen, offset4gen, src_mask_duration)
         word_weights = duration_pred[-1].squeeze().div(temperature).exp().cpu()
         word_idx = torch.multinomial(word_weights, 1)[0].item()
         new_duration = vocabDuration[word_idx]
         
+        
+        
         # append note to new arrays
         beat_pitch.append(new_pitch)
         beat_duration.append(new_duration)
+        
         duration_sec = inv_dur_dict[new_duration] # problem: might generate padding here
         offset_sec += duration_sec
+        
+        new_offset = min(int(bar_onset / (beat_duration_sec * 4) * 96),96)
+        bar_onset += duration_sec
+        
+        beat_offset.append(new_offset)
         
         # check if the note is in a new beat / bar
         while offset_sec >= next_beat_sec:
@@ -226,10 +250,11 @@ def generateCond(tune, num_bars, temperature,
                 # check for chords
                 if len(tune['bars']) > bar_num:
                     new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                    new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
                 beat['chord'] = new_chord
                 beat['pitch'] = beat_pitch 
                 beat['duration'] = beat_duration 
-                beat['offset'] = []
+                beat['offset'] = beat_offset
                 beat['scale'] = []
                 if isJazz:
                     if len(tune['bars']) > bar_num:
@@ -240,6 +265,7 @@ def generateCond(tune, num_bars, temperature,
                 beats.append(beat)
                 beat_pitch = []
                 beat_duration = []
+                beat_offset = []
                 # append bar
                 bar = {}
                 bar['num bar'] = bar_num + 1 # over all song
@@ -250,6 +276,7 @@ def generateCond(tune, num_bars, temperature,
                 bar_num += 1
                 beat_counter += 1
                 next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                bar_onset = 0
             else:
                 # end of beat
                 beat = {}
@@ -259,13 +286,14 @@ def generateCond(tune, num_bars, temperature,
                 # check for chords
                 if len(tune['bars']) > bar_num:
                     new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                    new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
                 beat['chord'] = new_chord
                 # pitch of notes which START in this beat
                 beat['pitch'] = beat_pitch 
                 # duration of notes which START in this beat
                 beat['duration'] = beat_duration 
                 # offset of notes which START in this beat wrt the start of the bar
-                beat['offset'] = []
+                beat['offset'] = beat_offset
                 # get from chord with m21
                 beat['scale'] = []
                 if isJazz:
@@ -278,6 +306,7 @@ def generateCond(tune, num_bars, temperature,
                 beats.append(beat)
                 beat_pitch = []
                 beat_duration = []
+                beat_offset = []
                 beat_num += 1
                 beat_counter += 1
                 next_beat_sec = (beat_counter + 1) * beat_duration_sec 
@@ -288,11 +317,13 @@ def generateCond(tune, num_bars, temperature,
         pitch.append(new_pitch)
         duration.append(new_duration)
         chord.append(datasetToMidiChords[new_chord][:4])
+        next_chord.append(datasetToMidiChords[new_next_chord][:4])
         beat_ar.append(beat_num + 1)
         if isJazz:
             bass.append(new_bass)
         else:
             bass.append(datasetToMidiChords[new_chord][0])
+        offset.append(new_offset)
     
     new_structured_song['bars'] = bars
     return new_structured_song
@@ -450,8 +481,8 @@ if __name__ == '__main__':
         
         songs = WjazzDB.getOriginalSongDict()
         structuredSongs = WjazzDB.getStructuredSongs()
-        vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
-        pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = WjazzDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = WjazzDB.getInverseVocabs()
         WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = WjazzDB.getChordDicts()
 
     elif con.DATASET == 'NottinghamDB':
@@ -481,10 +512,14 @@ if __name__ == '__main__':
     duration_embed_dim = 512
     
     chord_encod_dim = 64
-    
+    next_chord_encod_dim = 32
+
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 64
     bass_embed_dim = 64
+    
+    offset_vocab_size = len(vocabOffset) # size of the duration vocabulary
+    offset_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -495,12 +530,14 @@ if __name__ == '__main__':
     pitch_pad_idx = pitch_to_ix['<pad>']
     duration_pad_idx = duration_to_ix['<pad>']
     beat_pad_idx = beat_to_ix['<pad>']
+    offset_pad_idx = offset_to_ix['<pad>']
     modelPitch = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, chord_encod_dim,
-                                      beat_vocab_size, beat_embed_dim,  
+                                      bass_embed_dim, chord_encod_dim, next_chord_encod_dim,
+                                      beat_vocab_size, beat_embed_dim,
+                                      offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
-                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx,
+                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
@@ -508,7 +545,7 @@ if __name__ == '__main__':
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
-        
+    
     
     # DURATION MODEL
     isPitch = False
@@ -519,10 +556,14 @@ if __name__ == '__main__':
     duration_embed_dim = 64
     
     chord_encod_dim = 64
+    next_chord_encod_dim = 32
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 32
     bass_embed_dim = 32
+    
+    offset_vocab_size = len(vocabOffset) # size of the duration vocabulary
+    offset_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -533,12 +574,14 @@ if __name__ == '__main__':
     pitch_pad_idx = pitch_to_ix['<pad>']
     duration_pad_idx = duration_to_ix['<pad>']
     beat_pad_idx = beat_to_ix['<pad>']
+    offset_pad_idx = offset_to_ix['<pad>']
     modelDuration = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, chord_encod_dim,
-                                      beat_vocab_size, beat_embed_dim,  
+                                      bass_embed_dim, chord_encod_dim, next_chord_encod_dim,
+                                      beat_vocab_size, beat_embed_dim, 
+                                      offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
-                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx,
+                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
@@ -572,7 +615,7 @@ if __name__ == '__main__':
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = False
+    generate_dataset = True
     
     if generate_dataset:
         out_path = 'output/gen4eval_' + con.DATASET + '/'
