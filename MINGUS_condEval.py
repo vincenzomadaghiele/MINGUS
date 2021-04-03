@@ -37,8 +37,8 @@ if __name__ == '__main__':
         
         songs = WjazzDB.getOriginalSongDict()
         structuredSongs = WjazzDB.getStructuredSongs()
-        vocabPitch, vocabDuration, vocabBeat = WjazzDB.getVocabs()
-        pitch_to_ix, duration_to_ix, beat_to_ix = WjazzDB.getInverseVocabs()
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = WjazzDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = WjazzDB.getInverseVocabs()
         WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = WjazzDB.getChordDicts()
 
     elif con.DATASET == 'NottinghamDB':
@@ -61,6 +61,7 @@ if __name__ == '__main__':
     
     # PITCH MODEL
     isPitch = True
+    # HYPERPARAMETERS
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
     pitch_embed_dim = 512
     
@@ -68,10 +69,14 @@ if __name__ == '__main__':
     duration_embed_dim = 512
     
     chord_encod_dim = 64
-    
+    next_chord_encod_dim = 32
+
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 64
     bass_embed_dim = 64
+    
+    offset_vocab_size = len(vocabOffset) # size of the duration vocabulary
+    offset_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -82,12 +87,14 @@ if __name__ == '__main__':
     pitch_pad_idx = pitch_to_ix['<pad>']
     duration_pad_idx = duration_to_ix['<pad>']
     beat_pad_idx = beat_to_ix['<pad>']
+    offset_pad_idx = offset_to_ix['<pad>']
     modelPitch = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, chord_encod_dim,
-                                      beat_vocab_size, beat_embed_dim,  
+                                      bass_embed_dim, chord_encod_dim, next_chord_encod_dim,
+                                      beat_vocab_size, beat_embed_dim,
+                                      offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
-                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx,
+                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
@@ -99,6 +106,7 @@ if __name__ == '__main__':
     
     # DURATION MODEL
     isPitch = False
+    # HYPERPARAMETERS
     pitch_vocab_size = len(vocabPitch) # size of the pitch vocabulary
     pitch_embed_dim = 64
     
@@ -106,10 +114,14 @@ if __name__ == '__main__':
     duration_embed_dim = 64
     
     chord_encod_dim = 64
+    next_chord_encod_dim = 32
     
     beat_vocab_size = len(vocabBeat) # size of the duration vocabulary
     beat_embed_dim = 32
     bass_embed_dim = 32
+    
+    offset_vocab_size = len(vocabOffset) # size of the duration vocabulary
+    offset_embed_dim = 32
 
 
     emsize = 200 # embedding dimension
@@ -120,12 +132,14 @@ if __name__ == '__main__':
     pitch_pad_idx = pitch_to_ix['<pad>']
     duration_pad_idx = duration_to_ix['<pad>']
     beat_pad_idx = beat_to_ix['<pad>']
+    offset_pad_idx = offset_to_ix['<pad>']
     modelDuration = mod.TransformerModel(pitch_vocab_size, pitch_embed_dim,
                                       duration_vocab_size, duration_embed_dim, 
-                                      bass_embed_dim, chord_encod_dim,
-                                      beat_vocab_size, beat_embed_dim,  
+                                      bass_embed_dim, chord_encod_dim, next_chord_encod_dim,
+                                      beat_vocab_size, beat_embed_dim, 
+                                      offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
-                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx,
+                                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
