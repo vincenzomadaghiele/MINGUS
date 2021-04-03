@@ -6,26 +6,18 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    - optimize model
-        condition on offset
-        condition on next chord
-        condition on how many beat to next chord
-    - add next chord 
-    - add offset and next chord to dataset loader
-    - condition on offset and train (remove if not useful)
-    - condition on next chord and train (remove if not useful)
-    - update conditional generation function
-    - consider aggregating quarter rests (?)
-    - embed next chord and beats to next chord together (?)
-    
     App:
         - python flask
         - node js
     
     Model:
+        - update conditional generation function
         - compare training with or without parameters
         - fine tune parameters for NottinghamDB training 
-        - include offset (maybe it improves duration inference)
+        - add next chord and offset to NottinghamDB
+        - condition on how many beat to next chord
+        - consider aggregating quarter rests (?)
+        - embed next chord and beats to next chord together (?)
 
     Evaluation:
         - export midi to audio and evaluate long-term coherence 
@@ -38,7 +30,7 @@ ToDo:
         - evaluate implementation of Transformer-XL / Relative attention (and comparison)
         - live interface (chord recognition in max from audio or midi), 
             note generation in python (communication via osc)
-        might require training with different bass embedding layer
+            might require training with different bass embedding layer
         - melody harmonization
 
 Training instruction:
