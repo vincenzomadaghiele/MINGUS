@@ -182,7 +182,7 @@ def generateCond(tune, num_bars, temperature,
     while len(bars) < len(tune['bars']):
         
         # only give last 128 characters to speed up generation
-        last_char = -256
+        last_char = -128
         #print(len(pitch[last_char:]))
         
         # batchify
