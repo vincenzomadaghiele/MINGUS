@@ -98,7 +98,7 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
@@ -143,7 +143,7 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
+        savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
