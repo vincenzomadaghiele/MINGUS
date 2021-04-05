@@ -31,9 +31,9 @@ if __name__ == '__main__':
         WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                      con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
         
-        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = WjazzDB.getTrainingData()
-        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = WjazzDB.getValidationData()
-        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = WjazzDB.getTestData()
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = WjazzDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = WjazzDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = WjazzDB.getTestData()
         
         songs = WjazzDB.getOriginalSongDict()
         structuredSongs = WjazzDB.getStructuredSongs()
@@ -98,7 +98,7 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_WjazzDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
@@ -143,7 +143,7 @@ if __name__ == '__main__':
                                       device, dropout, isPitch).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_WjazzDB.pt'
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
@@ -220,8 +220,9 @@ if __name__ == '__main__':
     isPitch = True
     criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)    
     testLoss_results_pitch, accuracy_results_pitch = mod.evaluate(modelPitch, pitch_to_ix, 
-                                                                test_pitch_batched, test_duration_batched, test_chord_batched,
-                                                                test_bass_batched, test_beat_batched,
+                                                                test_pitch_batched, test_duration_batched, 
+                                                                test_chord_batched, test_next_chord_batched,
+                                                                test_bass_batched, test_beat_batched, test_offset_batched,
                                                                 criterion, con.BPTT, device, isPitch)
     
     # BLEU score
@@ -236,8 +237,9 @@ if __name__ == '__main__':
     isPitch = False
     criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
     testLoss_results_duration, accuracy_results_duration = mod.evaluate(modelDuration, duration_to_ix, 
-                                                                    test_pitch_batched, test_duration_batched, test_chord_batched,
-                                                                    test_bass_batched, test_beat_batched,
+                                                                    test_pitch_batched, test_duration_batched, 
+                                                                    test_chord_batched, test_next_chord_batched,
+                                                                    test_bass_batched, test_beat_batched, test_offset_batched,
                                                                     criterion, con.BPTT, device, isPitch)
     
     metrics_result['Duration']['Duration_test-loss'] = np.round_(testLoss_results_duration, decimals=4)
