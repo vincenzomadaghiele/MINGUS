@@ -271,6 +271,9 @@ def BLEUscore(original_structuredSongs, generated_structuredSongs):
 
 def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
     
+    print('Evaluating harmonic coherence')
+    print('Computing scales...')
+    
     datasetChordToScale = {}
     for chord in datasetToMidiChord.keys():
         if chord != 'NC':
@@ -294,6 +297,7 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
             datasetChordToScale[chord] = scale
             #print(chord + ': ' + scale)
     
+    print('Evaluating songs...')
     scale_coherence = 0
     chord_coherence = 0
     count_pitch = 0

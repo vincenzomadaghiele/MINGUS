@@ -11,8 +11,8 @@ ToDo:
         - node js
     
     Model:
-        - update conditional generation function
-        - compare training with or without parameters
+        - add next chord and offset to NottinghamDB
+        - condition on how many beat to next chord
         - fine tune parameters for NottinghamDB training 
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord
@@ -131,7 +131,7 @@ if __name__ == '__main__':
                                       offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
-                                      device, dropout, isPitch).to(device)
+                                      device, dropout, isPitch, con.COND_TYPE_PITCH).to(device)
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     best_model = None
     
     # INITIALIZE TENSORBOARD
-    path = f'runs/{con.DATASET}/pitchModel/Epochs {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}'
+    path = f'runs/{con.DATASET}/pitchModel/COND {con.COND_TYPE_PITCH} Epochs {epochs} Augmentation {con.AUGMENTATION}'
     #path = f'runs/{con.DATASET}/pitchModel/REDUCE LR ON PLATEAU'
     if os.path.isdir(path):
         # Remove folder with same parameters
@@ -210,6 +210,8 @@ if __name__ == '__main__':
     savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
                      + '_'+ segm_len + '_' + dataset_name + '.pt')
     
+    savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+    
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     #writer.close()
@@ -252,7 +254,7 @@ if __name__ == '__main__':
                                       offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
-                                      device, dropout, isPitch).to(device)
+                                      device, dropout, isPitch, con.COND_TYPE_DURATION).to(device)
     
     # LOSS FUNCTION
     criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
@@ -267,7 +269,7 @@ if __name__ == '__main__':
     best_model = None
 
     # INITIALIZE TENSORBOARD
-    path = f'runs/{con.DATASET}/durationModel/EPOCHS {epochs} LR {lr} BPTT {con.BPTT} BatchSize {con.TRAIN_BATCH_SIZE} Augmentation {con.AUGMENTATION} Segmentation {con.SEGMENTATION}'
+    path = f'runs/{con.DATASET}/durationModel/COND {con.COND_TYPE_DURATION} EPOCHS {epochs} Augmentation {con.AUGMENTATION}'
     #path = f'runs/{con.DATASET}/durationModel/REDUCE LR ON PLATEAU'    
     if os.path.isdir(path):
         # Remove folder with same parameters
@@ -328,11 +330,13 @@ if __name__ == '__main__':
     model_name = "MINGUSduration"
     num_epochs = str(epochs) + "epochs"
     segm_len = "seqLen" + str(con.BPTT)
-    savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
+    savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
                      + '_'+ segm_len + '_' + dataset_name + '.pt')
     
-    state_dictPitch = best_model_duration.state_dict()
-    torch.save(state_dictPitch, savePATHpitch)
+    savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+    
+    state_dictDuration = best_model_duration.state_dict()
+    torch.save(state_dictDuration, savePATHduration)
     #writer.close()
     
     

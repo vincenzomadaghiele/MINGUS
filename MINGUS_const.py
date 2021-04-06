@@ -20,4 +20,19 @@ augmentation_const = 2
 
 DATASET = 'WjazzDB'
 
-EPOCHS = 100
+EPOCHS = 5
+
+COND_TYPE_PITCH = 'I-C-NC-B-BE-O'
+COND_TYPE_DURATION = 'I-C-NC-B-BE-O'
+
+'''
+COND TYPES:
+    - NO : no conditioning
+    - I : inter conditioning
+    - C : chord conditioning
+    - NC : next chord conditioning
+    - B : bass conditioning
+    - BE : beat conditioning
+    - O : offset conditioning
+    - COMBINE : I-C-NC-B-BE-O
+'''

@@ -25,7 +25,7 @@ class TransformerModel(nn.Module):
                      offset_vocab_size, offset_embed_dim, 
                      ninp, nhead, nhid, nlayers, 
                      pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
-                     device, dropout=0.5, isPitch=True):
+                     device, dropout=0.5, isPitch=True, COND='I-C-NC-B-BE-O'):
         
         super(TransformerModel, self).__init__()
         from torch.nn import TransformerEncoder, TransformerEncoderLayer
@@ -37,6 +37,10 @@ class TransformerModel(nn.Module):
         self.offset_pad_idx = offset_pad_idx
         self.device = device
         self.ninp = ninp
+        self.isPitch = isPitch
+        
+        #COND = COND.split("-")
+        self.COND = COND.split("-")
         
         # feature embeddings
         self.pitch_embedding = nn.Embedding(pitch_vocab_size, pitch_embed_dim, padding_idx=self.pitch_pad_idx) # pitch
@@ -45,10 +49,10 @@ class TransformerModel(nn.Module):
         self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim, padding_idx=self.beat_pad_idx) # beat
         self.offset_embedding = nn.Embedding(offset_vocab_size, offset_embed_dim, padding_idx=self.offset_pad_idx) # beat
         
-        #chord_encod_dim = 64
-        self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
-        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
         
+        self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
+        
+        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
         self.next_chord_encoder = nn.Linear(4 * pitch_embed_dim, next_chord_encod_dim)
         
         # Try out chord embeds
@@ -56,7 +60,28 @@ class TransformerModel(nn.Module):
         #chord_embed_dim = 64
         #self.chord_emedding = nn.Embedding(pitch_vocab_size, chord_embed_dim, padding_idx=self.pitch_pad_idx) 
         
-        encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim + next_chord_encod_dim + beat_embed_dim + offset_embed_dim 
+        if self.isPitch:
+            encoder_input_dim = pitch_embed_dim
+        else:
+            encoder_input_dim = duration_embed_dim
+        if 'I' in self.COND:
+            if self.isPitch:
+                encoder_input_dim += duration_embed_dim
+            else:
+                encoder_input_dim += pitch_embed_dim
+        if 'C' in self.COND:
+            encoder_input_dim += chord_encod_dim
+        if 'NC' in self.COND:
+            encoder_input_dim += next_chord_encod_dim
+        if 'B' in self.COND:
+            encoder_input_dim += pitch_embed_dim
+        if 'BE' in self.COND:
+            encoder_input_dim += beat_embed_dim
+        if 'O' in self.COND:
+            encoder_input_dim += offset_embed_dim
+
+        
+        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim + next_chord_encod_dim + beat_embed_dim + offset_embed_dim 
         #print(encoder_input_dim)
         
         # Start the transformer structure with multidimensional data
@@ -66,7 +91,7 @@ class TransformerModel(nn.Module):
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
         
-        if isPitch:
+        if self.isPitch:
             self.out_linear = nn.Linear(ninp, pitch_embed_dim)
             self.out_decoder = nn.Linear(pitch_embed_dim, pitch_vocab_size)
         else:
@@ -119,22 +144,39 @@ class TransformerModel(nn.Module):
         offset_embeds = self.offset_embedding(offset)
 
         #chord_embeds = self.chord_emedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
-        #print(chord.shape)
-        #print(chord_embeds.shape)
-        #print(exp_chord_embeds.shape)
-
         chord_embeds = self.chord_encoder(chord_embeds)
         next_chord_embeds = self.next_chord_encoder(next_chord_embeds)
 
-        #print(chord_embeds.shape)
-        #print(next_chord_embeds.shape)
+        if self.isPitch:
+            src = pitch_embeds
+        else:
+            src = duration_embeds
+        if 'I' in self.COND:
+            if self.isPitch:
+                src = (torch.cat([src, duration_embeds], 2))
+            else:
+                src = (torch.cat([src, pitch_embeds], 2))
+        if 'C' in self.COND:
+            src = (torch.cat([src, chord_embeds], 2))
+        if 'NC' in self.COND:
+            src = (torch.cat([src, next_chord_embeds], 2))
+        if 'B' in self.COND:
+            src = (torch.cat([src, bass_embeds], 2))
+        if 'BE' in self.COND:
+            src = (torch.cat([src, beat_embeds], 2))
+        if 'O' in self.COND:
+            src = (torch.cat([src, offset_embeds], 2))
+            
+        src = self.encoder(src) * math.sqrt(self.ninp)
+
 
         # Concatenate along 3rd dimension
         #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
-        src = self.encoder(torch.cat([pitch_embeds, duration_embeds, 
-                                      bass_embeds, chord_embeds, 
-                                      next_chord_embeds, beat_embeds, 
-                                      offset_embeds], 2)) * math.sqrt(self.ninp)
+        #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, 
+        #                              bass_embeds, chord_embeds, 
+        #                              next_chord_embeds, beat_embeds, 
+        #                              offset_embeds], 2)) * math.sqrt(self.ninp)
+        
         
         #src_padding_mask = self.make_src_pad_mask(src) # PROBLEM
         
@@ -148,12 +190,9 @@ class TransformerModel(nn.Module):
         return output
     
     def getEmbeds(self, pitch, duration, chord, bass, beat):
-        # embed data
+        # embedded data
         pitch_embeds = self.pitch_embedding(pitch)
         duration_embeds = self.duration_embedding(duration)
-        #chord_embeds = self.pitch_embedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
-        #bass_embeds = self.pitch_embedding(bass)
-        
         return pitch_embeds, duration_embeds
 
 

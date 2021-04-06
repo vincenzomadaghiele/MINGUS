@@ -538,10 +538,13 @@ if __name__ == '__main__':
                                       offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
-                                      device, dropout, isPitch).to(device)
+                                      device, dropout, isPitch, con.COND_TYPE_PITCH).to(device)
     
     if con.DATASET == 'WjazzDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_WjazzDB.pt'
+        
+        savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+        
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
@@ -582,10 +585,13 @@ if __name__ == '__main__':
                                       offset_vocab_size, offset_embed_dim,
                                       emsize, nhead, nhid, nlayers, 
                                       pitch_pad_idx, duration_pad_idx, beat_pad_idx, offset_pad_idx,
-                                      device, dropout, isPitch).to(device)
+                                      device, dropout, isPitch, con.COND_TYPE_DURATION).to(device)
     
     if con.DATASET == 'WjazzDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_WjazzDB.pt'
+        
+        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+        
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
@@ -615,7 +621,7 @@ if __name__ == '__main__':
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = True
+    generate_dataset = False
     
     if generate_dataset:
         out_path = 'output/gen4eval_' + con.DATASET + '/'
