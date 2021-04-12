@@ -6,16 +6,10 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    App:
-        - python flask
-        - node js
-    
     Model:
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord
         - fine tune parameters for NottinghamDB training 
-        - add next chord and offset to NottinghamDB
-        - condition on how many beat to next chord
         - consider aggregating quarter rests (?)
         - embed next chord and beats to next chord together (?)
 
