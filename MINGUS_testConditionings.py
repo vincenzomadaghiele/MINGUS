@@ -57,7 +57,7 @@ if __name__ == '__main__':
             POSSIBLE_CONDS.append(COND)
     #print(len(POSSIBLE_CONDS))
 
-    for CONDITIONING in POSSIBLE_CONDS[20:30]:
+    for CONDITIONING in POSSIBLE_CONDS[:20]:
 
         #%% PITCH MODEL TRAINING
         
