@@ -6,6 +6,7 @@ import time
 import os
 import shutil
 import itertools
+import json
 import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
@@ -57,7 +58,10 @@ if __name__ == '__main__':
             POSSIBLE_CONDS.append(COND)
     #print(len(POSSIBLE_CONDS))
 
-    for CONDITIONING in POSSIBLE_CONDS[40:]:
+    scoresPitch = {}
+    scoresDuration = {}
+
+    for CONDITIONING in POSSIBLE_CONDS:
 
         
         #%% PITCH MODEL TRAINING
@@ -108,7 +112,7 @@ if __name__ == '__main__':
         
         # TRAIN AND EVALUATE LOSS
         best_val_loss = float("inf")
-        epochs = 20 # The number of epochs
+        epochs = 15 # The number of epochs
         best_model = None
         
         # INITIALIZE TENSORBOARD
@@ -151,6 +155,12 @@ if __name__ == '__main__':
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 best_model_pitch = modelPitch
+                
+                score = {}
+                score['val loss'] = val_loss
+                score['val ppl'] = math.exp(val_loss)
+                score['val acc'] = val_acc
+                scoresPitch[CONDITIONING] = score
         
             scheduler.step()
         
@@ -231,7 +241,7 @@ if __name__ == '__main__':
         
         # TRAIN AND EVALUATE LOSS
         best_val_loss = float("inf")
-        epochs = 20 # The number of epochs
+        epochs = 15 # The number of epochs
         best_model = None
 
         # INITIALIZE TENSORBOARD
@@ -274,6 +284,12 @@ if __name__ == '__main__':
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 best_model_duration = modelDuration
+                
+                score = {}
+                score['val loss'] = val_loss
+                score['val ppl'] = math.exp(val_loss)
+                score['val acc'] = val_acc
+                scoresDuration[CONDITIONING] = score
         
             scheduler.step()
         
@@ -308,5 +324,12 @@ if __name__ == '__main__':
         
         print('Total training time for pitch model: ', pitch_end_time - pitch_start_time )
         print('Total training time for duration model: ', duration_end_time - duration_start_time)
-        
+    
+    
+        with open('scores/pitch.json', 'w') as fp:
+            json.dump(scoresPitch, fp, indent=4)
+        with open('scores/duration.json', 'w') as fp:
+            json.dump(scoresDuration, fp, indent=4)
+
+
         
