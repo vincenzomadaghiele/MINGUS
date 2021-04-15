@@ -146,7 +146,7 @@ if __name__ == '__main__':
                                       device, dropout, isPitch, con.COND_TYPE_DURATION).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
+        savePATHduration = 'models/MINGUSduration_200epochs_seqLen35_WjazzDB.pt'
         
         savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
     
