@@ -14,8 +14,11 @@ ToDo:
         - embed next chord and beats to next chord together (?)
 
     Evaluation:
+        - evaluate BebopNet generations 
+            (convert to midi (no bass) and then to musicXML)
         - export midi to audio and evaluate long-term coherence 
             with Jazz Transformer metric (Matlab)
+        - evaluate multiple conditioning on all metrics
 
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)

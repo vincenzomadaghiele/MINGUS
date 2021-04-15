@@ -227,6 +227,7 @@ def generateCond(tune, num_bars, temperature,
         new_duration = vocabDuration[word_idx]
         
         
+        # if any padding is generated jump the step and re-try (it is rare!)
         
         # append note to new arrays
         beat_pitch.append(new_pitch)

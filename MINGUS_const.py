@@ -23,7 +23,7 @@ DATASET = 'WjazzDB'
 EPOCHS = 200
 
 COND_TYPE_PITCH = 'I-C-NC-B-BE-O'
-COND_TYPE_DURATION = 'I-NC-O'
+COND_TYPE_DURATION = 'I-NC-O' # change cond on loading and saving cmds!! 
 
 '''
 COND TYPES:
