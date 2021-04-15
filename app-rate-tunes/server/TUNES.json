@@ -1,0 +1,55 @@
+[{
+        "id": "Anthropology_MINGUS",
+        "title": "Anthropology",
+        "author": "Art Pepper",
+        "sample": "Sample I",
+        "origin": "MINGUS",
+        "human": false,
+        "url": "http://onj3.andrelouis.com/phonetones/unzipped/Meizu%20MX4/notifications/The_North_Star.mp3"
+    },
+    {
+        "id": "Anthropology_BebopNet",
+        "title": "Anthropology",
+        "author": "Art Pepper",
+        "sample": "Sample II",
+        "origin": "BebopNet",
+        "human": false,
+        "url": "http://onj3.andrelouis.com/phonetones/unzipped/Meizu%20MX4/notifications/Empire.mp3"
+    },
+    {
+        "id": "Anthropology_original",
+        "title": "Anthropology",
+        "author": "Art Pepper",
+        "sample": "Sample III",
+        "origin": "original",
+        "human": true,
+        "url": "./The_North_Star.mp3"
+    },
+    {
+        "id": "Avalon_MINGUS",
+        "title": "Avalon",
+        "author": "Benny Goodman",
+        "sample": "Sample I",
+        "origin": "MINGUS",
+        "human": false,
+        "url": "null"
+    },
+    {
+        "id": "Avalon_BebopNet",
+        "title": "Avalon",
+        "author": "Benny Goodman",
+        "sample": "Sample II",
+        "origin": "BebopNet",
+        "human": false,
+        "url": "null"
+    },
+    {
+        "id": "Avalon_original",
+        "title": "Avalon",
+        "author": "Benny Goodman",
+        "sample": "Sample III",
+        "origin": "original",
+        "human": true,
+        "url": "null"
+    }
+]

@@ -1,0 +1,122 @@
+[
+    {
+        "id": "Anthropology_MINGUS",
+        "title": "Anthropology",
+        "author": "Art Pepper",
+        "sample": "Sample I",
+        "origin": "MINGUS",
+        "url": "http://onj3.andrelouis.com/phonetones/unzipped/Meizu%20MX4/notifications/The_North_Star.mp3",
+        "ratings": [
+            {
+                "rate": 2,
+                "experience": "Music student"
+            }
+        ],
+        "comments": [
+            {
+                "comment": "Good",
+                "experience": "Music student"
+            }
+        ]
+    },
+    {
+        "id": "Anthropology_BebopNet",
+        "title": "Anthropology",
+        "author": "Art Pepper",
+        "sample": "Sample II",
+        "origin": "MINGUS",
+        "url": "http://onj3.andrelouis.com/phonetones/unzipped/Meizu%20MX4/notifications/Empire.mp3",
+        "ratings": [
+            {
+                "rate": 5,
+                "experience": "Music student"
+            }
+        ],
+        "comments": [
+            {
+                "comment": "gig",
+                "experience": "Music student"
+            }
+        ]
+    },
+    {
+        "id": "Anthropology_original",
+        "title": "Anthropology",
+        "author": "Art Pepper",
+        "sample": "Sample III",
+        "origin": "MINGUS",
+        "url": "../assets/The_North_Star.mp3",
+        "ratings": [
+            {
+                "rate": 1,
+                "experience": "Music student"
+            }
+        ],
+        "comments": [
+            {
+                "comment": "",
+                "experience": "Music student"
+            }
+        ]
+    },
+    {
+        "id": "Avalon_MINGUS",
+        "title": "Avalon",
+        "author": "Benny Goodman",
+        "sample": "Sample I",
+        "origin": "MINGUS",
+        "url": "null",
+        "ratings": [
+            {
+                "rate": 3,
+                "experience": "Music student"
+            }
+        ],
+        "comments": [
+            {
+                "comment": "",
+                "experience": "Music student"
+            }
+        ]
+    },
+    {
+        "id": "Avalon_BebopNet",
+        "title": "Avalon",
+        "author": "Benny Goodman",
+        "sample": "Sample II",
+        "origin": "BebopNet",
+        "url": "null",
+        "ratings": [
+            {
+                "rate": 3,
+                "experience": "Music student"
+            }
+        ],
+        "comments": [
+            {
+                "comment": "",
+                "experience": "Music student"
+            }
+        ]
+    },
+    {
+        "id": "Avalon_original",
+        "title": "Avalon",
+        "author": "Benny Goodman",
+        "sample": "Sample III",
+        "origin": "original",
+        "url": "null",
+        "ratings": [
+            {
+                "rate": 4,
+                "experience": "Music student"
+            }
+        ],
+        "comments": [
+            {
+                "comment": "",
+                "experience": "Music student"
+            }
+        ]
+    }
+]
