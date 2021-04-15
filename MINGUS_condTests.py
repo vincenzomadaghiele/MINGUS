@@ -331,5 +331,6 @@ if __name__ == '__main__':
         with open('scores/duration.json', 'w') as fp:
             json.dump(scoresDuration, fp, indent=4)
 
+        # Add generation and metrics here for final result
 
         

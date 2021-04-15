@@ -20,10 +20,10 @@ augmentation_const = 2
 
 DATASET = 'WjazzDB'
 
-EPOCHS = 20
+EPOCHS = 200
 
 COND_TYPE_PITCH = 'I-C-NC-B-BE-O'
-COND_TYPE_DURATION = 'I-C-NC-B-BE-O'
+COND_TYPE_DURATION = 'I-NC-O'
 
 '''
 COND TYPES:
