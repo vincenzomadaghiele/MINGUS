@@ -228,103 +228,103 @@ def generateCond(tune, num_bars, temperature,
         
         
         # if any padding is generated jump the step and re-try (it is rare!)
-        
-        # append note to new arrays
-        beat_pitch.append(new_pitch)
-        beat_duration.append(new_duration)
-        
-        duration_sec = inv_dur_dict[new_duration] # problem: might generate padding here
-        offset_sec += duration_sec
-        
-        new_offset = min(int(bar_onset / (beat_duration_sec * 4) * 96),96)
-        bar_onset += duration_sec
-        
-        beat_offset.append(new_offset)
-        
-        # check if the note is in a new beat / bar
-        while offset_sec >= next_beat_sec:
-            if beat_num >= 3:
-                # end of bar
-                # append beat
-                beat = {}
-                beat['num beat'] = beat_num + 1
-                # check for chords
-                if len(tune['bars']) > bar_num:
-                    new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
-                    new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
-                beat['chord'] = new_chord
-                beat['pitch'] = beat_pitch 
-                beat['duration'] = beat_duration 
-                beat['offset'] = beat_offset
-                beat['scale'] = []
-                if isJazz:
+        if new_pitch != '<pad>' and new_duration != '<pad>':
+            # append note to new arrays
+            beat_pitch.append(new_pitch)
+            beat_duration.append(new_duration)
+            
+            duration_sec = inv_dur_dict[new_duration] # problem: might generate padding here
+            offset_sec += duration_sec
+            
+            new_offset = min(int(bar_onset / (beat_duration_sec * 4) * 96),96)
+            bar_onset += duration_sec
+            
+            beat_offset.append(new_offset)
+            
+            # check if the note is in a new beat / bar
+            while offset_sec >= next_beat_sec:
+                if beat_num >= 3:
+                    # end of bar
+                    # append beat
+                    beat = {}
+                    beat['num beat'] = beat_num + 1
+                    # check for chords
                     if len(tune['bars']) > bar_num:
-                        new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
-                    beat['bass'] = new_bass
+                        new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                        new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
+                    beat['chord'] = new_chord
+                    beat['pitch'] = beat_pitch 
+                    beat['duration'] = beat_duration 
+                    beat['offset'] = beat_offset
+                    beat['scale'] = []
+                    if isJazz:
+                        if len(tune['bars']) > bar_num:
+                            new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
+                        beat['bass'] = new_bass
+                    else:
+                        beat['bass'] = []
+                    beats.append(beat)
+                    beat_pitch = []
+                    beat_duration = []
+                    beat_offset = []
+                    # append bar
+                    bar = {}
+                    bar['num bar'] = bar_num + 1 # over all song
+                    bar['beats'] = beats # beats 1,2,3,4
+                    bars.append(bar)
+                    beats = []
+                    beat_num = 0
+                    bar_num += 1
+                    beat_counter += 1
+                    next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                    bar_onset = 0
                 else:
-                    beat['bass'] = []
-                beats.append(beat)
-                beat_pitch = []
-                beat_duration = []
-                beat_offset = []
-                # append bar
-                bar = {}
-                bar['num bar'] = bar_num + 1 # over all song
-                bar['beats'] = beats # beats 1,2,3,4
-                bars.append(bar)
-                beats = []
-                beat_num = 0
-                bar_num += 1
-                beat_counter += 1
-                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
-                bar_onset = 0
+                    # end of beat
+                    beat = {}
+                    # number of beat in the bar [1,4]
+                    beat['num beat'] = beat_num + 1
+                    # at most one chord per beat
+                    # check for chords
+                    if len(tune['bars']) > bar_num:
+                        new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                        new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
+                    beat['chord'] = new_chord
+                    # pitch of notes which START in this beat
+                    beat['pitch'] = beat_pitch 
+                    # duration of notes which START in this beat
+                    beat['duration'] = beat_duration 
+                    # offset of notes which START in this beat wrt the start of the bar
+                    beat['offset'] = beat_offset
+                    # get from chord with m21
+                    beat['scale'] = []
+                    if isJazz:
+                        if len(tune['bars']) > bar_num:
+                            new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
+                        beat['bass'] = new_bass
+                    else:
+                        beat['bass'] = []
+                    # append beat
+                    beats.append(beat)
+                    beat_pitch = []
+                    beat_duration = []
+                    beat_offset = []
+                    beat_num += 1
+                    beat_counter += 1
+                    next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+            
+            # add note pitch and duration into new_structured_song
+            # change chord conditioning from tune based on beat
+            # add note to pitch, duration, chord, bass array
+            pitch.append(new_pitch)
+            duration.append(new_duration)
+            chord.append(datasetToMidiChords[new_chord][:4])
+            next_chord.append(datasetToMidiChords[new_next_chord][:4])
+            beat_ar.append(beat_num + 1)
+            if isJazz:
+                bass.append(new_bass)
             else:
-                # end of beat
-                beat = {}
-                # number of beat in the bar [1,4]
-                beat['num beat'] = beat_num + 1
-                # at most one chord per beat
-                # check for chords
-                if len(tune['bars']) > bar_num:
-                    new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
-                    new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
-                beat['chord'] = new_chord
-                # pitch of notes which START in this beat
-                beat['pitch'] = beat_pitch 
-                # duration of notes which START in this beat
-                beat['duration'] = beat_duration 
-                # offset of notes which START in this beat wrt the start of the bar
-                beat['offset'] = beat_offset
-                # get from chord with m21
-                beat['scale'] = []
-                if isJazz:
-                    if len(tune['bars']) > bar_num:
-                        new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
-                    beat['bass'] = new_bass
-                else:
-                    beat['bass'] = []
-                # append beat
-                beats.append(beat)
-                beat_pitch = []
-                beat_duration = []
-                beat_offset = []
-                beat_num += 1
-                beat_counter += 1
-                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
-        
-        # add note pitch and duration into new_structured_song
-        # change chord conditioning from tune based on beat
-        # add note to pitch, duration, chord, bass array
-        pitch.append(new_pitch)
-        duration.append(new_duration)
-        chord.append(datasetToMidiChords[new_chord][:4])
-        next_chord.append(datasetToMidiChords[new_next_chord][:4])
-        beat_ar.append(beat_num + 1)
-        if isJazz:
-            bass.append(new_bass)
-        else:
-            bass.append(datasetToMidiChords[new_chord][0])
-        offset.append(new_offset)
+                bass.append(datasetToMidiChords[new_chord][0])
+            offset.append(new_offset)
     
     new_structured_song['bars'] = bars
     return new_structured_song
