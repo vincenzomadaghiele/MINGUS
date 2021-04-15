@@ -591,7 +591,7 @@ if __name__ == '__main__':
     if con.DATASET == 'WjazzDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_WjazzDB.pt'
         
-        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'

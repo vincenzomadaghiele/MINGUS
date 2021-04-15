@@ -19,6 +19,9 @@ ToDo:
         - export midi to audio and evaluate long-term coherence 
             with Jazz Transformer metric (Matlab)
         - evaluate multiple conditioning on all metrics
+    
+    Competitors:
+        - download BebopNet
 
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)
@@ -330,7 +333,7 @@ if __name__ == '__main__':
     savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
                      + '_'+ segm_len + '_' + dataset_name + '.pt')
     
-    savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+    savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
     
     state_dictDuration = best_model_duration.state_dict()
     torch.save(state_dictDuration, savePATHduration)
