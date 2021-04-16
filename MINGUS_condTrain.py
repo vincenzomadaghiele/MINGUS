@@ -6,22 +6,34 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
+    - avvisare Pasquale che ho messo l'app
+    - put TUNES_STATS.json in 'output' folder
+    - choose tunes to rate
+    
     Model:
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord
         - fine tune parameters for NottinghamDB training 
-        - consider aggregating quarter rests (?)
-        - embed next chord and beats to next chord together (?)
 
     Evaluation:
-        - evaluate BebopNet generations 
-            (convert to midi (no bass) and then to musicXML)
+        - evaluate BebopNet generations with my metrics
         - export midi to audio and evaluate long-term coherence 
             with Jazz Transformer metric (Matlab)
-        - evaluate multiple conditioning on all metrics
+        - evaluate MINGUS multiple conditioning on all metrics
+        - evaluate SeqAttn generations with my metrics
     
     Competitors:
         - download BebopNet
+        - download midi2xml tool
+        - try tool on midi Wjazz files with no chords
+        - export WjazzDB files with chords to midi
+        - export NottinghamDB files with chords to midi
+        - train BebopNet on that
+        - convert output xml to midi
+        - export into audio good quality
+        - export WjazzDB files chords and melody separate to midi
+        - export NottinghamDB files chords and melody separate to midi
+        - train SeqAttn conditional on that
 
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)

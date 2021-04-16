@@ -53,7 +53,7 @@
                 <div class="col-md-6 col-10 text-secondary">
                     <h6>Thank you for your contribution to our research. 
                     The results will be available at 
-                    <a href="https://github.com/vincenzomadaghiele/MINGUS ">the project webpage</a> 
+                    <a href="https://github.com/vincenzomadaghiele/MINGUS " target="_blank" rel="noopener noreferrer">the project webpage</a> 
                     as soon as they are ready.</h6>
                     <br><br>
                 </div>

@@ -45,7 +45,7 @@ def all_tunes():
     response_object = {'status': 'success'}
     if request.method == 'POST':
         # open json
-        with open('TUNES_STATS.json') as f:
+        with open('output/TUNES_STATS.json') as f:
             TUNES_STATS = json.load(f)
         # get POST request payload
         post_data = request.get_json()
@@ -67,7 +67,7 @@ def all_tunes():
                         'experience': musicExperience,
                     })
         # save updated json file
-        with open('TUNES_STATS.json', 'w') as json_file:
+        with open('output/TUNES_STATS.json', 'w') as json_file:
             json.dump(TUNES_STATS, json_file, indent=4)
         response_object['message'] = 'Rating added!'
     else:

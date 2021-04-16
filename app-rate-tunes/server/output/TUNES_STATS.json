@@ -10,12 +10,28 @@
             {
                 "rate": 2,
                 "experience": "Music student"
+            },
+            {
+                "rate": 2,
+                "experience": "Professional musician"
+            },
+            {
+                "rate": 1,
+                "experience": "Professional musician"
             }
         ],
         "comments": [
             {
                 "comment": "Good",
                 "experience": "Music student"
+            },
+            {
+                "comment": "inside output",
+                "experience": "Professional musician"
+            },
+            {
+                "comment": null,
+                "experience": "Professional musician"
             }
         ]
     },
@@ -30,12 +46,28 @@
             {
                 "rate": 5,
                 "experience": "Music student"
+            },
+            {
+                "rate": 5,
+                "experience": "Professional musician"
+            },
+            {
+                "rate": 3,
+                "experience": "Professional musician"
             }
         ],
         "comments": [
             {
                 "comment": "gig",
                 "experience": "Music student"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
             }
         ]
     },
@@ -50,12 +82,28 @@
             {
                 "rate": 1,
                 "experience": "Music student"
+            },
+            {
+                "rate": 5,
+                "experience": "Professional musician"
+            },
+            {
+                "rate": 5,
+                "experience": "Professional musician"
             }
         ],
         "comments": [
             {
                 "comment": "",
                 "experience": "Music student"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
             }
         ]
     },
@@ -70,12 +118,28 @@
             {
                 "rate": 3,
                 "experience": "Music student"
+            },
+            {
+                "rate": 4,
+                "experience": "Professional musician"
+            },
+            {
+                "rate": 2,
+                "experience": "Professional musician"
             }
         ],
         "comments": [
             {
                 "comment": "",
                 "experience": "Music student"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
             }
         ]
     },
@@ -90,12 +154,28 @@
             {
                 "rate": 3,
                 "experience": "Music student"
+            },
+            {
+                "rate": 3,
+                "experience": "Professional musician"
+            },
+            {
+                "rate": 1,
+                "experience": "Professional musician"
             }
         ],
         "comments": [
             {
                 "comment": "",
                 "experience": "Music student"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
             }
         ]
     },
@@ -110,12 +190,28 @@
             {
                 "rate": 4,
                 "experience": "Music student"
+            },
+            {
+                "rate": 4,
+                "experience": "Professional musician"
+            },
+            {
+                "rate": 3,
+                "experience": "Professional musician"
             }
         ],
         "comments": [
             {
                 "comment": "",
                 "experience": "Music student"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
+            },
+            {
+                "comment": "",
+                "experience": "Professional musician"
             }
         ]
     }
