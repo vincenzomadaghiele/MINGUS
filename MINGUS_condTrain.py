@@ -6,8 +6,6 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    - avvisare Pasquale che ho messo l'app
-    - put TUNES_STATS.json in 'output' folder
     - choose tunes to rate
     
     Model:
