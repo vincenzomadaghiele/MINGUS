@@ -332,7 +332,7 @@ def generateCond(tune, num_bars, temperature,
     new_structured_song['bars'] = bars
     return new_structured_song
 
-def structuredSongsToPM(structured_song, datasetToMidiChords):
+def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
     
     # input : a structured song json
     #structured_song = structuredSongs[0]
@@ -614,7 +614,7 @@ if __name__ == '__main__':
                                        vocabPitch, vocabDuration,
                                        isJazz)
         title = new_structured_song['title']
-        pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
+        pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
         pm.write('output/'+ title + '.mid')
     elif con.DATASET == 'NottinghamDB':
         isJazz = False
@@ -650,9 +650,9 @@ if __name__ == '__main__':
                                            vocabPitch, vocabDuration,
                                            isJazz)
                 
-                pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
+                pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
                 pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
-                pm = structuredSongsToPM(tune, WjazzToMidiChords)
+                pm = structuredSongsToPM(tune, WjazzToMidiChords, isJazz)
                 pm.write(out_path + original_path + tune['title'] + '.mid')
                 generated_structuredSongs.append(new_structured_song)
                 original_structuredSongs.append(tune)
