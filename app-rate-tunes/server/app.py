@@ -1,6 +1,7 @@
+import os
+import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import json
 
 # POST answer format
 PAYLOAD = {
@@ -35,6 +36,12 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 
 print('MINGUS server starting')
 
+tunes_file = 'output/TUNES_STATS.json'
+
+if not os.path.exists(tunes_file):
+    with open(tunes_file, 'w') as json_file:
+        json.dump({}, json_file, indent=4)
+
 
 @app.route('/', methods=['GET'])
 def hello():
@@ -52,7 +59,7 @@ def all_tunes():
     response_object = {'status': 'success'}
     if request.method == 'POST':
         # open json
-        with open('output/TUNES_STATS.json') as f:
+        with open(tunes_file) as f:
             TUNES_STATS = json.load(f)
         # get POST request payload
         post_data = request.get_json()
@@ -74,7 +81,7 @@ def all_tunes():
                         'experience': musicExperience,
                     })
         # save updated json file
-        with open('output/TUNES_STATS.json', 'w') as json_file:
+        with open(tunes_file, 'w') as json_file:
             json.dump(TUNES_STATS, json_file, indent=4)
         response_object['message'] = 'Rating added!'
     else:
