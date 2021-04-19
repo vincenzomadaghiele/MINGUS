@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     
     # number of conditioned models to consider
-    NUM_MODELS = 2
+    NUM_MODELS = 4
     EPOCHS = 20
     
     #%% Opening JSON file of multiple models scores
@@ -268,7 +268,7 @@ if __name__ == '__main__':
             
             # Make directory to save metrics file
             parent_directory = f'metrics/{con.DATASET}/'
-            model_id = f'MINGUS PITCH_COND {COND_PITCH} DUR_COND {COND_DURATION} Epochs {con.EPOCHS}'
+            model_id = f'MINGUS PITCH_COND {COND_PITCH} DUR_COND {COND_DURATION} Epochs {EPOCHS}'
             path = os.path.join(parent_directory, model_id + '/')
             if not os.path.isdir(path):
                 os.mkdir(path)
