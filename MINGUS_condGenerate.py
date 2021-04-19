@@ -57,7 +57,9 @@ def batch4gen(data, bsz, dict_to_ix, device, isChord=False):
 
 def generateCond(tune, num_bars, temperature, 
                  modelPitch, modelDuration, 
-                 datasetToMidiChords, isJazz = False):
+                 datasetToMidiChords, 
+                 pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                 isJazz = False):
         
     # select a tune
     #tune = structuredSongs[0]
@@ -606,14 +608,17 @@ if __name__ == '__main__':
     if con.DATASET == 'WjazzDB':
         isJazz = True
         new_structured_song = generateCond(structuredSongs[0], num_bars, temperature, 
-                                       modelPitch, modelDuration, WjazzToMidiChords, isJazz)
+                                       modelPitch, modelDuration, WjazzToMidiChords, 
+                                       pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                       isJazz)
         title = new_structured_song['title']
         pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
         pm.write('output/'+ title + '.mid')
     elif con.DATASET == 'NottinghamDB':
         isJazz = False
         new_structured_song = generateCond(structuredSongs[0], num_bars, temperature, 
-                                       modelPitch, modelDuration, NottinghamToMidiChords)
+                                       modelPitch, modelDuration, NottinghamToMidiChords,
+                                       pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,)
         title = new_structured_song['title']
         pm = structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
         pm.write('output/'+ title + '.mid')
@@ -637,7 +642,9 @@ if __name__ == '__main__':
             if con.DATASET == 'WjazzDB':
                 isJazz = True
                 new_structured_song = generateCond(tune, num_bars, temperature, 
-                                           modelPitch, modelDuration, WjazzToMidiChords, isJazz)
+                                           modelPitch, modelDuration, WjazzToMidiChords, 
+                                           pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                           isJazz)
                 
                 pm = structuredSongsToPM(new_structured_song, WjazzToMidiChords)
                 pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
@@ -649,7 +656,8 @@ if __name__ == '__main__':
             elif con.DATASET == 'NottinghamDB':
                 isJazz = False
                 new_structured_song = generateCond(tune, num_bars, temperature, 
-                                           modelPitch, modelDuration, NottinghamToMidiChords)
+                                           modelPitch, modelDuration, NottinghamToMidiChords,
+                                           pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,)
                 
                 pm = structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
                 pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')

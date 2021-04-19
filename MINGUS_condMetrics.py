@@ -196,7 +196,8 @@ if __name__ == '__main__':
             modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
                     
             
-            # Generate new music
+            #%% Generate new music
+            
             # Set to True to generate dataset of songs
             num_bars = 8
             temperature = 1
@@ -215,7 +216,9 @@ if __name__ == '__main__':
                     if con.DATASET == 'WjazzDB':
                         isJazz = True
                         new_structured_song = gen.generateCond(tune, num_bars, temperature, 
-                                                   modelPitch, modelDuration, WjazzToMidiChords, isJazz)
+                                                   modelPitch, modelDuration, WjazzToMidiChords,
+                                                   pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                   isJazz)
                         
                         pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords)
                         pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
@@ -227,7 +230,8 @@ if __name__ == '__main__':
                     elif con.DATASET == 'NottinghamDB':
                         isJazz = False
                         new_structured_song = gen.generateCond(tune, num_bars, temperature, 
-                                                   modelPitch, modelDuration, NottinghamToMidiChords)
+                                                   modelPitch, modelDuration, NottinghamToMidiChords,
+                                                   pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,)
                         
                         pm = gen.structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
                         pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
@@ -242,7 +246,9 @@ if __name__ == '__main__':
                 with open(out_path + original_path + con.DATASET + '_original.json', 'w') as fp:
                     json.dump(original_structuredSongs, fp, indent=4)
             
-            # Evaluate
+            
+            #%% Evaluate
+            
             gen_common_path = 'output/gen4eval_' + con.DATASET + '/'
             original_subpath = 'original/'
             generated_subpath = 'generated/'
@@ -256,7 +262,7 @@ if __name__ == '__main__':
                 generated_structuredSongs = json.load(f)
                 
             
-            #%% METRICS DICTIONARY
+            # METRICS DICTIONARY
             
             # Make directory to save metrics file
             parent_directory = f'metrics/{con.DATASET}/'
