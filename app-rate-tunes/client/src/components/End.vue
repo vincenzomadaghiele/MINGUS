@@ -38,7 +38,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import axios from 'axios';
 
-const server = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://mingus.tools.eurecom.fr:5552';
+const server = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://mingus.tools.eurecom.fr/server';
 
 Vue.use(VueRouter);
 
