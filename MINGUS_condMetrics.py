@@ -218,6 +218,7 @@ if __name__ == '__main__':
                         new_structured_song = gen.generateCond(tune, num_bars, temperature, 
                                                    modelPitch, modelDuration, WjazzToMidiChords,
                                                    pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                   vocabPitch, vocabDuration,
                                                    isJazz)
                         
                         pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords)
@@ -231,7 +232,8 @@ if __name__ == '__main__':
                         isJazz = False
                         new_structured_song = gen.generateCond(tune, num_bars, temperature, 
                                                    modelPitch, modelDuration, NottinghamToMidiChords,
-                                                   pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,)
+                                                   pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                   vocabPitch, vocabDuration)
                         
                         pm = gen.structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
                         pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
