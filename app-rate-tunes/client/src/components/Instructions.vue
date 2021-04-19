@@ -12,7 +12,7 @@
         <div class="row text-center">
             <div class="col-lg-3"></div>
             <div class="col-lg-6">
-                <p>This quiz was build to evaluate <b>MINGUS</b>, a machine learning model 
+                <p>This quiz was build to evaluate <b>MINGUS</b>, a machine learning model
                     for generating jazz improvisations.</p>
                 <p>You will listen to musical phrases played on five famous jazz tunes. 
                     Your task will be to evaluate how much you like each musical phrase, 

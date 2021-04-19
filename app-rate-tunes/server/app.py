@@ -1,27 +1,26 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import uuid
 import json
 
 # POST answer format
 PAYLOAD = {
-	"musicExperience": "Professional",
-	"ratings": {
-		"Anthropology_MINGUS": 5,
-		"Anthropology_BebopNet": 2,
-		"Anthropology_original": 4,
-		"Avalon_MINGUS": 5,
-		"Avalon_BebopNet": 1,
-		"Avalon_original": 3
-	},
+    "musicExperience": "Professional",
+    "ratings": {
+        "Anthropology_MINGUS": 5,
+        "Anthropology_BebopNet": 2,
+        "Anthropology_original": 4,
+        "Avalon_MINGUS": 5,
+        "Avalon_BebopNet": 1,
+        "Avalon_original": 3
+    },
     "comments": {
-		"Anthropology_MINGUS": "",
-		"Anthropology_BebopNet": "aweful",
-		"Anthropology_original": "great!",
-		"Avalon_MINGUS": "",
-		"Avalon_BebopNet": "",
-		"Avalon_original": ""
-	}
+        "Anthropology_MINGUS": "",
+        "Anthropology_BebopNet": "aweful",
+        "Anthropology_original": "great!",
+        "Avalon_MINGUS": "",
+        "Avalon_BebopNet": "",
+        "Avalon_original": ""
+    }
 }
 
 # configuration
@@ -34,11 +33,19 @@ app.config.from_object(__name__)
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
 
+print('MINGUS server starting')
+
+
+@app.route('/', methods=['GET'])
+def hello():
+    return 'up and running!'
+
 
 # sanity check route
 @app.route('/ping', methods=['GET'])
 def ping_pong():
     return jsonify('pong!')
+
 
 @app.route('/tunes', methods=['GET', 'POST'])
 def all_tunes():
@@ -75,6 +82,7 @@ def all_tunes():
             TUNES = json.load(f)
         response_object['tunes'] = TUNES
     return jsonify(response_object)
+
 
 if __name__ == '__main__':
     app.run()

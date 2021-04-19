@@ -1,17 +1,18 @@
-App instructions
+# App instructions
 
 Open terminal:
-$ cd server
-$ source env/bin/activate
-$ python app.py
-
+```
+cd server
+python app.py
+```
 The server runs at: localhost:5000
 
 
 On a separate terminal:
-$ cd client
-$ npm run serve
-
+```
+cd client
+npm run serve
+```
 The client runs at: localhost:8080
 
 credits:

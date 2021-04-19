@@ -38,6 +38,8 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import axios from 'axios';
 
+const server = process.env.NODE_ENV === 'development' ? 'localhost:5000' : 'mingus.tools.eurecom.fr:5552';
+
 Vue.use(VueRouter);
 
 export default {
@@ -48,7 +50,7 @@ export default {
   },
   methods: {
     postRatedTunes(ratedTunes) {
-      const path = 'http://localhost:5000/tunes';
+      const path = `http://${server}/tunes`;
       // send ratedTunes to server
       axios.post(path, ratedTunes)
         .then(() => {

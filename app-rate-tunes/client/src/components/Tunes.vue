@@ -76,6 +76,8 @@ import axios from 'axios';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 
+const server = process.env.NODE_ENV === 'development' ? 'localhost:5000' : 'mingus.tools.eurecom.fr:5552';
+
 Vue.use(VueRouter);
 
 export default {
@@ -90,7 +92,7 @@ export default {
   },
   methods: {
     getTunes() {
-      const path = 'http://localhost:5000/tunes';
+      const path = `http://${server}/tunes`;
       const ratings = {};
       axios.get(path)
         .then((res) => {
