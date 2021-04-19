@@ -174,7 +174,7 @@ if __name__ == '__main__':
     
     # Make directory to save metrics file
     parent_directory = f'metrics/{con.DATASET}/'
-    model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+    model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}'
     path = os.path.join(parent_directory, model_id + '/')
     if not os.path.isdir(path):
         os.mkdir(path)
