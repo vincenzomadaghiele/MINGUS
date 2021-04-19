@@ -15,7 +15,7 @@ import numpy as np
 import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
-import MINGUS_condgenerate as gen
+import MINGUS_condGenerate as gen
 import MINGUS_eval_funct as ev
 
 # Device configuration
