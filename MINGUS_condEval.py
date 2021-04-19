@@ -173,8 +173,8 @@ if __name__ == '__main__':
     #%% METRICS DICTIONARY
     
     # Make directory to save metrics file
-    parent_directory = 'metrics/conditional_models/'
-    model_id = str(con.EPOCHS) + 'epochs_' + str(con.BPTT) + 'seqlen_' + con.DATASET 
+    parent_directory = f'metrics/{con.DATASET}/'
+    model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
     path = os.path.join(parent_directory, model_id + '/')
     if not os.path.isdir(path):
         os.mkdir(path)

@@ -1,0 +1,72 @@
+{
+    "MGEval": {
+        "total_used_pitch": {
+            "ref_mean": 29.7,
+            "ref_std": 5.883,
+            "gen_mean": 27.6,
+            "gen_std": 3.9294,
+            "ref_KL-div": 0.0263,
+            "ref_overlap-area": 0.8129,
+            "gen_KL-div": 0.0308,
+            "gen_overlap-area": 0.8075
+        },
+        "total_pitch_class_histogram": {
+            "ref_mean": 0.0833,
+            "ref_std": 0.0607,
+            "gen_mean": 0.0833,
+            "gen_std": 0.051,
+            "ref_KL-div": 0.0087,
+            "ref_overlap-area": 0.8535,
+            "gen_KL-div": 0.0727,
+            "gen_overlap-area": 0.8576
+        },
+        "pitch_class_transition_matrix": {
+            "ref_mean": 9.0007,
+            "ref_std": 12.9024,
+            "gen_mean": 7.2382,
+            "gen_std": 9.4354,
+            "ref_KL-div": 0.0171,
+            "ref_overlap-area": 0.8272,
+            "gen_KL-div": 0.0372,
+            "gen_overlap-area": 0.8232
+        },
+        "pitch_range": {
+            "ref_mean": 31.5,
+            "ref_std": 6.233,
+            "gen_mean": 28.7,
+            "gen_std": 3.9,
+            "ref_KL-div": 0.0419,
+            "ref_overlap-area": 0.837,
+            "gen_KL-div": 0.0091,
+            "gen_overlap-area": 0.7717
+        },
+        "avg_IOI": {
+            "ref_mean": 0.1425,
+            "ref_std": 0.0548,
+            "gen_mean": 0.1406,
+            "gen_std": 0.0552,
+            "ref_KL-div": 0.1076,
+            "ref_overlap-area": 0.818,
+            "gen_KL-div": 0.0991,
+            "gen_overlap-area": 0.7204
+        }
+    },
+    "Harmonic coherence": {
+        "Original scale coherence": 0.7238,
+        "Original chord coherence": 0.5675,
+        "Generated scale coherence": 0.7346,
+        "Generated chord coherence": 0.4889
+    },
+    "Pitch": {
+        "Pitch_accuracy": 24.8883,
+        "Pitch_perplexity": 8.0187,
+        "Pitch_test-loss": 2.0818,
+        "Pitch_BLEU": 0.5383
+    },
+    "Duration": {
+        "Duration_accuracy": 26.9326,
+        "Duration_perplexity": 4.8394,
+        "Duration_test-loss": 1.5768,
+        "Duration_BLEU": 0.6351
+    }
+}
