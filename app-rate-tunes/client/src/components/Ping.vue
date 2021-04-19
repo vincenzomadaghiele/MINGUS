@@ -7,7 +7,7 @@
 <script>
 import axios from 'axios';
 
-const server = process.env.NODE_ENV === 'development' ? 'localhost:5000' : 'mingus.tools.eurecom.fr:5552';
+const server = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://mingus.tools.eurecom.fr:5552';
 
 export default {
   name: 'Ping',
@@ -18,7 +18,7 @@ export default {
   },
   methods: {
     getMessage() {
-      const path = `http://${server}/ping`;
+      const path = `${server}/ping`;
       axios.get(path)
         .then((res) => {
           this.msg = res.data;

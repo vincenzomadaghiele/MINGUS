@@ -15,5 +15,10 @@ npm run serve
 ```
 The client runs at: localhost:8080
 
+
 credits:
 https://testdriven.io/blog/developing-a-single-page-app-with-flask-and-vuejs/#objectives
+
+## Install with Docker
+
+    docker-compose -p mingus up -d
