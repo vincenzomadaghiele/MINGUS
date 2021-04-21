@@ -6,8 +6,6 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    - choose tunes to rate
-    
     Model:
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord

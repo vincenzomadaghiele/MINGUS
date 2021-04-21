@@ -35,4 +35,8 @@ COND TYPES:
     - BE : beat conditioning
     - O : offset conditioning
     - COMBINE : I-C-NC-B-BE-O
+    
+Best to the ear so far:
+    COND_TYPE_PITCH = 'I-C-NC-BE'
+    COND_TYPE_DURATION = 'I-B-BE-O'
 '''
