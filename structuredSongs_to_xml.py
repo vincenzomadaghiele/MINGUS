@@ -53,8 +53,7 @@ if __name__ == '__main__':
         pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
         NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
 
-    #%%
-    
+    # Convert to musicXML
     previousID = ''
     for structuredSong in structuredSongs:
     
