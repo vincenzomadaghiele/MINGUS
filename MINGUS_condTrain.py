@@ -11,6 +11,7 @@ ToDo:
         - Generate songs on MINGUS
         - Collect metrics (on BebopNet generated standards 
                            from xmls converted to midi)
+        - Maybe retrain with quarter note triplet (and eight note triplets?)
     
     Model:
         - add next chord and offset to NottinghamDB
