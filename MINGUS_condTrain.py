@@ -6,6 +6,12 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
+    Next week:
+        - Generate songs on BebopNet
+        - Generate songs on MINGUS
+        - Collect metrics (on BebopNet generated standards 
+                           from xmls converted to midi)
+    
     Model:
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord

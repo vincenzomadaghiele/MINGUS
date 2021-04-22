@@ -16,6 +16,7 @@ import torch.nn as nn
 import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
+import MINGUS_condGenerate as gen
 
 def xmlToStructuredSong(xml_path):
     # open xml file 
@@ -192,10 +193,10 @@ if __name__ == '__main__':
     # invert dict from Wjazz to Music21 chords
     Music21ToWjazz = {v: k for k, v in WjazzToMusic21.items()}
     
-    s = m21.converter.parse('output/xmlStandards/Billies_Bounce.xml')
+    s = m21.converter.parse('output/xmlStandards/Never_Gonna_Give_You_Up.xml')
     
     new_structured_song = {}
-    new_structured_song['title'] = 'Billies_Bounce'
+    new_structured_song['title'] = 'Never_Gonna_Give_You_Up'
     new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
     new_structured_song['beat duration [sec]'] = 60 / new_structured_song['tempo']
     
@@ -205,33 +206,154 @@ if __name__ == '__main__':
     bar_num = 0
     bars = []
     beats = []
+    beat_pitch = []
+    beat_duration = []
+    beat_offset = []
 
     for measure in s.getElementsByClass('Measure'):
         bar_num += 1
         beat_num = 0
-        for note in measure.notes:
-            if 'ChordSymbol' in note.classSet:
+        bar_duration = 0
+        for note in measure.notesAndRests:  
+            if 'Rest' in note.classSet:
+                # detect rests
+                pitch = 'R'
+                distance = np.abs(np.array(possible_durations) - note.quarterLength)
+                idx = distance.argmin()
+                duration = dur_dict[possible_durations[idx]]
+                offset = int(bar_duration * 96 / 4)
+                # update beat arrays 
+                beat_pitch.append(pitch)
+                beat_duration.append(duration)
+                beat_offset.append(offset)            
+            
+            elif 'ChordSymbol' in note.classSet:
                 #chord
-                chord = note.figure
-                # if chord in Music21ToWjazz.keys():
-                    # 
-                # else:
+                m21chord = note.figure
+                if m21chord in Music21ToWjazz.keys():
+                    chord = Music21ToWjazz[m21chord]
+                else:
                     # add to WjazzToMusic21
-                    # add to WjazzToMidiChords
-                    # add to WjazzToChordComposition
-                print(chord)
-                note.show('text')
+                    WjazzToMusic21[m21chord] = m21chord
+                    # derive chord composition and make it of 4 notes
+                    pitchNames = [str(p) for p in note.pitches]
+                    # The following bit is added 
+                    # just for parameter modeling purposes
+                    if len(pitchNames) < 4:
+                        hd = m21.harmony.ChordStepModification('add', 7)
+                        note.addChordStepModification(hd, updatePitches=True)
+                        #chord = m21.chord.Chord(pitchNames)
+                        pitchNames = [str(p) for p in note.pitches]   
+                    
+                    # midi conversion
+                    midiChord = []
+                    for p in pitchNames:
+                        c = m21.pitch.Pitch(p)
+                        midiChord.append(c.midi)
+                    
+                    chord = m21chord
+                    NewChord = {}
+                    NewChord['Wjazz name'] = chord
+                    NewChord['music21 name'] = m21chord
+                    NewChord['chord composition'] = pitchNames
+                    NewChord['midi chord composition'] = midiChord
+                    NewChord['one-hot encoding'] = []
+                    WjazzChords.append(NewChord)
+
+                    # update dictionaries
+                    WjazzToMidiChords[chord] = midiChord[:4]
+                    WjazzToChordComposition[chord] = pitchNames[:4]
+            
+            # check for rests
             else:
                 pitch = note.pitch.midi
-                duration = note.quarterLength
-                
-                print(note.pitch.midi)
-                print(note.quarterLength)
-                
-            #if note
-            #note.show('text')
-            #print(note.classSet)
-            #print(thisNote.octave)
+                distance = np.abs(np.array(possible_durations) - note.quarterLength)
+                idx = distance.argmin()
+                duration = dur_dict[possible_durations[idx]]
+                offset = int(bar_duration * 96 / 4)
+                # update beat arrays 
+                beat_pitch.append(pitch)
+                beat_duration.append(duration)
+                beat_offset.append(offset)
 
-        #measure.show('text')
+            # update bar duration
+            bar_duration += note.quarterLength
+            # check if the beat is ended
+            if np.floor(bar_duration) != beat_num:
+                #print(np.floor(bar_duration), beat_num)
+                count = np.floor(bar_duration) - beat_num
+                while count > 1:
+                    new_beat = {}
+                    new_beat['num beat'] = int(beat_num) + 1
+                    new_beat['chord'] = chord
+                    new_beat['pitch'] = [] 
+                    new_beat['duration'] = [] 
+                    new_beat['offset'] = []
+                    new_beat['scale'] = []
+                    new_beat['bass'] = WjazzToMidiChords[chord][0]
+                    new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
+                    beats.append(new_beat)
+                    count -= 1
+                    
+                if not chord:
+                    chord = 'NC'
+                new_beat = {}
+                new_beat['num beat'] = int(beat_num) + 1
+                new_beat['chord'] = chord
+                new_beat['pitch'] = beat_pitch 
+                new_beat['duration'] = beat_duration 
+                new_beat['offset'] = beat_offset
+                new_beat['scale'] = []
+                new_beat['bass'] = WjazzToMidiChords[chord][0]
+                new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
+                beats.append(new_beat)
+                if beat_num == 3:
+                    # if there are missing beats add them
+                    count = len(beats)
+                    while count < 4:
+                        new_beat = {}
+                        new_beat['num beat'] = int(beat_num) + 1
+                        new_beat['chord'] = chord
+                        new_beat['pitch'] = [] 
+                        new_beat['duration'] = [] 
+                        new_beat['offset'] = []
+                        new_beat['scale'] = []
+                        new_beat['bass'] = WjazzToMidiChords[chord][0]
+                        new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
+                        beats.append(new_beat)
+                        count = len(beats)
+                        
+                    # append bar
+                    new_bar = {}
+                    new_bar['num bar'] = bar_num # over all song
+                    new_bar['beats'] = beats # beats 1,2,3,4
+                    bars.append(new_bar)
+                    beats = []
+                    bar_onset = 0
+                
+                beat_num = np.floor(bar_duration)
+                beat_pitch = []
+                beat_duration = []
+                beat_offset = []
+                
+            # append note to beat
+            # if beat is ended
+            # beats.append(beat)
+            # beat = []
+    
+    # fill in missing beats with chord of last beat
+    #for bar in bars:
+    #    beat_n = 1
+    #     for beat in bar['beats']:
+    #         if beat['num beat'] != beat_n:
+       
+            
+    new_structured_song['bars'] = bars
+    
+    #%% Convert structured song to midi
+    
+    title = new_structured_song['title'] + '_standard'
+    pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz = True)
+    pm.write('output/'+ title + '.mid')
+
     
