@@ -19,13 +19,8 @@ ToDo:
         - evaluate SeqAttn generations with my metrics
     
     Competitors:
-        - download BebopNet
-        - download midi2xml tool
-        - try tool on midi Wjazz files with no chords
-        - export WjazzDB files with chords to midi
-        - export NottinghamDB files with chords to midi
-        - train BebopNet on that
-        - convert output xml to midi
+        - train BebopNet on WjazzDB
+        - generate songs with BebopNet
         - export into audio good quality
         - export WjazzDB files chords and melody separate to midi
         - export NottinghamDB files chords and melody separate to midi

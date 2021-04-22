@@ -8,6 +8,7 @@ Created on Thu Apr 22 10:05:49 2021
 This scripts generates over a jazz standard given in XML format as input to the model
 """
 import pretty_midi
+import music21 as m21
 import json
 import numpy as np
 import torch
@@ -16,14 +17,21 @@ import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
 
+def xmlToStructuredSong(xml_path):
+    # open xml file 
+    # 
+    #return structuredSong
+    pass
 
 def generateOverStandard(tune, model, num_chorus):
     # upload a standard in XML format
+    # xml to structured song
+    # use chord root as bass
     # extract chord sequence
     # generate over number of chorus chosen
     # export in midi and xml
-    return stream
-
+    #return stream
+    pass
 
 # Device configuration
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
@@ -104,9 +112,9 @@ if __name__ == '__main__':
                                       device, dropout, isPitch, con.COND_TYPE_PITCH).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_WjazzDB.pt'
+        savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
         
-        savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+        #savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
@@ -151,12 +159,79 @@ if __name__ == '__main__':
                                       device, dropout, isPitch, con.COND_TYPE_DURATION).to(device)
     
     if con.DATASET == 'WjazzDB':
-        savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_WjazzDB.pt'
+        savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
         
-        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+        #savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
+
+    #%% Import xml file
+    
+    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8,
+                          3, 1 + 1/2, 1/2 + 1/4, 1/4 + 1/8, 
+                          4/3]
+
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = '32th'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'dot 16th'
+    dur_dict[possible_durations[10]] = 'half note triplet'
+    inv_dur_dict = {v: k for k, v in dur_dict.items()}
+    
+    # invert dict from Wjazz to Music21 chords
+    Music21ToWjazz = {v: k for k, v in WjazzToMusic21.items()}
+    
+    s = m21.converter.parse('output/xmlStandards/Billies_Bounce.xml')
+    
+    new_structured_song = {}
+    new_structured_song['title'] = 'Billies_Bounce'
+    new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
+    new_structured_song['beat duration [sec]'] = 60 / new_structured_song['tempo']
+    
+    if not s.hasMeasures():
+        s = s.makeMeasures()
+    #sMeasures.show('text')
+    bar_num = 0
+    bars = []
+    beats = []
+
+    for measure in s.getElementsByClass('Measure'):
+        bar_num += 1
+        beat_num = 0
+        for note in measure.notes:
+            if 'ChordSymbol' in note.classSet:
+                #chord
+                chord = note.figure
+                # if chord in Music21ToWjazz.keys():
+                    # 
+                # else:
+                    # add to WjazzToMusic21
+                    # add to WjazzToMidiChords
+                    # add to WjazzToChordComposition
+                print(chord)
+                note.show('text')
+            else:
+                pitch = note.pitch.midi
+                duration = note.quarterLength
+                
+                print(note.pitch.midi)
+                print(note.quarterLength)
+                
+            #if note
+            #note.show('text')
+            #print(note.classSet)
+            #print(thisNote.octave)
+
+        #measure.show('text')
     
