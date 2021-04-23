@@ -60,6 +60,7 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     beat_pitch = []
     beat_duration = []
     beat_offset = []
+    chord = 'NC'
 
     for measure in s.getElementsByClass('Measure'):
         #measure.show('text')
