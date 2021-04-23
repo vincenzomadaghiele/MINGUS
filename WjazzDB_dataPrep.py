@@ -40,6 +40,10 @@ if __name__=="__main__":
             structured_song['tempo'] = row[10]
             structured_song['chord changes'] = row[15]
             structured_song['performer'] = row[4]
+            structured_song['solo part'] = row[7] # number of solo in the original track recording
+            structured_song['instrument'] = row[8]
+            structured_song['style'] = row[9]
+
             bars = []
             beats = []
             

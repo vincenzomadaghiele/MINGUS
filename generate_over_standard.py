@@ -7,6 +7,7 @@ Created on Thu Apr 22 10:05:49 2021
 
 This scripts generates over a jazz standard given in XML format as input to the model
 """
+
 import pretty_midi
 import music21 as m21
 import json
