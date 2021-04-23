@@ -634,7 +634,7 @@ if __name__ == '__main__':
 
     #%% Import xml file
     
-    xml_path = 'output/xmlStandards/Despacito.xml'    
+    xml_path = 'output/xmlStandards/All_The_Things_You_Are.xml'    
     tuneFromXML, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
                                                                                                                        WjazzToMusic21,
                                                                                                                        WjazzToMidiChords, 
