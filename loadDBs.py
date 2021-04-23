@@ -268,33 +268,37 @@ class WjazzDB():
         offset_validation = []
         offset_test = []
         
+        STYLES = ['COOL','BEBOP','TRADITIONAL']
         
         for song in songs['train']:
-            pitch_train.append(song['pitch'])
-            duration_train.append(song['duration'])
-            chord_train.append(song['chords'])
-            next_chord_train.append(song['next chords'])
-            bass_train.append(song['bass pitch'])
-            beat_train.append(song['beats'])
-            offset_train.append(song['offset'])
+            if song['style'] in STYLES:
+                pitch_train.append(song['pitch'])
+                duration_train.append(song['duration'])
+                chord_train.append(song['chords'])
+                next_chord_train.append(song['next chords'])
+                bass_train.append(song['bass pitch'])
+                beat_train.append(song['beats'])
+                offset_train.append(song['offset'])
         
         for song in songs['validation']:
-            pitch_validation.append(song['pitch'])
-            duration_validation.append(song['duration'])
-            chord_validation.append(song['chords'])
-            next_chord_validation.append(song['next chords'])
-            bass_validation.append(song['bass pitch'])
-            beat_validation.append(song['beats'])
-            offset_validation.append(song['offset'])
+            if song['style'] in STYLES:
+                pitch_validation.append(song['pitch'])
+                duration_validation.append(song['duration'])
+                chord_validation.append(song['chords'])
+                next_chord_validation.append(song['next chords'])
+                bass_validation.append(song['bass pitch'])
+                beat_validation.append(song['beats'])
+                offset_validation.append(song['offset'])
         
         for song in songs['test']:
-            pitch_test.append(song['pitch'])
-            duration_test.append(song['duration'])
-            chord_test.append(song['chords'])
-            next_chord_test.append(song['next chords'])
-            bass_test.append(song['bass pitch'])
-            beat_test.append(song['beats'])
-            offset_test.append(song['offset'])
+            if song['style'] in STYLES:
+                pitch_test.append(song['pitch'])
+                duration_test.append(song['duration'])
+                chord_test.append(song['chords'])
+                next_chord_test.append(song['next chords'])
+                bass_test.append(song['bass pitch'])
+                beat_test.append(song['beats'])
+                offset_test.append(song['offset'])
         
         
         # COMPUTE VOCABS

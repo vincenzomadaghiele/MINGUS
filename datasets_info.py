@@ -29,7 +29,7 @@ if __name__ == '__main__':
     vocabPitch, vocabDuration, vocabBeat, vocabOffset = WjazzDB.getVocabs()
     
     songs = WjazzDB.getOriginalSongDict()
-    
+        
     pitch = []
     duration = []
     chord = []
@@ -80,6 +80,12 @@ if __name__ == '__main__':
     plt.subplots_adjust(bottom = 0.2)
     plt.show()
     
+
+    #%%
+    
+    styles = []
+    for song in songs['train']:
+        styles.append(song['style'])
 
 
     

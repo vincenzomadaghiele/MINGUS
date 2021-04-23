@@ -20,7 +20,7 @@ augmentation_const = 2
 
 DATASET = 'WjazzDB'
 
-EPOCHS = 200
+EPOCHS = 100
 
 COND_TYPE_PITCH = 'I-C-NC-BE'
 COND_TYPE_DURATION = 'I-B-BE-O' # change cond on loading and saving cmds!! 
