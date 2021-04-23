@@ -657,4 +657,55 @@ if __name__ == '__main__':
     pm.write('output/fromXML/'+ title + '.mid')
 
     
-        
+    #%% BUILD A DATASET OF GENERATED TUNES
+    
+    # Set to True to generate dataset of songs
+    generate_dataset = True
+    
+    if generate_dataset:
+        out_path = 'output/fromXML/'
+        generated_path = 'generated/'
+        original_path = 'original/'
+        num_tunes = 20
+        generated_structuredSongs = []
+        original_structuredSongs = []
+
+        for tune in structuredSongs[:num_tunes]:
+            
+            if con.DATASET == 'WjazzDB':
+                isJazz = True
+                new_structured_song = generateOverStandard(tune, num_chorus, temperature, 
+                                                       modelPitch, modelDuration, WjazzToMidiChords, 
+                                                       pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                       vocabPitch, vocabDuration,
+                                                       isJazz)
+                
+                pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
+                pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
+                pm = gen.structuredSongsToPM(tune, WjazzToMidiChords, isJazz)
+                pm.write(out_path + original_path + tune['title'] + '.mid')
+                generated_structuredSongs.append(new_structured_song)
+                original_structuredSongs.append(tune)
+                
+            elif con.DATASET == 'NottinghamDB':
+                isJazz = False
+                new_structured_song = generateOverStandard(tune, num_chorus, temperature, 
+                                                       modelPitch, modelDuration, NottinghamToMidiChords,
+                                                       pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                       vocabPitch, vocabDuration)
+                
+                pm = gen.structuredSongsToPM(new_structured_song, NottinghamToMidiChords)
+                pm.write(out_path + generated_path + new_structured_song['title'] + '.mid')
+                pm = gen.structuredSongsToPM(tune, NottinghamToMidiChords)
+                pm.write(out_path + original_path + tune['title'] + '.mid')
+                generated_structuredSongs.append(new_structured_song)
+                original_structuredSongs.append(tune)
+            
+        # Convert dict to JSON and SAVE IT
+        with open(out_path + generated_path + con.DATASET + '_generated.json', 'w') as fp:
+            json.dump(generated_structuredSongs, fp, indent=4)
+        with open(out_path + original_path + con.DATASET + '_original.json', 'w') as fp:
+            json.dump(original_structuredSongs, fp, indent=4)
+
+
+    
