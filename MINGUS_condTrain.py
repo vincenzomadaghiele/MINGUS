@@ -15,6 +15,7 @@ ToDo:
         
         - try generation with only certain styles 
             to obtain better sounding gens
+        - compare 
     
     Model:
         - add next chord and offset to NottinghamDB
