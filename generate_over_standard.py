@@ -504,9 +504,7 @@ torch.manual_seed(1)
 
 if __name__ == '__main__':
 
-    a = 0    
-
-    #%% LOAD DATA
+    # LOAD DATA
     if con.DATASET == 'WjazzDB':
             
         WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
