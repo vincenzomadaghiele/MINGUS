@@ -268,7 +268,7 @@ class WjazzDB():
         offset_validation = []
         offset_test = []
         
-        STYLES = ['COOL','BEBOP','TRADITIONAL']
+        STYLES = ['COOL','BEBOP','TRADITIONAL','SWING']
         
         for song in songs['train']:
             if song['style'] in STYLES:
