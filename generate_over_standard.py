@@ -579,7 +579,7 @@ if __name__ == '__main__':
     if con.DATASET == 'WjazzDB':
         savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
         
-        #savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+        savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
@@ -626,7 +626,7 @@ if __name__ == '__main__':
     if con.DATASET == 'WjazzDB':
         savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
         
-        #savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
