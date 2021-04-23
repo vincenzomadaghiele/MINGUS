@@ -52,7 +52,7 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     
     if not s.hasMeasures():
         s = s.makeMeasures()
-    #sMeasures.show('text')
+    #s.show('text')
     bar_num = 0
     bars = []
     beats = []
@@ -61,10 +61,11 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     beat_offset = []
 
     for measure in s.getElementsByClass('Measure'):
+        #measure.show('text')
         bar_num += 1
         beat_num = 0
         bar_duration = 0
-        for note in measure.notesAndRests:  
+        for note in measure.notesAndRests:
             if 'Rest' in note.classSet:
                 # detect rests
                 pitch = 'R'
@@ -130,9 +131,9 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
             bar_duration += note.quarterLength
             # check if the beat is ended
             if np.floor(bar_duration) != beat_num:
+                
                 #print(np.floor(bar_duration), beat_num)
-                count = np.floor(bar_duration) - beat_num
-                while count > 1:
+                while np.floor(bar_duration) - beat_num > 1:
                     new_beat = {}
                     new_beat['num beat'] = int(beat_num) + 1
                     new_beat['chord'] = chord
@@ -143,7 +144,7 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
                     new_beat['bass'] = WjazzToMidiChords[chord][0]
                     new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
                     beats.append(new_beat)
-                    count -= 1
+                    beat_num += 1
                     
                 if not chord:
                     chord = 'NC'
@@ -158,21 +159,6 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
                 new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
                 beats.append(new_beat)
                 if beat_num == 3:
-                    # if there are missing beats add them
-                    count = len(beats)
-                    while count < 4:
-                        new_beat = {}
-                        new_beat['num beat'] = int(beat_num) + 1
-                        new_beat['chord'] = chord
-                        new_beat['pitch'] = [] 
-                        new_beat['duration'] = [] 
-                        new_beat['offset'] = []
-                        new_beat['scale'] = []
-                        new_beat['bass'] = WjazzToMidiChords[chord][0]
-                        new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
-                        beats.append(new_beat)
-                        count = len(beats)
-                        
                     # append bar
                     new_bar = {}
                     new_bar['num bar'] = bar_num # over all song
@@ -184,7 +170,6 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
                 beat_pitch = []
                 beat_duration = []
                 beat_offset = []
-    
     
     # compute chords array
     chord_array = []
@@ -651,7 +636,7 @@ if __name__ == '__main__':
 
     #%% Import xml file
     
-    xml_path = 'output/xmlStandards/Billies_Bounce.xml'    
+    xml_path = 'output/xmlStandards/Despacito.xml'    
     tuneFromXML, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
                                                                                                                        WjazzToMusic21,
                                                                                                                        WjazzToMidiChords, 
