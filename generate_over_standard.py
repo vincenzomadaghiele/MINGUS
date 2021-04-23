@@ -10,6 +10,7 @@ This scripts generates over a jazz standard given in XML format as input to the 
 import pretty_midi
 import music21 as m21
 import json
+import glob
 import numpy as np
 import torch
 import torch.nn as nn
@@ -578,7 +579,7 @@ if __name__ == '__main__':
     if con.DATASET == 'WjazzDB':
         savePATHpitch = 'models/MINGUSpitch_10epochs_seqLen35_WjazzDB.pt'
         
-        savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+        #savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
@@ -625,7 +626,7 @@ if __name__ == '__main__':
     if con.DATASET == 'WjazzDB':
         savePATHduration = 'models/MINGUSduration_10epochs_seqLen35_WjazzDB.pt'
         
-        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+        #savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
         
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
@@ -670,10 +671,20 @@ if __name__ == '__main__':
         generated_structuredSongs = []
         original_structuredSongs = []
 
-        for tune in structuredSongs[:num_tunes]:
+
+        source_path = 'output/xmlStandards/*.xml'
+        source_songs = glob.glob(source_path)
+        for xml_path in source_songs:
             
             if con.DATASET == 'WjazzDB':
                 isJazz = True
+                tune, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
+                                                                                                                   WjazzToMusic21,
+                                                                                                                   WjazzToMidiChords, 
+                                                                                                                   WjazzToChordComposition, 
+                                                                                                                   WjazzChords)
+
+                
                 new_structured_song = generateOverStandard(tune, num_chorus, temperature, 
                                                        modelPitch, modelDuration, WjazzToMidiChords, 
                                                        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
@@ -689,6 +700,11 @@ if __name__ == '__main__':
                 
             elif con.DATASET == 'NottinghamDB':
                 isJazz = False
+                tune, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
+                                                                                                                   WjazzToMusic21,
+                                                                                                                   WjazzToMidiChords, 
+                                                                                                                   WjazzToChordComposition, 
+                                                                                                                   WjazzChords)
                 new_structured_song = generateOverStandard(tune, num_chorus, temperature, 
                                                        modelPitch, modelDuration, NottinghamToMidiChords,
                                                        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
