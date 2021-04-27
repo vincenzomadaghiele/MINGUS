@@ -40,16 +40,16 @@ if __name__ == '__main__':
                           3, 3/2, 3/4, 3/8, 
                           1/6, 1/12]
     
-    rests_durations = [4, 2, 1, 1/2, 1/4, 1/8, 1/16, 
-                       3, 3/2, 3/4, 3/8,
-                       1/6, 1/12]
+    rests_durations = [4, 2, 1, 1/2, 1/4, 1/8, 
+                       3, 3/2, 3/4, 
+                       1/6]
 
 
     #%% Load csv as dataframe
     
     source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    source_songs = ['data/WjazzDBcsv/csv_beats/ArtPepper_Anthropology_Solo.csv']
+    #source_songs = ['data/WjazzDBcsv/csv_beats/ArtPepper_Anthropology_Solo.csv']
     
     for csv_path in source_songs:
         
@@ -58,208 +58,234 @@ if __name__ == '__main__':
         melody_path = 'data/WjazzDBcsv/csv_melody/' + song_name + '.csv'
         meldoy_df = pd.read_csv(melody_path)
         print('converting ', song_name)
-        #try:
-        #beat_df = pd.read_csv("data/WjazzDBcsv/csv_beats/ArtPepper_Anthropology_Solo.csv")
-        #meldoy_df = pd.read_csv("data/WjazzDBcsv/csv_melody/ArtPepper_Anthropology_Solo.csv")
-        
-        #tempo = 218
-        
-        tempo = int(60 / meldoy_df['beatdur'].mean())
-        
-        # get time signature
-        time_signature = beat_df[beat_df['signature'].notnull()]['signature'].values[0]
-        
-        # remove empty beats at the beginning
-        first_bar = max(beat_df.iloc[0]['bar'], meldoy_df.iloc[0]['bar'])
-        meldoy_df = meldoy_df[(meldoy_df.bar >= first_bar)]
-        beat_df = beat_df[(beat_df.bar >= first_bar)]
-        
-        # fill missing chords with NC
-        beat_df['chord'] = beat_df['chord'].fillna('NC')
-        
-        # rescale onsets to start from first beat
-        meldoy_df['onset'] = meldoy_df['onset'] - beat_df.iloc[0]['onset']
-        beat_df['onset'] = beat_df['onset'] - beat_df.iloc[0]['onset']
-        
-        # create a new m21 stream
-        stream = m21.stream.Stream()
-        m = m21.stream.Measure()
-        tempo = m21.tempo.MetronomeMark(number=tempo)
-        m.append(tempo)
-        m.timeSignature = m21.meter.TimeSignature('4/4')
-        
-        # constants for iteration
-        current_bar = beat_df.iloc[0]['bar']
-        current_bar_start_time = beat_df.iloc[0]['onset']
-        counter96 = 0
-        for i, row in beat_df.iterrows():
-            # check for bar end
-            if row['bar'] != current_bar:
-                m.number = current_bar
-                # append bar to the stream
-                stream.append(m)
-                m = m21.stream.Measure()
-                current_bar = row['bar']
-                current_bar_start_time = row['onset']
-                #break
+        try:
+            #beat_df = pd.read_csv("data/WjazzDBcsv/csv_beats/ArtPepper_Anthropology_Solo.csv")
+            #meldoy_df = pd.read_csv("data/WjazzDBcsv/csv_melody/ArtPepper_Anthropology_Solo.csv")
             
-            # append chords
-            if row['chord'] != 'NC':
-                m21chord = WjazzToMusic21[row['chord']]
-                h = m21.harmony.ChordSymbol(m21chord)
-                m.insert(row['beat']-1, h)
+            #tempo = 218
             
-            # find all notes in the bar
-            if row['beat'] == 1:
-                _thisBarNotes = meldoy_df[(meldoy_df.bar == current_bar)]
-                #thisBarNotes = _thisBarNotes.copy()[:2]
-                notes = []
+            tempo = int(60 / meldoy_df['beatdur'].mean())
+            
+            # get time signature
+            time_signature = beat_df[beat_df['signature'].notnull()]['signature'].values[0]
+            
+            # remove empty beats at the beginning
+            first_bar = max(beat_df.iloc[0]['bar'], meldoy_df.iloc[0]['bar'])
+            meldoy_df = meldoy_df[(meldoy_df.bar >= first_bar)].reset_index()
+            beat_df = beat_df[(beat_df.bar >= first_bar)].reset_index()
+            
+            # fill missing chords with NC
+            beat_df['chord'] = beat_df['chord'].fillna('NC')
+            
+            # rescale onsets to start from first beat
+            meldoy_df['onset'] = meldoy_df['onset'] - beat_df.iloc[0]['onset']
+            beat_df['onset'] = beat_df['onset'] - beat_df.iloc[0]['onset']
+            
+            # create a new m21 stream
+            stream = m21.stream.Stream()
+            m = m21.stream.Measure()
+            tempo = m21.tempo.MetronomeMark(number=tempo)
+            m.append(tempo)
+            m.timeSignature = m21.meter.TimeSignature('4/4')
+            
+            # constants for iteration
+            current_bar = beat_df.iloc[0]['bar']
+            current_bar_start_time = beat_df.iloc[0]['onset']
+            counter96 = 0
+            for i, row in beat_df.iterrows():
+                # check if it is the last bar
+                    
+                # check for bar end
+                if row['bar'] != current_bar:
+                    m.number = current_bar
+                    # append bar to the stream
+                    stream.append(m)
+                    m = m21.stream.Measure()
+                    current_bar = row['bar']
+                    current_bar_start_time = row['onset']
+                    #break
                 
-                # update last onset
-                if counter96 == 0:
-                    last_onset = current_bar_start_time
-
-                # check for rests at the start of the bar
-                rest_dur = (_thisBarNotes.iloc[0]['onset'] - last_onset) / _thisBarNotes.iloc[0]['beatdur']
-                if rest_dur > min(rests_durations):
-                    distance = np.abs(np.array(possible_durations) - rest_dur)
-                    idx = distance.argmin()
-                    duration = possible_durations[idx]
-                    counter96 += duration * 24
-                    notes.append(['R', duration])
-                for j, note in _thisBarNotes.iterrows():
-                    nextRest = 'no rest'
-                    # check if this is the last note in the bar
-                    if j < _thisBarNotes.last_valid_index():
-                        # check for onset difference between this note and the next one
-                        rest_dur = _thisBarNotes.iloc[j+1]['onset'] - (note['onset'] + note['duration']) / note['beatdur']
+                # append chords
+                if row['chord'] != 'NC':
+                    m21chord = WjazzToMusic21[row['chord']]
+                    h = m21.harmony.ChordSymbol(m21chord)
+                    m.insert(row['beat']-1, h)
+                
+                # find all notes in the bar
+                if row['beat'] == 1:
+                    
+                    if i+4 <= beat_df.shape[0] - 1:
+                        next_bar_onset = beat_df.iloc[i+4]['onset']
+                    
+                    _thisBarNotes = meldoy_df[(meldoy_df.bar == current_bar)]
+                    #thisBarNotes = _thisBarNotes.copy()[:2]
+                    notes = []
+                    
+                    # update last onset
+                    if counter96 == 0:
+                        last_onset = current_bar_start_time
+    
+                    if not _thisBarNotes.empty:
+                        # check for rests at the start of the bar
+                        rest_dur = (_thisBarNotes.iloc[0]['onset'] - last_onset) / _thisBarNotes.iloc[0]['beatdur']
                         if rest_dur > min(rests_durations):
-                            # if rest append after the note
                             distance = np.abs(np.array(possible_durations) - rest_dur)
                             idx = distance.argmin()
                             duration = possible_durations[idx]
                             counter96 += duration * 24
-                            nextRest = ['R', duration]
+                            notes.append(['R', duration])
+                        for j, note in _thisBarNotes.iterrows():
+                            nextRest = 'no rest'
+                            # check if this is the last note in the bar
+                            if j < _thisBarNotes.shape[0] - 1:
+                                # check for onset difference between this note and the next one
+                                rest_dur = (_thisBarNotes.iloc[j+1]['onset'] - (note['onset'] + note['duration'])) / note['beatdur']
+                                if rest_dur > min(rests_durations):
+                                    # if rest append after the note
+                                    distance = np.abs(np.array(possible_durations) - rest_dur)
+                                    idx = distance.argmin()
+                                    duration = possible_durations[idx]
+                                    counter96 += duration * 24
+                                    nextRest = ['R', duration]
+                                else:
+                                    # if no rest sum duration to the note 
+                                    note['duration'] = _thisBarNotes.iloc[j+1]['onset'] - note['onset']
+                                
+                                # compute note duration
+                                dur = note['duration'] / note['beatdur']
+                                distance = np.abs(np.array(possible_durations) - dur)
+                                idx = distance.argmin()
+                                duration = possible_durations[idx]
+                                counter96 += duration * 24
+                                
+                                # append note THEN rest to array
+                                notes.append([note['pitch'], duration])
+                                if nextRest != 'no rest':
+                                    notes.append(nextRest)
+                            else:
+                                
+                                '''
+                                rest_dur = (next_bar_onset - (note['onset'] + note['duration'])) / note['beatdur']
+                                #print(rest_dur)
+                                if rest_dur > min(rests_durations):
+                                    # if rest append after the note
+                                    distance = np.abs(np.array(possible_durations) - rest_dur)
+                                    idx = distance.argmin()
+                                    duration = possible_durations[idx]
+                                    counter96 += duration * 24
+                                    nextRest = ['R', duration]
+                                else:
+                                    # if no rest sum duration to the note 
+                                    note['duration'] = next_bar_onset - note['onset']
+                                '''
+                                
+                                # this is the last note in the bar
+                                dur = note['duration'] / note['beatdur']
+                                distance = np.abs(np.array(possible_durations) - dur)
+                                idx = distance.argmin()
+                                duration = possible_durations[idx]
+                                counter96 += duration * 24
+                                notes.append([note['pitch'], duration])
+                                last_onset = note['onset'] + note['duration']
+                                            
+                        # check if the bar is complete
+                        if counter96 <= 96:                    
+                            # add rests
+                            duration = min(((96 - counter96) * 4) / 96, 4)
+                            #print('less')
+                            notes.append(['R', duration])
+                            counter96 = 0
                         else:
-                            # if no rest sum duration to the note 
-                            note['duration'] = _thisBarNotes.iloc[j+1]['onset'] - note['onset']
-                        
-                        # compute note duration
-                        dur = note['duration'] / note['beatdur']
-                        distance = np.abs(np.array(possible_durations) - dur)
-                        idx = distance.argmin()
-                        duration = possible_durations[idx]
-                        counter96 += duration * 24
-                        
-                        # append note THEN rest to array
-                        notes.append([note['pitch'], duration])
-                        if nextRest != 'no rest':
-                            notes.append(nextRest)
+                            #print('more')
+                            counter96 -= 96
                     else:
-                        # this is the last note in the bar
-                        dur = note['duration'] / note['beatdur']
-                        distance = np.abs(np.array(possible_durations) - dur)
-                        idx = distance.argmin()
-                        duration = possible_durations[idx]
-                        counter96 += duration * 24
-                        notes.append([note['pitch'], duration])
-                        last_onset = note['onset'] + note['duration']
-
-                # check if the bar is complete
-                if counter96 <= 96:                    
-                    # add rests
-                    duration = min(((96 - counter96) * 4) / 96, 4)
-                    #print('less')
-                    notes.append(['R', duration])
-                    counter96 = 0
-                else:
-                    #print('more')
-                    counter96 -= 96
+                        # reset to 0 if a bar is skipped
+                        counter96 = 0
+                        
+                    # write to stream measure
+                    for note in notes:
+                        if note[0] == 'R':
+                            new_note = m21.note.Rest(quarterLength=note[1])
+                            m.append(new_note)
+                        else:
+                            new_note = m21.note.Note(midi=note[0], quarterLength=note[1])
+                            m.append(new_note)
                     
-                # write to stream measure
-                for note in notes:
-                    if note[0] == 'R':
-                        new_note = m21.note.Rest(quarterLength=note[1])
-                        m.append(new_note)
-                    else:
-                        new_note = m21.note.Note(midi=note[0], quarterLength=note[1])
-                        m.append(new_note)
-                
-                '''
-                # constants for iteration
-                if counter96 == 0:
-                    last_onset = current_bar_start_time
-                for j, note in _thisBarNotes.iterrows():
-                    # check for rests 
-                    #offset96 = round((note['onset'] - current_bar_start_time) * 96)
-                    #duration96 = round((note['duration'] / note['beatdur']) * 12)
-                    rest_dur = (note['onset'] - last_onset) / note['beatdur']
-                    if rest_dur > min(rests_durations):
+                    '''
+                    # constants for iteration
+                    if counter96 == 0:
+                        last_onset = current_bar_start_time
+                    for j, note in _thisBarNotes.iterrows():
+                        # check for rests 
+                        #offset96 = round((note['onset'] - current_bar_start_time) * 96)
+                        #duration96 = round((note['duration'] / note['beatdur']) * 12)
+                        rest_dur = (note['onset'] - last_onset) / note['beatdur']
+                        if rest_dur > min(rests_durations):
+                            
+                            new_row = {
+                                'bar': note['bar'], 
+                                'beat': note['beat'], # check (useful?)
+                                'beatdur': note['beatdur'], 
+                                'duration': rest_dur,
+                                'onset': last_onset,
+                                'pitch': 'R',
+                                }
+                            
+                            distance = np.abs(np.array(possible_durations) - rest_dur)
+                            idx = distance.argmin()
+                            duration = possible_durations[idx]
+                            counter96 += duration * 24
+                            #print(counter96)
+                            # append to bar notes
+                            thisBarNotes = thisBarNotes.append(new_row, ignore_index=True)
+                            #last_onset += rest_dur
+                            # append to stream measure
+                            new_note = m21.note.Rest(quarterLength=duration)
+                            m.append(new_note)
+                        #else:
+                            # aggregate duration to the note before!
+                            #note['duration'] = note['duration'] + (note['onset'] - last_onset)
                         
-                        new_row = {
-                            'bar': note['bar'], 
-                            'beat': note['beat'], # check (useful?)
-                            'beatdur': note['beatdur'], 
-                            'duration': rest_dur,
-                            'onset': last_onset,
-                            'pitch': 'R',
-                            }
-                        
-                        distance = np.abs(np.array(possible_durations) - rest_dur)
+                        dur = note['duration'] / note['beatdur']
+                        distance = np.abs(np.array(possible_durations) - dur)
                         idx = distance.argmin()
                         duration = possible_durations[idx]
                         counter96 += duration * 24
-                        #print(counter96)
+                        
+                        
                         # append to bar notes
-                        thisBarNotes = thisBarNotes.append(new_row, ignore_index=True)
-                        #last_onset += rest_dur
+                        thisBarNotes = thisBarNotes.append(note)
+                        last_onset = note['onset'] + note['duration']
                         # append to stream measure
+                        new_note = m21.note.Note(midi=note['pitch'], quarterLength=duration)
+                        m.append(new_note)
+                        
+                    if counter96 <= 96:
+                        # aggregate to last note duration first and then rest
+                        
+                        # add rests
+                        duration = min(((96 - counter96) * 4) / 96, 4)
+                        #print('less')
                         new_note = m21.note.Rest(quarterLength=duration)
                         m.append(new_note)
-                    #else:
-                        # aggregate duration to the note before!
-                        #note['duration'] = note['duration'] + (note['onset'] - last_onset)
-                    
-                    dur = note['duration'] / note['beatdur']
-                    distance = np.abs(np.array(possible_durations) - dur)
-                    idx = distance.argmin()
-                    duration = possible_durations[idx]
-                    counter96 += duration * 24
-                    
-                    
-                    # append to bar notes
-                    thisBarNotes = thisBarNotes.append(note)
-                    last_onset = note['onset'] + note['duration']
-                    # append to stream measure
-                    new_note = m21.note.Note(midi=note['pitch'], quarterLength=duration)
-                    m.append(new_note)
-                    
-                if counter96 <= 96:
-                    # aggregate to last note duration first and then rest
-                    
-                    # add rests
-                    duration = min(((96 - counter96) * 4) / 96, 4)
-                    #print('less')
-                    new_note = m21.note.Rest(quarterLength=duration)
-                    m.append(new_note)
-                    counter96 = 0
-                else:
-                    #print('more')
-                    counter96 -= 96
-                    
-                    #print(offset96, duration96, duration * 12)
-            
-                    # durations in a beat should sum to 96
-                    # if a pitch exceeds no problem 
-                    # calculate by how much and update next bar 96counter
-                    
-                thisBarNotes = thisBarNotes[2:].reset_index()
-                '''
+                        counter96 = 0
+                    else:
+                        #print('more')
+                        counter96 -= 96
+                        
+                        #print(offset96, duration96, duration * 12)
                 
-        xml_converter = m21.converter.subConverters.ConverterMusicXML()
-        xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml2/'+song_name+'.xml')
-        #except:
-            #print('Not able to convert ', song_name)
+                        # durations in a beat should sum to 96
+                        # if a pitch exceeds no problem 
+                        # calculate by how much and update next bar 96counter
+                        
+                    thisBarNotes = thisBarNotes[2:].reset_index()
+                    '''
+                    
+            xml_converter = m21.converter.subConverters.ConverterMusicXML()
+            xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml2/'+song_name+'.xml')
+        except:
+            print('Not able to convert ', song_name)
     
 
 
