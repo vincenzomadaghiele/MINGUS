@@ -126,7 +126,7 @@ if __name__=="__main__":
                         # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
                         possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
                                               unit * 72, unit * 36, unit * 18, unit * 9, 
-                                              unit * 32]
+                                              unit * 16]
         
                         # Define durations dictionary
                         dur_dict = {}

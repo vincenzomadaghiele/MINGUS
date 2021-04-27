@@ -73,7 +73,7 @@ if __name__ == '__main__':
         duration_to_m21['dot quarter'] = 1 + 1/2
         duration_to_m21['dot 8th'] = 1/2 + 1/4
         duration_to_m21['dot 16th'] = 1/4 + 1/8
-        duration_to_m21['half note triplet'] = 4/3
+        duration_to_m21['half note triplet'] = 1/6
     
         # create a new m21 stream
         m = m21.stream.Measure()
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         # convert to xml
         try:
             xml_converter = m21.converter.subConverters.ConverterMusicXML()
-            xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml/' + songID + '.xml')
+            xml_converter.write(stream, 'musicxml', 'data/{con.DATASET}xml/' + songID + '.xml')
         except:
             pass
         previousID = songID
