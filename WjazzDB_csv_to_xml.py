@@ -49,7 +49,7 @@ if __name__ == '__main__':
     
     source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    source_songs = ["data/WjazzDBcsv/csv_beats/CharlieParker_Billie'sBounce_Solo.csv"]
+    #source_songs = ["data/WjazzDBcsv/csv_beats/CharlieParker_Billie'sBounce_Solo.csv"]
     
     for csv_path in source_songs:
         
@@ -116,13 +116,6 @@ if __name__ == '__main__':
                         #break
                     #break
                 
-                # append chords
-                if row['chord'] != 'NC':
-                    m21chord = WjazzToMusic21[row['chord']]
-                    h = m21.harmony.ChordSymbol(m21chord)
-                    m.insert(row['beat']-1, h)
-                    chord_counter += 1
-                    last_chord = row['chord']
                 
                 # find all notes in the bar
                 if row['beat'] == 4:
@@ -225,16 +218,26 @@ if __name__ == '__main__':
                     for note in notes:
                         if note[0] == 'R':
                             new_note = m21.note.Rest(quarterLength=note[1])
-                            m.append(new_note)
+                            m.insert(bar_offset, new_note)
                             bar_offset += note[1]
                         else:
                             new_note = m21.note.Note(midi=note[0], quarterLength=note[1])
-                            m.append(new_note)
+                            m.insert(bar_offset, new_note)
                             bar_offset += note[1]
-                    print(bar_offset)
+                    #print(bar_offset)
                     if bar_offset < 4:
                         new_note = m21.note.Rest(quarterLength = 4-bar_offset)
-                        m.append(new_note)
+                        m.insert(bar_offset, new_note)
+                        bar_offset = 0
+                        
+                # append chords
+                if row['chord'] != 'NC':
+                    m21chord = WjazzToMusic21[row['chord']]
+                    h = m21.harmony.ChordSymbol(m21chord)
+                    m.insert(row['beat']-1, h)
+                    chord_counter += 1
+                    last_chord = row['chord']
+
                     
                     '''
                     # constants for iteration
@@ -308,7 +311,7 @@ if __name__ == '__main__':
                     '''
                     
             xml_converter = m21.converter.subConverters.ConverterMusicXML()
-            xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml3/'+song_name+'.xml')
+            xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml4/'+song_name+'.xml')
         except:
             print('Not able to convert ', song_name)
     
