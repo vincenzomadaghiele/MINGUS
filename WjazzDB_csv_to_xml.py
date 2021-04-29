@@ -133,7 +133,7 @@ if __name__ == '__main__':
     
     source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    #source_songs = ["data/WjazzDBcsv/csv_beats/JohnColtrane_Mr.P.C._Solo.csv"]
+    #source_songs = ["data/WjazzDBcsv/csv_beats/JoshuaRedman_HomeFries_Solo.csv"]
     
     for csv_path in source_songs:
         
@@ -203,7 +203,7 @@ if __name__ == '__main__':
                             current_bar = row['bar']
                             current_bar_start_time = row['onset']
                             chord_counter = 0
-                            #if row['bar'] == 2:
+                            #if row['bar'] == 34:
                                 #break
                             #break
                         
@@ -327,8 +327,18 @@ if __name__ == '__main__':
                         if row['chord'] != 'NC':
                             if row['chord'] in WjazzToMusic21.keys():
                                 m21chord = WjazzToMusic21[row['chord']]
+                                #print(row['chord'], m21chord)
                             else:
                                 m21chord = WjazzChordToM21(row['chord'])
+                            # Handle exceptions
+                            chord_components = [char for char in m21chord]
+                            m21chord = ''
+                            for kk in range(len(chord_components)):
+                                m21chord += chord_components[kk]
+                                if kk != len(chord_components) - 1:
+                                    if chord_components[kk] == '7' and (chord_components[kk+1] != 'b' or chord_components[kk+1] != '#'):
+                                        break
+                            
                             h = m21.harmony.ChordSymbol(m21chord)
                             m.insert(row['beat']-1, h)
                             chord_counter += 1

@@ -5,27 +5,15 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
-ToDo:        
+ToDo:
     Model:
         - add next chord and offset to NottinghamDB
-        - condition on how many beat to next chord
         - fine tune parameters for NottinghamDB training 
-
-    Evaluation:
         - evaluate BebopNet generations with my metrics
-        - export midi to audio and evaluate long-term coherence 
-            with Jazz Transformer metric (Matlab)
-        - evaluate MINGUS multiple conditioning on all metrics
         - evaluate SeqAttn generations with my metrics
+        - train MINGUS from xml
+        - train MINGUS from xml
     
-    Competitors:
-        - train BebopNet on WjazzDB
-        - generate songs with BebopNet
-        - export into audio good quality
-        - export WjazzDB files chords and melody separate to midi
-        - export NottinghamDB files chords and melody separate to midi
-        - train SeqAttn conditional on that
-
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)
         - parallel conditional generation (melody + bass)
@@ -35,6 +23,13 @@ ToDo:
             note generation in python (communication via osc)
             might require training with different bass embedding layer
         - melody harmonization
+
+Pre-processing data:
+    - load WjazzDB through specific function
+    - load NottinghamDB through specific function
+    - load data from xml --> todo
+    - load data from abc --> todo
+    - load data from midi --> todo
 
 Training instruction:
     - to train with different dataset create a json file in the same format 
