@@ -666,7 +666,7 @@ if __name__ == '__main__':
     generate_dataset = True
     
     if generate_dataset:
-        out_path = 'output/fromXML/'
+        out_path = 'output/00_MINGUS_gens/'
         generated_path = 'generated/'
         original_path = 'original/'
         num_tunes = 20
@@ -674,7 +674,7 @@ if __name__ == '__main__':
         original_structuredSongs = []
 
 
-        source_path = 'output/xmlStandards/*.xml'
+        source_path = 'output/tunes4eval/xml/*.xml'
         source_songs = glob.glob(source_path)
         for xml_path in source_songs:
             

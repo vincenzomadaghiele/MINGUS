@@ -11,8 +11,6 @@ ToDo:
         - Problems with conversion function
         - Accuracy not available on BebopNet
         - choosing standards for evaluation
-        - 
-        
         
     Model:
         - add next chord and offset to NottinghamDB
