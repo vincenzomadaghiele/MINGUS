@@ -5,13 +5,7 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
-ToDo:
-    Meeting:
-        - Adjusting data to do all experiments with the same dataset
-        - Problems with conversion function
-        - Accuracy not available on BebopNet
-        - choosing standards for evaluation
-        
+ToDo:        
     Model:
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord
