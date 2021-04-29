@@ -6,17 +6,14 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    Next week:
-        - Generate songs on BebopNet
-        - Generate songs on MINGUS
-        - Collect metrics (on BebopNet generated standards 
-                           from xmls converted to midi)
-        - Maybe retrain with quarter note triplet (and eight note triplets?)
+    Meeting:
+        - Adjusting data to do all experiments with the same dataset
+        - Problems with conversion function
+        - Accuracy not available on BebopNet
+        - choosing standards for evaluation
+        - 
         
-        - try generation with only certain styles 
-            to obtain better sounding gens
-        - compare 
-    
+        
     Model:
         - add next chord and offset to NottinghamDB
         - condition on how many beat to next chord
