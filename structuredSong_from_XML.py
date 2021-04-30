@@ -5,28 +5,23 @@ Created on Fri Apr 30 09:27:20 2021
 
 @author: vincenzomadaghiele
 """
-import pretty_midi
 import music21 as m21
 import json
 import glob
 import numpy as np
-import torch
-import torch.nn as nn
-import loadDBs as dataset
-import MINGUS_condModel as mod
-import MINGUS_const as con
-import MINGUS_condGenerate as gen
 
 
 def xmlToStructuredSong(xml_path):
     
+    print('Loading song: ', xml_path)
+    
     # Import xml file
     possible_durations = [4, 2, 1, 1/2, 1/4, 1/8,
                           3, 1 + 1/2, 1/2 + 1/4, 1/4 + 1/8, 
-                          4/3]
+                          1/6]
     
     rests_durations = [4, 2, 1, 1/2, 1/4, 1/8,
-                       3, 3/2, 3/4, 
+                       3, 3/2, 3/4,  3/8, 
                        1/6]
 
 
@@ -219,16 +214,16 @@ def arraysFromStructuredSong(structuredTune):
     beat = []
     offset = []
     for bar in structuredTune['bars']:
-        for beat in bar:
-            for p in beat['pitch']:
+        for bea in bar['beats']:
+            for p in bea['pitch']:
                 pitch.append(p)
-                chord.append(beat['chord'])
-                next_chord.append(beat['next chord'])
-                bass.append(beat['bass'])
-                beat.append(beat['num beat'])
-            for d in beat['duration']:
+                chord.append(bea['chord'])
+                next_chord.append(bea['next chord'])
+                bass.append(bea['bass'])
+                beat.append(bea['num beat'])
+            for d in bea['duration']:
                 duration.append(d)
-            for o in beat['offset']:
+            for o in bea['offset']:
                 offset.append(o)
     
     song['pitch'] = pitch
@@ -250,7 +245,22 @@ if __name__ == '__main__':
     source_songs = glob.glob(source_path)
     for xml_path in source_songs:
         structuredTune = xmlToStructuredSong(xml_path)
-        
-        
-        
-        
+        tune = arraysFromStructuredSong(structuredTune)
+        structuredSongs.append(structuredTune)
+        songs.append(tune)
+    
+    # split into train, validation and test
+    songs_split = {}
+    # train: 70% 
+    songs_split['train'] = songs[:int(len(songs)*0.7)]
+    # train: 10% 
+    songs_split['validation'] = songs[int(len(songs)*0.7)+1:int(len(songs)*0.7)+1+int(len(songs)*0.1)]
+    # train: 20%
+    songs_split['test'] = songs[int(len(songs)*0.7)+1+int(len(songs)*0.1):]
+    # structured songs (ordered by bar and beats)
+    songs_split['structured for generation'] = structuredSongs
+    
+    # Convert dict to JSON and SAVE IT
+    with open('data/CustomDB.json', 'w') as fp:
+        json.dump(songs_split, fp, indent=4)
+
