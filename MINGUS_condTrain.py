@@ -6,12 +6,14 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
+    - Format for evaluation:
+        midi with only melody and chords
+    
     Model:
         - add next chord and offset to NottinghamDB
         - fine tune parameters for NottinghamDB training 
         - evaluate BebopNet generations with my metrics
         - evaluate SeqAttn generations with my metrics
-        - train MINGUS from xml
     
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)

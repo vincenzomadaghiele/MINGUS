@@ -20,7 +20,7 @@ augmentation_const = 2
 
 DATASET = 'CustomDB'
 
-EPOCHS = 10
+EPOCHS = 200
 
 COND_TYPE_PITCH = 'I-C-NC-BE'
 COND_TYPE_DURATION = 'I-B-BE-O' # change cond on loading and saving cmds!! 

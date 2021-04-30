@@ -19,14 +19,15 @@ import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
 import MINGUS_condGenerate as gen
+import CustomDB_dataPrep as cus
 
 def xmlToStructuredSong(xml_path, datasetToMusic21,
                         datasetToMidiChords, datasetToChordComposition, datasetChords):
     
     # Import xml file
-    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8,
-                          3, 1 + 1/2, 1/2 + 1/4, 1/4 + 1/8, 
-                          4/3]
+    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8, 1/16,
+                          3, 3/2, 3/4, 3/8, 
+                          1/6, 1/12]
 
     # Define durations dictionary
     dur_dict = {}
@@ -36,11 +37,13 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     dur_dict[possible_durations[3]] = '8th'
     dur_dict[possible_durations[4]] = '16th'
     dur_dict[possible_durations[5]] = '32th'
-    dur_dict[possible_durations[6]] = 'dot half'
-    dur_dict[possible_durations[7]] = 'dot quarter'
-    dur_dict[possible_durations[8]] = 'dot 8th'
-    dur_dict[possible_durations[9]] = 'dot 16th'
-    dur_dict[possible_durations[10]] = 'half note triplet'
+    dur_dict[possible_durations[6]] = '64th'
+    dur_dict[possible_durations[7]] = 'dot half'
+    dur_dict[possible_durations[8]] = 'dot quarter'
+    dur_dict[possible_durations[9]] = 'dot 8th'
+    dur_dict[possible_durations[10]] = 'dot 16th'
+    dur_dict[possible_durations[11]] = 'half note triplet'
+    dur_dict[possible_durations[12]] = 'quarter note triplet'
     
     # invert dict from Wjazz to Music21 chords
     Music21ToWjazz = {v: k for k, v in datasetToMusic21.items()}
@@ -48,7 +51,7 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     s = m21.converter.parse(xml_path)
     
     new_structured_song = {}
-    new_structured_song['title'] = xml_path[20:-4]
+    new_structured_song['title'] = xml_path[22:-4]
     new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
     new_structured_song['beat duration [sec]'] = 60 / new_structured_song['tempo']
     
@@ -243,43 +246,15 @@ def generateOverStandard(tune, num_chorus, temperature,
     
     print('Generating over song %s' % (tune['title']))
     
-    '''
-    # define duration dictionary
-    unit = beat_duration_sec * 4 / 96.
-    # possible note durations in seconds 
-    # (it is possible to add representations - include 32nds, quintuplets...):
-    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
-    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
-                          unit * 72, unit * 36, unit * 18, unit * 9, 
-                          unit * 32, unit * 16, unit * 8, unit * 4]
-
-    # Define durations dictionary
-    dur_dict = {}
-    dur_dict[possible_durations[0]] = 'full'
-    dur_dict[possible_durations[1]] = 'half'
-    dur_dict[possible_durations[2]] = 'quarter'
-    dur_dict[possible_durations[3]] = '8th'
-    dur_dict[possible_durations[4]] = '16th'
-    dur_dict[possible_durations[5]] = '32th'
-    dur_dict[possible_durations[6]] = 'dot half'
-    dur_dict[possible_durations[7]] = 'dot quarter'
-    dur_dict[possible_durations[8]] = 'dot 8th'
-    dur_dict[possible_durations[9]] = 'dot 16th'
-    dur_dict[possible_durations[10]] = 'half note triplet'
-    dur_dict[possible_durations[11]] = 'quarter note triplet'
-    dur_dict[possible_durations[12]] = '8th note triplet'
-    dur_dict[possible_durations[13]] = '16th note triplet'
-    inv_dur_dict = {v: k for k, v in dur_dict.items()}
-    '''
     
     # sampling of the measure
-    unit = beat_duration_sec * 4 / 96.
+    unit = beat_duration_sec * 4 / 192.
     # possible note durations in seconds 
     # (it is possible to add representations - include 32nds, quintuplets...):
     # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
-    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
-                          unit * 72, unit * 36, unit * 18, unit * 9, 
-                          unit * 32]
+    possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
+                          unit * 144, unit * 72, unit * 36, unit * 18, 
+                          unit * 32, unit * 16]
 
     # Define durations dictionary
     dur_dict = {}
@@ -289,11 +264,13 @@ def generateOverStandard(tune, num_chorus, temperature,
     dur_dict[possible_durations[3]] = '8th'
     dur_dict[possible_durations[4]] = '16th'
     dur_dict[possible_durations[5]] = '32th'
-    dur_dict[possible_durations[6]] = 'dot half'
-    dur_dict[possible_durations[7]] = 'dot quarter'
-    dur_dict[possible_durations[8]] = 'dot 8th'
-    dur_dict[possible_durations[9]] = 'dot 16th'
-    dur_dict[possible_durations[10]] = 'half note triplet'
+    dur_dict[possible_durations[6]] = '64th'
+    dur_dict[possible_durations[7]] = 'dot half'
+    dur_dict[possible_durations[8]] = 'dot quarter'
+    dur_dict[possible_durations[9]] = 'dot 8th'
+    dur_dict[possible_durations[10]] = 'dot 16th'
+    dur_dict[possible_durations[11]] = 'half note triplet'
+    dur_dict[possible_durations[12]] = 'quarter note triplet'
     inv_dur_dict = {v: k for k, v in dur_dict.items()}
     
     
@@ -538,6 +515,21 @@ if __name__ == '__main__':
         pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
         NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
 
+    elif con.DATASET == 'CustomDB':
+        
+        CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                    con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+            
+        #train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = CustomDB.getTrainingData()
+        #val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = CustomDB.getValidationData()
+        #test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = CustomDB.getTestData()
+
+        songs = CustomDB.getOriginalSongDict()
+        structuredSongs = CustomDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
+        WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = CustomDB.getChordDicts()
+
 
     #%% LOAD PRE-TRAINED MODELS
     
@@ -585,6 +577,10 @@ if __name__ == '__main__':
         
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
+    
+    elif con.DATASET == 'CustomDB':
+        savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+    
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
     
     
@@ -632,20 +628,25 @@ if __name__ == '__main__':
         
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
+    
+    elif con.DATASET == 'CustomDB':
+        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+    
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
 
     #%% Import xml file
     
-    xml_path = 'output/xmlStandards/All_The_Things_You_Are.xml'    
+    xml_path = 'output/tunes4eval/xml/All_The_Things_You_Are_short.xml'    
     tuneFromXML, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
-                                                                                                                       WjazzToMusic21,
-                                                                                                                       WjazzToMidiChords, 
-                                                                                                                       WjazzToChordComposition, 
-                                                                                                                       WjazzChords)
+                                                                                                               WjazzToMusic21,
+                                                                                                               WjazzToMidiChords, 
+                                                                                                               WjazzToChordComposition, 
+                                                                                                               WjazzChords)
     
-    #%% GENERATE ON A TUNE
-    
+    #tuneFromXML = cus.xmlToStructuredSong(xml_path)
+
+    # GENERATE ON A TUNE
     num_chorus = 3
     temperature = 1
     
@@ -657,13 +658,13 @@ if __name__ == '__main__':
                                                isJazz)
     title = new_structured_song['title']
     pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
-    pm.write('output/fromXML/'+ title + '.mid')
+    pm.write('output/00_MINGUS_gens/'+ title + '.mid')
 
     
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = True
+    generate_dataset = False
     
     if generate_dataset:
         out_path = 'output/00_MINGUS_gens/'
