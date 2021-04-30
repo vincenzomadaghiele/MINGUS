@@ -647,7 +647,7 @@ if __name__ == '__main__':
     #tuneFromXML = cus.xmlToStructuredSong(xml_path)
 
     # GENERATE ON A TUNE
-    num_chorus = 3
+    num_chorus = 4
     temperature = 1
     
     isJazz = False
