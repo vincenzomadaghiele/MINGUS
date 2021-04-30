@@ -24,14 +24,11 @@ def xmlToStructuredSong(xml_path):
     print('Loading song: ', xml_path)
     
     # Import xml file
-    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8,
-                          3, 1 + 1/2, 1/2 + 1/4, 1/4 + 1/8, 
-                          1/6]
+    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8, 1/16,
+                          3, 3/2, 3/4, 3/8, 
+                          1/6, 1/12]
     
-    rests_durations = [4, 2, 1, 1/2, 1/4, 1/8,
-                       3, 3/2, 3/4,  3/8, 
-                       1/6]
-
+    min_rest = 1/8
 
     # Define durations dictionary
     dur_dict = {}
@@ -41,19 +38,18 @@ def xmlToStructuredSong(xml_path):
     dur_dict[possible_durations[3]] = '8th'
     dur_dict[possible_durations[4]] = '16th'
     dur_dict[possible_durations[5]] = '32th'
-    dur_dict[possible_durations[6]] = 'dot half'
-    dur_dict[possible_durations[7]] = 'dot quarter'
-    dur_dict[possible_durations[8]] = 'dot 8th'
-    dur_dict[possible_durations[9]] = 'dot 16th'
-    dur_dict[possible_durations[10]] = 'half note triplet'
-    
-    # invert dict from Wjazz to Music21 chords
-    #Music21ToWjazz = {v: k for k, v in datasetToMusic21.items()}
+    dur_dict[possible_durations[6]] = '64th'
+    dur_dict[possible_durations[7]] = 'dot half'
+    dur_dict[possible_durations[8]] = 'dot quarter'
+    dur_dict[possible_durations[9]] = 'dot 8th'
+    dur_dict[possible_durations[10]] = 'dot 16th'
+    dur_dict[possible_durations[11]] = 'half note triplet'
+    dur_dict[possible_durations[12]] = 'quarter note triplet'
     
     s = m21.converter.parse(xml_path)
     
     new_structured_song = {}
-    new_structured_song['title'] = xml_path[20:-4]
+    new_structured_song['title'] = xml_path[15:-4]
     new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
     new_structured_song['beat duration [sec]'] = 60 / new_structured_song['tempo']
     
@@ -77,14 +73,15 @@ def xmlToStructuredSong(xml_path):
             if 'Rest' in note.classSet:
                 # detect rests
                 pitch = 'R'
-                distance = np.abs(np.array(rests_durations) - note.quarterLength)
-                idx = distance.argmin()
-                duration = dur_dict[rests_durations[idx]]
-                offset = int(bar_duration * 96 / 4)
-                # update beat arrays 
-                beat_pitch.append(pitch)
-                beat_duration.append(duration)
-                beat_offset.append(offset)            
+                if note.quarterLength > min_rest:
+                    distance = np.abs(np.array(possible_durations) - note.quarterLength)
+                    idx = distance.argmin()
+                    duration = dur_dict[possible_durations[idx]]
+                    offset = int(bar_duration * 96 / 4)
+                    # update beat arrays 
+                    beat_pitch.append(pitch)
+                    beat_duration.append(duration)
+                    beat_offset.append(offset)            
             
             elif 'ChordSymbol' in note.classSet:
                 #chord

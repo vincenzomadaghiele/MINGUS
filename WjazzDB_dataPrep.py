@@ -120,14 +120,14 @@ if __name__=="__main__":
                         '''
                         
                         # sampling of the measure
-                        unit = beat_duration_sec * 4 / 96.
+                        unit = beat_duration_sec * 4 / 192.
                         # possible note durations in seconds 
                         # (it is possible to add representations - include 32nds, quintuplets...):
                         # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
-                        possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
-                                              unit * 72, unit * 36, unit * 18, unit * 9, 
-                                              unit * 16]
-        
+                        possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
+                                              unit * 144, unit * 72, unit * 36, unit * 18, 
+                                              unit * 32, unit * 16]
+                    
                         # Define durations dictionary
                         dur_dict = {}
                         dur_dict[possible_durations[0]] = 'full'
@@ -136,11 +136,13 @@ if __name__=="__main__":
                         dur_dict[possible_durations[3]] = '8th'
                         dur_dict[possible_durations[4]] = '16th'
                         dur_dict[possible_durations[5]] = '32th'
-                        dur_dict[possible_durations[6]] = 'dot half'
-                        dur_dict[possible_durations[7]] = 'dot quarter'
-                        dur_dict[possible_durations[8]] = 'dot 8th'
-                        dur_dict[possible_durations[9]] = 'dot 16th'
-                        dur_dict[possible_durations[10]] = 'half note triplet'
+                        dur_dict[possible_durations[6]] = '64th'
+                        dur_dict[possible_durations[7]] = 'dot half'
+                        dur_dict[possible_durations[8]] = 'dot quarter'
+                        dur_dict[possible_durations[9]] = 'dot 8th'
+                        dur_dict[possible_durations[10]] = 'dot 16th'
+                        dur_dict[possible_durations[11]] = 'half note triplet'
+                        dur_dict[possible_durations[12]] = 'quarter note triplet'
                         inv_dur_dict = {v: k for k, v in dur_dict.items()}
                         
                         

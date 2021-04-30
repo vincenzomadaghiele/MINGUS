@@ -125,8 +125,7 @@ if __name__ == '__main__':
                           1/6, 1/12]
     
     rests_durations = [4, 2, 1, 1/2, 1/4, 1/8,
-                       3, 3/2, 3/4, 
-                       1/6]
+                       3, 3/2, 3/4, 1/6]
 
     # Load csv as dataframe
     
