@@ -97,14 +97,14 @@ if __name__ == '__main__':
         
         CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                                     con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+            
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
         
-        vocabPitch, vocabDuration, vocabBeat = CustomDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
         
-        pitch_to_ix, duration_to_ix, beat_to_ix = CustomDB.getInverseVocabs()
-        
-        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = CustomDB.getTrainingData()
-        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = CustomDB.getValidationData()
-        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = CustomDB.getTestData()
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = CustomDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = CustomDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = CustomDB.getTestData()
     
     
     #%% PITCH MODEL TRAINING

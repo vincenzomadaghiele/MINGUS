@@ -18,9 +18,9 @@ AUGMENTATION = False
 SEGMENTATION = True
 augmentation_const = 2
 
-DATASET = 'WjazzDB'
+DATASET = 'CustomDB'
 
-EPOCHS = 100
+EPOCHS = 5
 
 COND_TYPE_PITCH = 'I-C-NC-BE'
 COND_TYPE_DURATION = 'I-B-BE-O' # change cond on loading and saving cmds!! 

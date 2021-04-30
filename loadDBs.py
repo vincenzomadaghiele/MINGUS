@@ -133,11 +133,36 @@ def separateSeqs(seq_pitch, seq_duration,
     counter = 0
     for i in range(len(seq_pitch)):
         
-        new_pitch.append(seq_pitch[i])
+        # ensure pitch is int
+        if seq_pitch[i] == 'R':
+            new_pitch.append(seq_pitch[i])
+        else:
+            new_pitch.append(int(seq_pitch[i]))
         new_duration.append(seq_duration[i])
-        new_chord.append(seq_chord[i])
-        new_next_chord.append(seq_next_chord[i])
+        
+        # ensure pitch is int
+        ch = []
+        for n in seq_chord[i]:
+            if n != 'R':
+                ch.append(int(n))
+            else:
+                ch.append(n)
+        new_chord.append(ch)
+        
+        # ensure pitch is int
+        nch = []
+        for n in seq_next_chord[i]:
+            if n != 'R':
+                nch.append(int(n))
+            else:
+                nch.append(n)
+
+        new_next_chord.append(nch)
         new_bass.append(seq_bass[i])
+        
+        # ensure beat is not > 4
+        if seq_beat[i] > 4:
+            seq_beat[i] = 4
         new_beat.append(seq_beat[i])
         new_offset.append(seq_offset[i])
         
@@ -1734,7 +1759,22 @@ class CustomDB():
             for chord in chord_list:
                 if chord not in unique_chords:
                     unique_chords.append(chord)
+                    
+        for chord_list in next_chord_train:
+            for chord in chord_list:
+                if chord not in unique_chords:
+                    unique_chords.append(chord)
         
+        for chord_list in next_chord_validation:
+            for chord in chord_list:
+                if chord not in unique_chords:
+                    unique_chords.append(chord)
+        
+        for chord_list in next_chord_test:
+            for chord in chord_list:
+                if chord not in unique_chords:
+                    unique_chords.append(chord)
+                
         # substitute for chord representation compatibility between music21 and WjazzDB
         # to do this I have extracted all unique chords and operated some simplification
         # to the chord notes in order for them to be recognized by music21
@@ -2165,6 +2205,7 @@ class CustomDB():
         # TOKENIZE AND BATCHIFY
         
         print('Batching...')
+        
         
         train_pitch_batched = batchify(pitch_train, TRAIN_BATCH_SIZE, pitch_to_ix, device)
         val_pitch_batched = batchify(pitch_validation, EVAL_BATCH_SIZE, pitch_to_ix, device)

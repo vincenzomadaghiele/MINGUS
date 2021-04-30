@@ -10,6 +10,14 @@ import json
 import glob
 import numpy as np
 
+import torch
+import MINGUS_const as con
+import loadDBs as dataset
+
+# Device configuration
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+torch.manual_seed(1)
+
 
 def xmlToStructuredSong(xml_path):
     
@@ -216,7 +224,10 @@ def arraysFromStructuredSong(structuredTune):
     for bar in structuredTune['bars']:
         for bea in bar['beats']:
             for p in bea['pitch']:
-                pitch.append(p)
+                if p == 'R':
+                    pitch.append(p)
+                else:
+                    pitch.append(int(p))
                 chord.append(bea['chord'])
                 next_chord.append(bea['next chord'])
                 bass.append(bea['bass'])
@@ -263,4 +274,18 @@ if __name__ == '__main__':
     # Convert dict to JSON and SAVE IT
     with open('data/CustomDB.json', 'w') as fp:
         json.dump(songs_split, fp, indent=4)
+        
+    # Load the DB to see if everything runs correctly
+    
+    CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+    vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
+    
+    pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
+    
+    train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = CustomDB.getTrainingData()
+    val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = CustomDB.getValidationData()
+    test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = CustomDB.getTestData()
+
 
