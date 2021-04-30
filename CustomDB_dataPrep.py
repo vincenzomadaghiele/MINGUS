@@ -9,7 +9,6 @@ import music21 as m21
 import json
 import glob
 import numpy as np
-
 import torch
 import MINGUS_const as con
 import loadDBs as dataset
@@ -47,9 +46,9 @@ def xmlToStructuredSong(xml_path):
     dur_dict[possible_durations[12]] = 'quarter note triplet'
     
     s = m21.converter.parse(xml_path)
-    
+        
     new_structured_song = {}
-    new_structured_song['title'] = xml_path[15:-4]
+    new_structured_song['title'] = xml_path.split('/')[-1].split('.')[0]
     new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
     new_structured_song['beat duration [sec]'] = 60 / new_structured_song['tempo']
     

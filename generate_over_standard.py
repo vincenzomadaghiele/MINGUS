@@ -8,18 +8,23 @@ Created on Thu Apr 22 10:05:49 2021
 This scripts generates over a jazz standard given in XML format as input to the model
 """
 
-import pretty_midi
 import music21 as m21
 import json
 import glob
 import numpy as np
 import torch
-import torch.nn as nn
 import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
 import MINGUS_condGenerate as gen
 import CustomDB_dataPrep as cus
+
+
+# Device configuration
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+torch.manual_seed(1)
+
+
 
 def xmlToStructuredSong(xml_path, datasetToMusic21,
                         datasetToMidiChords, datasetToChordComposition, datasetChords):
@@ -477,11 +482,6 @@ def generateOverStandard(tune, num_chorus, temperature,
     return new_structured_song
 
 
-# Device configuration
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
-torch.manual_seed(1)
-
-
 if __name__ == '__main__':
 
     # LOAD DATA
@@ -650,7 +650,7 @@ if __name__ == '__main__':
     num_chorus = 3
     temperature = 1
     
-    isJazz = True
+    isJazz = False
     new_structured_song = generateOverStandard(tuneFromXML, num_chorus, temperature, 
                                                modelPitch, modelDuration, WjazzToMidiChords, 
                                                pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
@@ -658,16 +658,16 @@ if __name__ == '__main__':
                                                isJazz)
     title = new_structured_song['title']
     pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
-    pm.write('output/00_MINGUS_gens/'+ title + '.mid')
+    pm.write('output/' + title + '.mid')
 
     
     #%% BUILD A DATASET OF GENERATED TUNES
     
     # Set to True to generate dataset of songs
-    generate_dataset = False
+    generate_dataset = True
     
     if generate_dataset:
-        out_path = 'output/00_MINGUS_gens/'
+        out_path = 'output/gen4eval_WjazzDB/'
         generated_path = 'generated/'
         original_path = 'original/'
         num_tunes = 20
@@ -719,12 +719,50 @@ if __name__ == '__main__':
                 pm.write(out_path + original_path + tune['title'] + '.mid')
                 generated_structuredSongs.append(new_structured_song)
                 original_structuredSongs.append(tune)
+                
+            if con.DATASET == 'CustomDB':
+                isJazz = False
+                tune, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
+                                                                                                                   WjazzToMusic21,
+                                                                                                                   WjazzToMidiChords, 
+                                                                                                                   WjazzToChordComposition, 
+                                                                                                                   WjazzChords)
+
+                
+                new_structured_song = generateOverStandard(tune, num_chorus, temperature, 
+                                                       modelPitch, modelDuration, WjazzToMidiChords, 
+                                                       pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                       vocabPitch, vocabDuration,
+                                                       isJazz)
+                
+                pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
+                pm.write('output/00_MINGUS_gens/' + new_structured_song['title'] + '.mid')
+                generated_structuredSongs.append(new_structured_song)
+                
+        
+        if con.DATASET != 'CustomDB':
+            # Convert dict to JSON and SAVE IT
+            with open(out_path + generated_path + con.DATASET + '_generated.json', 'w') as fp:
+                json.dump(generated_structuredSongs, fp, indent=4)
+            with open(out_path + original_path + con.DATASET + '_original.json', 'w') as fp:
+                json.dump(original_structuredSongs, fp, indent=4)
+
+        else:
+            # convert reference to midi and structured song json
+            source_path = 'output/reference/xml/*.xml'
+            source_songs = glob.glob(source_path)
+            reference_structuredSongs = []
+            for xml_path in source_songs:
+                tune = cus.xmlToStructuredSong(xml_path)
+                reference_structuredSongs.append(tune)
+                pm = gen.structuredSongsToPM(tune, WjazzToMidiChords)
+                pm.write('output/reference/' + tune['title'] + '.mid')
             
-        # Convert dict to JSON and SAVE IT
-        with open(out_path + generated_path + con.DATASET + '_generated.json', 'w') as fp:
-            json.dump(generated_structuredSongs, fp, indent=4)
-        with open(out_path + original_path + con.DATASET + '_original.json', 'w') as fp:
-            json.dump(original_structuredSongs, fp, indent=4)
+            with open('output/reference/'+ con.DATASET + '_reference.json', 'w') as fp:
+                json.dump(reference_structuredSongs, fp, indent=4)
+            with open('output/00_MINGUS_gens/'+ con.DATASET + '_generated.json', 'w') as fp:
+                json.dump(generated_structuredSongs, fp, indent=4)
+
 
 
     

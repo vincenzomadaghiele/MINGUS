@@ -64,6 +64,7 @@ if __name__ == '__main__':
     EPOCHS = 20
     
     #%% Opening JSON file of multiple models scores
+    
     pitch_scores = open('scores/pitch.json',)
     pitch_scores = json.load(pitch_scores)
     duration_scores = open('scores/duration.json',)

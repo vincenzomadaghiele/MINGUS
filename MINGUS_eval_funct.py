@@ -13,7 +13,7 @@ import numpy as np
 import math
 import json
 import MINGUS_dataset_funct as dataset
-import MINGUS_model as mod
+#import MINGUS_model as mod
 from nltk.translate.bleu_score import corpus_bleu
 
 
@@ -305,7 +305,7 @@ def HarmonicCoherence(structuredSongs, chordToMusic21, datasetToMidiChord):
         for bar in tune['bars']:
             for beat in bar['beats']:
                 chord = beat['chord']
-                if chord != 'NC':
+                if chord != 'NC' and chord in datasetToMidiChord.keys():
                     # derive chord scale
                     scale = datasetChordToScale[chord]
                     

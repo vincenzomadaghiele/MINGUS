@@ -56,6 +56,21 @@ if __name__ == '__main__':
         pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
         NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
         
+    elif con.DATASET == 'CustomDB':
+        
+        CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                    con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+            
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = CustomDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = CustomDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = CustomDB.getTestData()
+
+        songs = CustomDB.getOriginalSongDict()
+        structuredSongs = CustomDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
+        WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = CustomDB.getChordDicts()
+
         
     #%% LOAD PRE-TRAINED MODELS
     
@@ -104,6 +119,10 @@ if __name__ == '__main__':
     
     elif con.DATASET == 'NottinghamDB':
         savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
+    
+    elif con.DATASET == 'CustomDB':
+        savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+    
     modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
         
     
@@ -152,6 +171,10 @@ if __name__ == '__main__':
     
     elif con.DATASET == 'NottinghamDB':
         savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
+    
+    elif con.DATASET == 'CustomDB':
+        savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+    
     modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
 
     
@@ -162,10 +185,12 @@ if __name__ == '__main__':
     generated_subpath = 'generated/'
     
     path = gen_common_path + original_subpath + con.DATASET + '_original.json'
+    path = 'output/reference/CustomDB_reference.json'
     with open(path) as f:
         original_structuredSongs = json.load(f)
         
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
+    path = 'output/00_MINGUS_gens/CustomDB_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
         
@@ -196,8 +221,10 @@ if __name__ == '__main__':
     
     # MGEval on generated midi files
     num_of_generations = 10
-    original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
-    generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
+    #original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
+    original_path = 'output/reference/*.mid'
+    #generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
+    generated_path = 'output/00_MINGUS_gens/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
@@ -216,6 +243,14 @@ if __name__ == '__main__':
         generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
                                                                                     NottinghamToMusic21, 
                                                                                     NottinghamToMidiChords)
+
+    elif con.DATASET == 'CustomDB':
+        original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
+                                                                                  WjazzToMusic21, 
+                                                                                  WjazzToMidiChords)
+        generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
+                                                                                    WjazzToMusic21, 
+                                                                                    WjazzToMidiChords)
 
     metrics_result['Harmonic coherence']['Original scale coherence'] = np.round_(original_scale_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Original chord coherence'] = np.round_(original_chord_coherence, decimals=4)
