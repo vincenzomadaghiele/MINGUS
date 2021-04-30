@@ -12,7 +12,6 @@ ToDo:
         - evaluate BebopNet generations with my metrics
         - evaluate SeqAttn generations with my metrics
         - train MINGUS from xml
-        - train MINGUS from xml
     
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)
@@ -25,9 +24,12 @@ ToDo:
         - melody harmonization
 
 Pre-processing data:
-    - load WjazzDB through specific function
+    - load WjazzDB through specific function 
+        (choosing it as input is already initialized)
     - load NottinghamDB through specific function
-    - load data from xml --> todo
+        (choosing it as input is already initialized)
+    - load data from xml
+        (initialization to be run before) --> todo
     - load data from abc --> todo
     - load data from midi --> todo
 
@@ -90,6 +92,19 @@ if __name__ == '__main__':
         train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = NottinghamDB.getTrainingData()
         val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = NottinghamDB.getValidationData()
         test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = NottinghamDB.getTestData()
+        
+    elif con.DATASET == 'CustomDB':
+        
+        CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                    con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+        
+        vocabPitch, vocabDuration, vocabBeat = CustomDB.getVocabs()
+        
+        pitch_to_ix, duration_to_ix, beat_to_ix = CustomDB.getInverseVocabs()
+        
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_bass_batched, train_beat_batched  = CustomDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = CustomDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = CustomDB.getTestData()
     
     
     #%% PITCH MODEL TRAINING

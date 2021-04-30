@@ -133,7 +133,7 @@ if __name__ == '__main__':
     
     source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    #source_songs = ["data/WjazzDBcsv/csv_beats/JoshuaRedman_HomeFries_Solo.csv"]
+    #source_songs = ["data/WjazzDBcsv/csv_beats/WoodyShaw_Rosewood_Solo.csv"]
     
     for csv_path in source_songs:
         
@@ -194,6 +194,15 @@ if __name__ == '__main__':
                                     m21chord = WjazzToMusic21[last_chord]
                                 else:
                                     m21chord = WjazzChordToM21(last_chord)
+                                # Handle exceptions
+                                chord_components = [char for char in m21chord]
+                                m21chord = ''
+                                for kk in range(len(chord_components)):
+                                    m21chord += chord_components[kk]
+                                    if kk != len(chord_components) - 1:
+                                        if chord_components[kk] == '7' and (chord_components[kk+1] != 'b' or chord_components[kk+1] != '#'):
+                                            break
+                                        
                                 h = m21.harmony.ChordSymbol(m21chord)
                                 m.insert(0, h)
                             m.number = current_bar
@@ -203,10 +212,8 @@ if __name__ == '__main__':
                             current_bar = row['bar']
                             current_bar_start_time = row['onset']
                             chord_counter = 0
-                            #if row['bar'] == 34:
-                                #break
-                            #break
-                        
+                            #if row['bar'] == 36:
+                                #break                        
                         
                         # find all notes in the bar
                         if row['beat'] == 1:
@@ -338,7 +345,7 @@ if __name__ == '__main__':
                                 if kk != len(chord_components) - 1:
                                     if chord_components[kk] == '7' and (chord_components[kk+1] != 'b' or chord_components[kk+1] != '#'):
                                         break
-                            
+                            #print(row['chord'], m21chord)
                             h = m21.harmony.ChordSymbol(m21chord)
                             m.insert(row['beat']-1, h)
                             chord_counter += 1
