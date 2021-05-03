@@ -28,7 +28,7 @@ torch.manual_seed(1)
 
 def xmlToStructuredSong(xml_path, datasetToMusic21,
                         datasetToMidiChords, datasetToChordComposition, datasetChords):
-    
+    '''
     # Import xml file
     possible_durations = [4, 2, 1, 1/2, 1/4, 1/8, 1/16,
                           3, 3/2, 3/4, 3/8, 
@@ -49,6 +49,26 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     dur_dict[possible_durations[10]] = 'dot 16th'
     dur_dict[possible_durations[11]] = 'half note triplet'
     dur_dict[possible_durations[12]] = 'quarter note triplet'
+    '''
+    
+    # Import xml file
+    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8,
+                          3, 3/2, 3/4,
+                          1/6, 1/12]
+    
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = '32th'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'half note triplet'
+    dur_dict[possible_durations[10]] = 'quarter note triplet'    
     
     # invert dict from Wjazz to Music21 chords
     Music21ToWjazz = {v: k for k, v in datasetToMusic21.items()}
@@ -251,7 +271,7 @@ def generateOverStandard(tune, num_chorus, temperature,
     
     print('Generating over song %s' % (tune['title']))
     
-    
+    '''
     # sampling of the measure
     unit = beat_duration_sec * 4 / 192.
     # possible note durations in seconds 
@@ -277,7 +297,31 @@ def generateOverStandard(tune, num_chorus, temperature,
     dur_dict[possible_durations[11]] = 'half note triplet'
     dur_dict[possible_durations[12]] = 'quarter note triplet'
     inv_dur_dict = {v: k for k, v in dur_dict.items()}
+    '''
     
+    # sampling of the measure
+    unit = beat_duration_sec * 4 / 96.
+    # possible note durations in seconds 
+    # (it is possible to add representations - include 32nds, quintuplets...):
+    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
+                          unit * 72, unit * 36, unit * 18, 
+                          unit * 16, unit * 8]
+
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = '32th'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'half note triplet'
+    dur_dict[possible_durations[10]] = 'quarter note triplet'
+    inv_dur_dict = {v: k for k, v in dur_dict.items()}
     
     # initialize counters
     bar_num = len(tune['bars'])

@@ -8,12 +8,10 @@ Created on Tue Mar 16 08:56:16 2021
 ToDo:
     - Format for evaluation:
         midi with only melody and chords
-    
-    Model:
-        - add next chord and offset to NottinghamDB
-        - fine tune parameters for NottinghamDB training 
-        - evaluate BebopNet generations with my metrics
-        - evaluate SeqAttn generations with my metrics
+    - add next chord and offset to NottinghamDB
+    - fine tune parameters for NottinghamDB training 
+    - evaluate BebopNet generations with my metrics
+    - evaluate SeqAttn generations with my metrics
     
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)
@@ -24,29 +22,17 @@ ToDo:
             note generation in python (communication via osc)
             might require training with different bass embedding layer
         - melody harmonization
-
-Pre-processing data:
-    - load WjazzDB through specific function 
-        (choosing it as input is already initialized)
-    - load NottinghamDB through specific function
-        (choosing it as input is already initialized)
-    - load data from xml
-        (initialization to be run before) --> todo
-    - load data from abc --> todo
-    - load data from midi --> todo
-
-Training instruction:
-    - to train with different dataset create a json file in the same format 
-        of the three given song datasets:
-            divided in train, validation, test and structured songs
-            give clear information about the format
-        different datasets can be automatically transcribed with the functions provided
-    - to train with the given datasets just modify the MINGUS_const file,
-        which contains the training parameters
-    - do not train with structured song data:
-        the rests duration are not the same! 
-        OR take data from structured song but implement function to 'sum' rests
     
+Procedure with custom data:
+    1. Put data in the folder data/customXML
+    2. Run CustomDB_dataPrep.py
+        --> results in data/CustomDB.json
+    3. Run MINGUS_condTrain.py to train
+        --> results in models/CustomDB and runs/CustomDB
+    4. Run generate_over_standards.py to generate
+        --> results in output/00_MINGUS_gens
+    5. Run MINGUS_condEval.py to evaluate songs
+        --> results in metrics/CustomDB
 """
 
 import torch

@@ -23,13 +23,13 @@ torch.manual_seed(1)
 if __name__ == '__main__':
 
     # LOAD DATA       
-    WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+    CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                  con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
     
-    vocabPitch, vocabDuration, vocabBeat, vocabOffset = WjazzDB.getVocabs()
+    vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
     
-    songs = WjazzDB.getOriginalSongDict()
-        
+    songs = CustomDB.getOriginalSongDict()
+    
     pitch = []
     duration = []
     chord = []

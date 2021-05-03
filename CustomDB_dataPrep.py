@@ -22,12 +22,13 @@ def xmlToStructuredSong(xml_path):
     
     print('Loading song: ', xml_path)
     
+    '''
     # Import xml file
     possible_durations = [4, 2, 1, 1/2, 1/4, 1/8, 1/16,
                           3, 3/2, 3/4, 3/8, 
                           1/6, 1/12]
     
-    min_rest = 1/8
+    min_rest = 1/16
 
     # Define durations dictionary
     dur_dict = {}
@@ -44,6 +45,29 @@ def xmlToStructuredSong(xml_path):
     dur_dict[possible_durations[10]] = 'dot 16th'
     dur_dict[possible_durations[11]] = 'half note triplet'
     dur_dict[possible_durations[12]] = 'quarter note triplet'
+    '''
+    
+    # Import xml file
+    possible_durations = [4, 2, 1, 1/2, 1/4, 1/8,
+                          3, 3/2, 3/4,
+                          1/6, 1/12]
+    
+    min_rest = 1/8
+
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = '32th'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'half note triplet'
+    dur_dict[possible_durations[10]] = 'quarter note triplet'
+
     
     s = m21.converter.parse(xml_path)
         
@@ -80,7 +104,7 @@ def xmlToStructuredSong(xml_path):
                     # update beat arrays 
                     beat_pitch.append(pitch)
                     beat_duration.append(duration)
-                    beat_offset.append(offset)            
+                    beat_offset.append(offset)
             
             elif 'ChordSymbol' in note.classSet:
                 #chord
