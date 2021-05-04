@@ -257,6 +257,7 @@ if __name__ == '__main__':
     metrics_result['Harmonic coherence']['Original chord coherence'] = np.round_(original_chord_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Generated scale coherence'] = np.round_(generated_scale_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Generated chord coherence'] = np.round_(generated_chord_coherence, decimals=4)
+    
     '''
     # loss, perplexity and accuracy of pitch model
     isPitch = True

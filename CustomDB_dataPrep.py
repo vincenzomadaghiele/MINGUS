@@ -52,7 +52,7 @@ def xmlToStructuredSong(xml_path):
                           3, 3/2, 3/4,
                           1/6, 1/12]
     
-    min_rest = 1/4
+    min_rest = 1/2
 
     # Define durations dictionary
     dur_dict = {}
@@ -295,11 +295,11 @@ if __name__ == '__main__':
     with open('data/CustomDB.json', 'w') as fp:
         json.dump(songs_split, fp, indent=4)
         
-    #%% Load the DB to see if everything runs correctly
+    # Load the DB to see if everything runs correctly
     
     CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
-        
+    
     vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
     
     pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
