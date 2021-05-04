@@ -19,12 +19,9 @@ import MINGUS_const as con
 import MINGUS_condGenerate as gen
 import CustomDB_dataPrep as cus
 
-
 # Device configuration
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 torch.manual_seed(1)
-
-
 
 def xmlToStructuredSong(xml_path, datasetToMusic21,
                         datasetToMidiChords, datasetToChordComposition, datasetChords):

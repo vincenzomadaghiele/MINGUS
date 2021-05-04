@@ -1714,9 +1714,9 @@ class CustomDB():
         # I have added one beat but the two songs could be removed 
         # or the beat substituted
         vocabBeat = {} 
-        for i in range(0,5): 
+        for i in range(0,4): 
             vocabBeat[i] = i+1
-        vocabBeat[5] = '<pad>'
+        vocabBeat[4] = '<pad>'
         # inverse dictionary
         beat_to_ix = {v: k for k, v in vocabBeat.items()}
         

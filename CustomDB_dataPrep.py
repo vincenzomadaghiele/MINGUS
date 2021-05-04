@@ -70,7 +70,7 @@ def xmlToStructuredSong(xml_path):
 
     
     s = m21.converter.parse(xml_path)
-        
+    
     new_structured_song = {}
     new_structured_song['title'] = xml_path.split('/')[-1].split('.')[0]
     new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     with open('data/CustomDB.json', 'w') as fp:
         json.dump(songs_split, fp, indent=4)
         
-    # Load the DB to see if everything runs correctly
+    #%% Load the DB to see if everything runs correctly
     
     CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                                 con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
