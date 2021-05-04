@@ -6,6 +6,7 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
+    - Best up to now: 1/4 min_rest (train on 100 epochs)
     - Format for evaluation:
         midi with only melody and chords
     - audio rendition of samples and complete app

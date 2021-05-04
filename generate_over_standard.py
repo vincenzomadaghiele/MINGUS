@@ -104,7 +104,7 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
                 # update beat arrays 
                 beat_pitch.append(pitch)
                 beat_duration.append(duration)
-                beat_offset.append(offset)            
+                beat_offset.append(offset)
             
             elif 'ChordSymbol' in note.classSet:
                 #chord

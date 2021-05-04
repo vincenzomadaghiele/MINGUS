@@ -20,7 +20,7 @@ augmentation_const = 2
 
 DATASET = 'CustomDB'
 
-EPOCHS = 50
+EPOCHS = 100
 
 COND_TYPE_PITCH = 'I-C-NC-B-O'
 COND_TYPE_DURATION = 'I-C-NC-B-O' 
