@@ -375,7 +375,7 @@ def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
             
             if beat['chord'] != last_chord:
                 # append last chord to pm inst
-                if last_chord != 'NC':
+                if last_chord != 'NC' and last_chord in datasetToMidiChords.keys():
                     for chord_pitch in datasetToMidiChords[last_chord][:3]:
                         chords_inst.notes.append(pretty_midi.Note(chord_velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
                 # update next chord start
@@ -408,7 +408,7 @@ def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
             next_beat_sec = (beat_counter + 1) * beat_duration_sec
     
     # append last chord
-    if last_chord != 'NC':
+    if last_chord != 'NC' and last_chord in datasetToMidiChords.keys():
         for chord_pitch in datasetToMidiChords[last_chord][:3]:
             chords_inst.notes.append(pretty_midi.Note(velocity, int(chord_pitch), chord_start, next_beat_sec - beat_duration_sec))
     if isJazz:

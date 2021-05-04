@@ -9,11 +9,10 @@ ToDo:
     - Format for evaluation:
         midi with only melody and chords
     - audio rendition of samples and complete app
-    - initialize metrics on app json DB
-    - midi with chords to structured songs
+    - initialize to empty metrics on app json DB
     - add next chord and offset to NottinghamDB
     - fine tune parameters for NottinghamDB training 
-    - evaluate BebopNet generations with my metrics
+    - midi with chords to structured songs
     - evaluate SeqAttn generations with my metrics
     
     Future steps:
