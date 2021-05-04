@@ -15,7 +15,7 @@ EVAL_BATCH_SIZE = 10
 
 BPTT = 35
 AUGMENTATION = False
-SEGMENTATION = True
+SEGMENTATION = False
 augmentation_const = 2
 
 DATASET = 'CustomDB'
