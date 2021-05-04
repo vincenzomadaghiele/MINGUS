@@ -52,7 +52,7 @@ def xmlToStructuredSong(xml_path):
                           3, 3/2, 3/4,
                           1/6, 1/12]
     
-    min_rest = 1/8
+    min_rest = 1/12
 
     # Define durations dictionary
     dur_dict = {}

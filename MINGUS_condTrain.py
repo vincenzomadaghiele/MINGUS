@@ -8,6 +8,9 @@ Created on Tue Mar 16 08:56:16 2021
 ToDo:
     - Format for evaluation:
         midi with only melody and chords
+    - audio rendition of samples and complete app
+    - initialize metrics on app json DB
+    - midi with chords to structured songs
     - add next chord and offset to NottinghamDB
     - fine tune parameters for NottinghamDB training 
     - evaluate BebopNet generations with my metrics
@@ -23,7 +26,7 @@ ToDo:
             might require training with different bass embedding layer
         - melody harmonization
     
-Procedure with custom data:
+Procedure to train with custom data:
     1. Put data in the folder data/customXML
     2. Run CustomDB_dataPrep.py
         --> results in data/CustomDB.json

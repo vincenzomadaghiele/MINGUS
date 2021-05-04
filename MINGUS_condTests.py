@@ -47,6 +47,20 @@ if __name__ == '__main__':
         val_pitch_batched, val_duration_batched, val_chord_batched, val_bass_batched, val_beat_batched  = NottinghamDB.getValidationData()
         test_pitch_batched, test_duration_batched, test_chord_batched, test_bass_batched, test_beat_batched  = NottinghamDB.getTestData()
     
+    elif con.DATASET == 'CustomDB':
+        
+        CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                    con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+            
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
+        
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
+        
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = CustomDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = CustomDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = CustomDB.getTestData()
+
+    
     # obtain array of all possible conditionings
     CONDS = ['I','C','NC','B','BE','O']
     POSSIBLE_CONDS = []
@@ -326,9 +340,9 @@ if __name__ == '__main__':
         print('Total training time for duration model: ', duration_end_time - duration_start_time)
     
     
-        with open('scores/pitch.json', 'w') as fp:
+        with open(f'scores/{con.DATASET}/pitch.json', 'w') as fp:
             json.dump(scoresPitch, fp, indent=4)
-        with open('scores/duration.json', 'w') as fp:
+        with open(f'scores/{con.DATASET}/duration.json', 'w') as fp:
             json.dump(scoresDuration, fp, indent=4)
 
         # Add generation and metrics here for final result

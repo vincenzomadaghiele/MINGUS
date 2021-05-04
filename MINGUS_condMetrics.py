@@ -58,6 +58,20 @@ if __name__ == '__main__':
         pitch_to_ix, duration_to_ix, beat_to_ix = NottinghamDB.getInverseVocabs()
         NottinghamChords, NottinghamToMusic21, NottinghamToChordComposition, NottinghamToMidiChords = NottinghamDB.getChordDicts()
 
+    elif con.DATASET == 'CustomDB':
+        
+        CustomDB = dataset.CustomDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
+                                    con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
+            
+        train_pitch_batched, train_duration_batched, train_chord_batched, train_next_chord_batched, train_bass_batched, train_beat_batched, train_offset_batched  = CustomDB.getTrainingData()
+        val_pitch_batched, val_duration_batched, val_chord_batched, val_next_chord_batched, val_bass_batched, val_beat_batched, val_offset_batched  = CustomDB.getValidationData()
+        test_pitch_batched, test_duration_batched, test_chord_batched, test_next_chord_batched, test_bass_batched, test_beat_batched, test_offset_batched  = CustomDB.getTestData()
+
+        songs = CustomDB.getOriginalSongDict()
+        structuredSongs = CustomDB.getStructuredSongs()
+        vocabPitch, vocabDuration, vocabBeat, vocabOffset = CustomDB.getVocabs()
+        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = CustomDB.getInverseVocabs()
+        WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = CustomDB.getChordDicts()
     
     # number of conditioned models to consider
     NUM_MODELS = 4
@@ -146,6 +160,10 @@ if __name__ == '__main__':
             
             elif con.DATASET == 'NottinghamDB':
                 savePATHpitch = 'models/MINGUSpitch_100epochs_seqLen35_NottinghamDB.pt'
+                
+            elif con.DATASET == 'CustomDB':
+                savePATHpitch = f'models/{con.DATASET}/pitchModel/MINGUS COND {con.COND_TYPE_PITCH} Epochs {con.EPOCHS}.pt'
+                
             modelPitch.load_state_dict(torch.load(savePATHpitch, map_location=torch.device('cpu')))
                 
             
@@ -194,6 +212,10 @@ if __name__ == '__main__':
             
             elif con.DATASET == 'NottinghamDB':
                 savePATHduration = 'models/MINGUSduration_100epochs_seqLen35_NottinghamDB.pt'
+            
+            elif con.DATASET == 'CustomDB':
+                savePATHduration = f'models/{con.DATASET}/durationModel/MINGUS COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}.pt'
+            
             modelDuration.load_state_dict(torch.load(savePATHduration, map_location=torch.device('cpu')))
                     
             
