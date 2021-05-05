@@ -5,6 +5,12 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
+Meeting:
+    - finished app
+    - How to choose reference solos for eval
+    - SeqAttn evaluation (no song names)
+    - Saint Louis profs
+
 ToDo:
     - Best up to now: 1/4 min_rest (train on 100 epochs)
     - Format for evaluation:

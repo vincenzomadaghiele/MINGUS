@@ -131,7 +131,7 @@ if __name__ == '__main__':
     
     source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    source_songs = ["data/WjazzDBcsv/csv_beats/CharlieParker_DonnaLee_Solo.csv"]
+    source_songs = ["data/WjazzDBcsv/csv_beats/ChetBaker_ThereWillNeverBeAnotherYou-1_Solo.csv"]
     
     for csv_path in source_songs:
         

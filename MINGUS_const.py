@@ -12,7 +12,6 @@ TRAIN_BATCH_SIZE = 20
 EVAL_BATCH_SIZE = 10
 
 # length of one note sequence
-
 BPTT = 35
 AUGMENTATION = False
 SEGMENTATION = True
