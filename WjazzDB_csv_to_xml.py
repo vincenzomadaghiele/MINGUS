@@ -127,11 +127,11 @@ if __name__ == '__main__':
     rests_durations = [4, 2, 1, 1/2, 1/4, 1/8,
                        3, 3/2, 3/4, 1/6]
 
-    # Load csv as dataframe
+    #%% Load csv as dataframe
     
     source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    #source_songs = ["data/WjazzDBcsv/csv_beats/BenWebster_WhereOrWhen_Solo.csv"]
+    source_songs = ["data/WjazzDBcsv/csv_beats/CharlieParker_DonnaLee_Solo.csv"]
     
     for csv_path in source_songs:
         
@@ -164,9 +164,18 @@ if __name__ == '__main__':
             # create a new m21 stream
             stream = m21.stream.Stream()
             m = m21.stream.Measure()
+            stream_chords = m21.stream.Stream()
+            mc = m21.stream.Measure()
+            stream_melody = m21.stream.Stream()
+            mm = m21.stream.Measure()
             tempo = m21.tempo.MetronomeMark(number=tempo)
             m.append(tempo)
             m.timeSignature = m21.meter.TimeSignature('4/4')
+            mm.append(tempo)
+            mm.timeSignature = m21.meter.TimeSignature('4/4')
+            mc.append(tempo)
+            mc.timeSignature = m21.meter.TimeSignature('4/4')
+            oc = 0 # offset counter for chords stream
             
             # constants for iteration
             current_bar = beat_df.iloc[0]['bar']
@@ -200,10 +209,20 @@ if __name__ == '__main__':
                                     
                             h = m21.harmony.ChordSymbol(m21chord)
                             m.insert(0, h)
+                            h2 = m21.harmony.ChordSymbol(m21chord, quarterLength=4)
+                            mc.insert(0, h2)
                         m.number = current_bar
+                        mc.number = current_bar
+                        mm.number = current_bar
                         # append bar to the stream
                         stream.append(m)
+                        #mc.offset = oc
+                        stream_chords.insert(oc, mc)
+                        oc += 4
+                        stream_melody.append(mm)
                         m = m21.stream.Measure()
+                        mc = m21.stream.Measure()
+                        mm = m21.stream.Measure()
                         current_bar = row['bar']
                         current_bar_start_time = row['onset']
                         chord_counter = 0
@@ -302,16 +321,19 @@ if __name__ == '__main__':
                                 if bar_offset + note[1] <= 4:
                                     new_note = m21.note.Rest(quarterLength=note[1])
                                     m.insert(bar_offset, new_note)
+                                    mm.insert(bar_offset, new_note)
                                     bar_offset += note[1]
                             else:
                                 if bar_offset + note[1] <= 4:
                                     new_note = m21.note.Note(midi=note[0], quarterLength=note[1])
                                     m.insert(bar_offset, new_note)
+                                    mm.insert(bar_offset, new_note)
                                     bar_offset += note[1]
                         #print(bar_offset)
                         if bar_offset < 4:
                             new_note = m21.note.Rest(quarterLength = 4-bar_offset)
                             m.insert(bar_offset, new_note)
+                            mm.insert(bar_offset, new_note)
                             bar_offset = 0
                             
                     # append chords
@@ -335,13 +357,15 @@ if __name__ == '__main__':
                         #print(row['chord'], m21chord)
                         h = m21.harmony.ChordSymbol(m21chord)
                         m.insert(row['beat']-1, h)
+                        h2 = m21.harmony.ChordSymbol(m21chord, quarterLength=2)
+                        mc.insert(row['beat']-1, h2)
                         chord_counter += 1
                         last_chord = row['chord']
 
                 xml_converter = m21.converter.subConverters.ConverterMusicXML()
-                xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml5/'+song_name+'.xml')
-    
-
+                xml_converter.write(stream, 'musicxml', 'data/WjazzDBxml6/'+song_name+'.xml')
+                fp = stream_melody.write('midi', fp=f'data/WjazzDBxml6/melody/{song_name}.mid')
+                fp = stream_chords.write('midi', fp=f'data/WjazzDBxml6/chords/{song_name}.mid')
 
         
     
