@@ -56,7 +56,7 @@
                 <font-awesome-icon icon="chevron-left" class="cursor-change" size="3x" @click="tuneBackward" v-if="indcator > 0"/>
             </div>
             <div class="col-6 col-lg-4">
-                <button type="button" class="btn btn-outline-dark" @click="endQuiz" v-if="indcator == 5">
+                <button type="button" class="btn btn-outline-dark" @click="endQuiz" v-if="indcator == 14">
                   End quiz
                 </button>
                 <font-awesome-icon icon="chevron-right" class="cursor-change" size="3x" @click="tuneForward" v-if="indcator < (tunes.length - 1)"/>
