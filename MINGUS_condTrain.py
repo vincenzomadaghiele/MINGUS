@@ -5,22 +5,33 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
-Meeting:
-    - finished app
-    - How to choose reference solos for eval
-    - SeqAttn evaluation (no song names)
-    - Saint Louis 
-
 ToDo:
-    - Best up to now: 1/4 min_rest (train on 100 epochs)
-    - Format for evaluation:
-        midi with only melody and chords
-    - audio rendition of samples and complete app
-    - initialize to empty metrics on app json DB
     - add next chord and offset to NottinghamDB
     - fine tune parameters for NottinghamDB training 
-    - midi with chords to structured songs
-    - evaluate SeqAttn generations with my metrics
+    - midi with chords to structured songs to 
+        evaluate SeqAttn generations with my metrics
+    
+    Paper:
+        - Check if segmentation is indeed useful
+        - Check SeqAttn sustain in accuracy
+        - Check true perplexity in BebopNet
+        
+    Tables and figures on paper:
+        - Data representation
+        - Melody segmentation
+        - Model figure with conditionings
+        - Perplexity / Accuracy of the three models
+        - MGEval on WjazzDB of the three models (reference VS generated)
+        - Harmonic coherence (all dataset VS generated)
+        - User evaluation 
+        - Musical analysis
+    
+    Tables and figures on appendix:
+        - Conditionings accuracy / perplexity (first 20)
+        - BLEU
+        - Model parameters
+        - Training times
+        - Style-dependent generation results (?)
     
     Future steps:
         - bass line generation on WjazzDB (given only chord and given melody)
