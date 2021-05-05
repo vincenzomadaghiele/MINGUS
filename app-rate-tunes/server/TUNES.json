@@ -121,7 +121,7 @@
         "author": "Chet Baker",
         "sample": "Sample II",
         "origin": "BebopNet",
-        "human": true,
+        "human": false,
         "url": "./BebopNet_There_will_never.mp3"
     },
     {
@@ -130,7 +130,7 @@
         "author": "Chet Baker",
         "sample": "Sample III",
         "origin": "MINGUS",
-        "human": true,
+        "human": false,
         "url": "./MINGUS_There_will_never.mp3"
     }
 ]

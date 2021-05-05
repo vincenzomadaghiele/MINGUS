@@ -9,7 +9,7 @@ Meeting:
     - finished app
     - How to choose reference solos for eval
     - SeqAttn evaluation (no song names)
-    - Saint Louis profs
+    - Saint Louis 
 
 ToDo:
     - Best up to now: 1/4 min_rest (train on 100 epochs)

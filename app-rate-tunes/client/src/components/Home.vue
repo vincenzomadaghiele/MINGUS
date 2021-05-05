@@ -10,8 +10,8 @@
         </div>
         <br>
         <div class="row text-center">
-          <div class="col-4"></div>
-            <div class="col-4">
+          <div class="col-lg-4"></div>
+            <div class="col-lg-4">
                 <div class="form-check">
                 <input class="form-check-input" type="radio" name="level" value="Music lover" id="Listener" v-model="musicExperience">
                 <label class="form-check-label" for="Listener">
@@ -37,7 +37,7 @@
                 </p>
                 </div>
             </div>
-            <div class="col-4"></div>
+            <div class="col-lg-4"></div>
         </div>
         <br><br>
         <div class="row text-center">
@@ -45,6 +45,7 @@
                 <button type="button" class="btn btn-primary" @click="startQuiz">Read the quiz instructions</button>
             </div>
         </div>
+        <br><br>
     </div>
 </template>
 
