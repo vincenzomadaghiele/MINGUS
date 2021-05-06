@@ -190,7 +190,7 @@ if __name__ == '__main__':
         original_structuredSongs = json.load(f)
         
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
-    path = 'output/01_BebopNet_gens/CustomDB_generated.json'
+    path = 'output/00_MINGUS_gens/CustomDB_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
         
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     # Make directory to save metrics file
     parent_directory = f'metrics/{con.DATASET}/'
     model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}'
-    model_id = 'BebopNet'
+    #model_id = 'BebopNet'
     path = os.path.join(parent_directory, model_id + '/')
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -225,7 +225,7 @@ if __name__ == '__main__':
     #original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
     original_path = 'output/reference/*.mid'
     #generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
-    generated_path = 'output/01_BebopNet_gens/*.mid'
+    generated_path = 'output/00_MINGUS_gens/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     metrics_result['Harmonic coherence']['Generated scale coherence'] = np.round_(generated_scale_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Generated chord coherence'] = np.round_(generated_chord_coherence, decimals=4)
     
-    '''
+    
     # loss, perplexity and accuracy of pitch model
     isPitch = True
     criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)    
@@ -289,7 +289,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_perplexity'] = np.round_(math.exp(testLoss_results_duration), decimals=4)
     metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
     #metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
-    '''
+    
     
     # Convert metrics dict to JSON and SAVE IT
     with open(path + 'metrics' + model_id + '.json', 'w') as fp:

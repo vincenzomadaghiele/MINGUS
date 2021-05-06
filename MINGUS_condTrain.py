@@ -31,6 +31,7 @@ ToDo:
         - BLEU
         - Model parameters
         - Training times
+        - MGEval comparison on NottinghamDB for the three models
         - Style-dependent generation results (?)
     
     Future steps:
