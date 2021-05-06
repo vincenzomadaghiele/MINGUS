@@ -224,7 +224,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_BLEU'] = {}
     
     # MGEval on generated midi files
-    num_of_generations = 14
+    num_of_generations = 10
     #original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
     original_path = 'output/reference/*.mid'
     #generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
