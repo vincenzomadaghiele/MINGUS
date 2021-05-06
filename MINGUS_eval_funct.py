@@ -194,15 +194,15 @@ def MGEval(training_midi_path, generated_midi_path, fig_savePath, num_samples = 
     plot_sets_inter = np.transpose(sets_inter,(1, 0, 2)).reshape(len(metrics_list), -1)
     for i in range(0,len(metrics_list)):
         print(plot_set1_intra[i])
-        fig = plt.figure()
-        sns.kdeplot(plot_set1_intra[i], label='intra_set1')
-        sns.kdeplot(plot_sets_inter[i], label='inter')
-        sns.kdeplot(plot_set2_intra[i], label='intra_set2')
+        #fig = plt.figure()
+        #sns.kdeplot(plot_set1_intra[i], label='intra_set1')
+        #sns.kdeplot(plot_sets_inter[i], label='inter')
+        #sns.kdeplot(plot_set2_intra[i], label='intra_set2')
     
-        plt.title(metrics_list[i])
-        plt.xlabel('Euclidean distance')
-        plt.show()
-        fig.savefig(fig_savePath + metrics_list[i] + '.png')
+        #plt.title(metrics_list[i])
+        #plt.xlabel('Euclidean distance')
+        #plt.show()
+        #fig.savefig(fig_savePath + metrics_list[i] + '.png')
         
     # Calculate divergence between measures
     for i in range(0, len(metrics_list)):
