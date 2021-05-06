@@ -186,6 +186,7 @@ if __name__ == '__main__':
     
     path = gen_common_path + original_subpath + con.DATASET + '_original.json'
     path = 'output/reference/CustomDB_reference.json'
+    path = 'data/CustomDB.json'
     with open(path) as f:
         original_structuredSongs = json.load(f)
         
@@ -274,7 +275,7 @@ if __name__ == '__main__':
     metrics_result['Pitch']['Pitch_test-loss'] = np.round_(testLoss_results_pitch, decimals=4)
     metrics_result['Pitch']['Pitch_perplexity'] = np.round_(math.exp(testLoss_results_pitch), decimals=4)
     metrics_result['Pitch']['Pitch_accuracy'] = np.round_(accuracy_results_pitch * 100, decimals=4)
-    #metrics_result['Pitch']['Pitch_BLEU'] = np.round_(bleu_pitch, decimals=4)
+    metrics_result['Pitch']['Pitch_BLEU'] = np.round_(bleu_pitch, decimals=4)
     
     # loss, perplexity and accuracy of duration model
     isPitch = False

@@ -67,6 +67,6 @@
         "Duration_accuracy": 32.3447,
         "Duration_perplexity": 4.1415,
         "Duration_test-loss": 1.4211,
-        "Duration_BLEU": {}
+        "Duration_BLEU": 0.6816
     }
 }
