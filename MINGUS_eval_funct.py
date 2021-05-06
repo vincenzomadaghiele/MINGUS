@@ -193,6 +193,7 @@ def MGEval(training_midi_path, generated_midi_path, fig_savePath, num_samples = 
     plot_set2_intra = np.transpose(set2_intra,(1, 0, 2)).reshape(len(metrics_list), -1)
     plot_sets_inter = np.transpose(sets_inter,(1, 0, 2)).reshape(len(metrics_list), -1)
     for i in range(0,len(metrics_list)):
+        print(plot_set1_intra[i])
         fig = plt.figure()
         sns.kdeplot(plot_set1_intra[i], label='intra_set1')
         sns.kdeplot(plot_sets_inter[i], label='inter')
