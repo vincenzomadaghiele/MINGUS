@@ -189,6 +189,8 @@ if __name__ == '__main__':
     path = 'data/CustomDB.json'
     with open(path) as f:
         original_structuredSongs = json.load(f)
+    
+    original_structuredSongs = original_structuredSongs['structured for generation']
         
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
     path = 'output/00_MINGUS_gens/CustomDB_generated.json'
