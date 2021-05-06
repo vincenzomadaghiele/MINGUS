@@ -193,7 +193,7 @@ if __name__ == '__main__':
     original_structuredSongs = original_structuredSongs['structured for generation']
         
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
-    path = 'output/01_BebopNet_gens/CustomDB_generated.json'
+    path = 'output/00_MINGUS_gens/CustomDB_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
         
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     # Make directory to save metrics file
     parent_directory = f'metrics/{con.DATASET}/'
     model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}'
-    model_id = 'BebopNet'
+    #model_id = 'BebopNet'
     path = os.path.join(parent_directory, model_id + '/')
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -228,7 +228,7 @@ if __name__ == '__main__':
     #original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
     original_path = 'output/reference/*.mid'
     #generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
-    generated_path = 'output/01_BebopNet_gens/*.mid'
+    generated_path = 'output/00_MINGUS_gens/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
@@ -264,33 +264,33 @@ if __name__ == '__main__':
     
     # loss, perplexity and accuracy of pitch model
     isPitch = True
-    #criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)    
-    #testLoss_results_pitch, accuracy_results_pitch = mod.evaluate(modelPitch, pitch_to_ix, 
-    #                                                            test_pitch_batched, test_duration_batched, 
-    #                                                            test_chord_batched, test_next_chord_batched,
-    #                                                            test_bass_batched, test_beat_batched, test_offset_batched,
-    #                                                            criterion, con.BPTT, device, isPitch)
+    criterion = nn.CrossEntropyLoss(ignore_index=pitch_pad_idx)    
+    testLoss_results_pitch, accuracy_results_pitch = mod.evaluate(modelPitch, pitch_to_ix, 
+                                                                test_pitch_batched, test_duration_batched, 
+                                                                test_chord_batched, test_next_chord_batched,
+                                                                test_bass_batched, test_beat_batched, test_offset_batched,
+                                                                criterion, con.BPTT, device, isPitch)
     
     # BLEU score
     bleu_pitch, bleu_duration = ev.BLEUscore(original_structuredSongs, generated_structuredSongs)
     
-    #metrics_result['Pitch']['Pitch_test-loss'] = np.round_(testLoss_results_pitch, decimals=4)
-    #metrics_result['Pitch']['Pitch_perplexity'] = np.round_(math.exp(testLoss_results_pitch), decimals=4)
-    #metrics_result['Pitch']['Pitch_accuracy'] = np.round_(accuracy_results_pitch * 100, decimals=4)
+    metrics_result['Pitch']['Pitch_test-loss'] = np.round_(testLoss_results_pitch, decimals=4)
+    metrics_result['Pitch']['Pitch_perplexity'] = np.round_(math.exp(testLoss_results_pitch), decimals=4)
+    metrics_result['Pitch']['Pitch_accuracy'] = np.round_(accuracy_results_pitch * 100, decimals=4)
     metrics_result['Pitch']['Pitch_BLEU'] = np.round_(bleu_pitch, decimals=4)
     
     # loss, perplexity and accuracy of duration model
     isPitch = False
-    #criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
-    #testLoss_results_duration, accuracy_results_duration = mod.evaluate(modelDuration, duration_to_ix, 
-    #                                                                test_pitch_batched, test_duration_batched, 
-    #                                                                test_chord_batched, test_next_chord_batched,
-    #                                                                test_bass_batched, test_beat_batched, test_offset_batched,
-    #                                                                criterion, con.BPTT, device, isPitch)
+    criterion = nn.CrossEntropyLoss(ignore_index=duration_pad_idx)
+    testLoss_results_duration, accuracy_results_duration = mod.evaluate(modelDuration, duration_to_ix, 
+                                                                    test_pitch_batched, test_duration_batched, 
+                                                                    test_chord_batched, test_next_chord_batched,
+                                                                    test_bass_batched, test_beat_batched, test_offset_batched,
+                                                                    criterion, con.BPTT, device, isPitch)
     
-    #metrics_result['Duration']['Duration_test-loss'] = np.round_(testLoss_results_duration, decimals=4)
-    #metrics_result['Duration']['Duration_perplexity'] = np.round_(math.exp(testLoss_results_duration), decimals=4)
-    #metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
+    metrics_result['Duration']['Duration_test-loss'] = np.round_(testLoss_results_duration, decimals=4)
+    metrics_result['Duration']['Duration_perplexity'] = np.round_(math.exp(testLoss_results_duration), decimals=4)
+    metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
     metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
     
     
