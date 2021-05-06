@@ -794,7 +794,13 @@ if __name__ == '__main__':
             source_songs = glob.glob(source_path)
             reference_structuredSongs = []
             for xml_path in source_songs:
-                tune = cus.xmlToStructuredSong(xml_path) # remove min_rest
+                #tune = cus.xmlToStructuredSong(xml_path) # remove min_rest
+                tune, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = xmlToStructuredSong(xml_path, 
+                                                                                                   WjazzToMusic21,
+                                                                                                   WjazzToMidiChords, 
+                                                                                                   WjazzToChordComposition, 
+                                                                                                   WjazzChords)
+
                 reference_structuredSongs.append(tune)
                 pm = gen.structuredSongsToPM(tune, WjazzToMidiChords)
                 pm.write('output/reference/' + tune['title'] + '.mid')
