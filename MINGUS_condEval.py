@@ -269,7 +269,7 @@ if __name__ == '__main__':
                                                                 criterion, con.BPTT, device, isPitch)
     
     # BLEU score
-    #bleu_pitch, bleu_duration = ev.BLEUscore(original_structuredSongs, generated_structuredSongs)
+    bleu_pitch, bleu_duration = ev.BLEUscore(original_structuredSongs, generated_structuredSongs)
     
     metrics_result['Pitch']['Pitch_test-loss'] = np.round_(testLoss_results_pitch, decimals=4)
     metrics_result['Pitch']['Pitch_perplexity'] = np.round_(math.exp(testLoss_results_pitch), decimals=4)
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_test-loss'] = np.round_(testLoss_results_duration, decimals=4)
     metrics_result['Duration']['Duration_perplexity'] = np.round_(math.exp(testLoss_results_duration), decimals=4)
     metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
-    #metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
+    metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
     
     
     # Convert metrics dict to JSON and SAVE IT
