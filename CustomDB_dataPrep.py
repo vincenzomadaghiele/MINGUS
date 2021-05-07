@@ -86,6 +86,7 @@ def xmlToStructuredSong(xml_path):
     beat_duration = []
     beat_offset = []
     chord = 'NC'
+    bass = 'R'
 
     for measure in s.getElementsByClass('Measure'):
         #measure.show('text')
@@ -133,6 +134,7 @@ def xmlToStructuredSong(xml_path):
                 beat_duration.append(duration)
                 beat_offset.append(offset)
 
+
             # update bar duration
             bar_duration += note.quarterLength
             # check if the beat is ended
@@ -154,6 +156,7 @@ def xmlToStructuredSong(xml_path):
                     
                 if not chord:
                     chord = 'NC'
+                    bass = 'R'
                 new_beat = {}
                 new_beat['num beat'] = int(beat_num) + 1
                 new_beat['chord'] = chord
@@ -272,7 +275,7 @@ if __name__ == '__main__':
     
     structuredSongs = []
     songs = []
-    source_path = 'data/customXML/*.xml'
+    source_path = 'data/NottinghamDBxml/*.xml'
     source_songs = glob.glob(source_path)
     for xml_path in source_songs:
         structuredTune = xmlToStructuredSong(xml_path)
