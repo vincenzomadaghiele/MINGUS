@@ -5,12 +5,7 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
-ToDo:
-    - add next chord and offset to NottinghamDB
-    - fine tune parameters for NottinghamDB training 
-    - midi with chords to structured songs to 
-        evaluate SeqAttn generations with my metrics
-    
+ToDo:    
     Paper:
         - Check if segmentation is indeed useful
         - Check SeqAttn sustain in accuracy

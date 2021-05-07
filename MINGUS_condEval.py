@@ -231,7 +231,7 @@ if __name__ == '__main__':
     generated_path = 'output/02_SeqAttn_gens/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
-    '''
+    
     # Harmonic coherence of generated samples
     if con.DATASET == 'WjazzDB':
         original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
@@ -292,7 +292,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_perplexity'] = np.round_(math.exp(testLoss_results_duration), decimals=4)
     metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
     metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
-    '''
+    
     
     # Convert metrics dict to JSON and SAVE IT
     with open(path + 'metrics' + model_id + '.json', 'w') as fp:
