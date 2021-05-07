@@ -73,7 +73,7 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
     s = m21.converter.parse(xml_path)
     
     new_structured_song = {}
-    new_structured_song['title'] = xml_path[36:-4]
+    new_structured_song['title'] = xml_path[34:-4]
     new_structured_song['tempo'] = s.metronomeMarkBoundaries()[0][2].number
     new_structured_song['beat duration [sec]'] = 60 / new_structured_song['tempo']
     
