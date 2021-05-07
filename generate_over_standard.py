@@ -688,7 +688,7 @@ if __name__ == '__main__':
     #tuneFromXML = cus.xmlToStructuredSong(xml_path)
 
     # GENERATE ON A TUNE
-    num_chorus = 4
+    num_chorus = 3
     temperature = 1
     
     isJazz = False
@@ -716,7 +716,7 @@ if __name__ == '__main__':
         original_structuredSongs = []
 
 
-        source_path = 'output/tunes4eval/xml/*.xml'
+        source_path = 'output/tunes4eval/xmlNottinghamDB/*.xml'
         source_songs = glob.glob(source_path)
         for xml_path in source_songs:
             
@@ -777,7 +777,7 @@ if __name__ == '__main__':
                                                        isJazz)
                 
                 pm = gen.structuredSongsToPM(new_structured_song, WjazzToMidiChords, isJazz)
-                pm.write('output/00_MINGUS_gens/' + new_structured_song['title'] + '.mid')
+                pm.write('output/00_MINGUS_gens_NottinghamDB/' + new_structured_song['title'] + '.mid')
                 generated_structuredSongs.append(new_structured_song)
                 
         
@@ -790,7 +790,7 @@ if __name__ == '__main__':
 
         else:
             # convert reference to midi and structured song json
-            source_path = 'output/reference/xml/*.xml'
+            source_path = 'output/reference_NottinghamDB/xml/*.xml'
             source_songs = glob.glob(source_path)
             reference_structuredSongs = []
             for xml_path in source_songs:
@@ -803,11 +803,11 @@ if __name__ == '__main__':
 
                 reference_structuredSongs.append(tune)
                 pm = gen.structuredSongsToPM(tune, WjazzToMidiChords)
-                pm.write('output/reference/' + tune['title'] + '.mid')
+                pm.write('output/reference_NottinghamDB/' + tune['title'] + '.mid')
             
-            with open('output/reference/'+ con.DATASET + '_reference.json', 'w') as fp:
+            with open('output/reference_NottinghamDB/'+ con.DATASET + '_reference.json', 'w') as fp:
                 json.dump(reference_structuredSongs, fp, indent=4)
-            with open('output/00_MINGUS_gens/'+ con.DATASET + '_generated.json', 'w') as fp:
+            with open('output/00_MINGUS_gens_NottinghamDB/'+ con.DATASET + '_generated.json', 'w') as fp:
                 json.dump(generated_structuredSongs, fp, indent=4)
 
 
