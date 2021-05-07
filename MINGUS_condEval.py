@@ -185,7 +185,7 @@ if __name__ == '__main__':
     generated_subpath = 'generated/'
     
     path = gen_common_path + original_subpath + con.DATASET + '_original.json'
-    path = 'output/reference/CustomDB_reference.json'
+    path = 'output/reference_NottinghamDB/CustomDB_reference.json'
     path = 'data/CustomDB.json'
     with open(path) as f:
         original_structuredSongs = json.load(f)
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     original_structuredSongs = original_structuredSongs['structured for generation']
         
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
-    path = 'output/00_MINGUS_gens/CustomDB_generated.json'
+    path = 'output/00_MINGUS_gens_NottinghamDB/CustomDB_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
         
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     # Make directory to save metrics file
     parent_directory = f'metrics/{con.DATASET}/'
     model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}'
-    model_id = 'SeqAttn'
+    model_id = 'MINGUSnottingham'
     path = os.path.join(parent_directory, model_id + '/')
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -226,9 +226,9 @@ if __name__ == '__main__':
     # MGEval on generated midi files
     num_of_generations = 14
     #original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
-    original_path = 'output/reference/*.mid'
+    original_path = 'output/reference_NottinghamDB/*.mid'
     #generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
-    generated_path = 'output/02_SeqAttn_gens/*.mid'
+    generated_path = 'output/00_MINGUS_gens_NottinghamDB/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
