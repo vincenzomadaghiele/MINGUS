@@ -1,0 +1,72 @@
+{
+    "MGEval": {
+        "total_used_pitch": {
+            "ref_mean": 11.0714,
+            "ref_std": 1.8309,
+            "gen_mean": 13.8571,
+            "gen_std": 2.1993,
+            "ref_KL-div": 0.0025,
+            "ref_overlap-area": 0.7192,
+            "gen_KL-div": 0.0114,
+            "gen_overlap-area": 0.8067
+        },
+        "total_pitch_class_histogram": {
+            "ref_mean": 0.0833,
+            "ref_std": 0.0891,
+            "gen_mean": 0.0833,
+            "gen_std": 0.0825,
+            "ref_KL-div": 0.0435,
+            "ref_overlap-area": 0.8325,
+            "gen_KL-div": 0.132,
+            "gen_overlap-area": 0.8194
+        },
+        "pitch_class_transition_matrix": {
+            "ref_mean": 2.0789,
+            "ref_std": 3.9823,
+            "gen_mean": 5.9072,
+            "gen_std": 11.1332,
+            "ref_KL-div": 0.1008,
+            "ref_overlap-area": 0.2164,
+            "gen_KL-div": 0.1292,
+            "gen_overlap-area": 0.8341
+        },
+        "pitch_range": {
+            "ref_mean": 16.7143,
+            "ref_std": 2.5475,
+            "gen_mean": 19.7143,
+            "gen_std": 2.1524,
+            "ref_KL-div": 0.017,
+            "ref_overlap-area": 0.8364,
+            "gen_KL-div": 0.0255,
+            "gen_overlap-area": 0.7465
+        },
+        "avg_IOI": {
+            "ref_mean": 0.2693,
+            "ref_std": 0.0722,
+            "gen_mean": 0.2817,
+            "gen_std": 0.065,
+            "ref_KL-div": 0.0218,
+            "ref_overlap-area": 0.8461,
+            "gen_KL-div": 0.0147,
+            "gen_overlap-area": 0.8405
+        }
+    },
+    "Harmonic coherence": {
+        "Original scale coherence": 0.9534,
+        "Original chord coherence": 0.7563,
+        "Generated scale coherence": 0.9753,
+        "Generated chord coherence": 0.7032
+    },
+    "Pitch": {
+        "Pitch_accuracy": 35.828,
+        "Pitch_perplexity": 11.0359,
+        "Pitch_test-loss": 2.4012,
+        "Pitch_BLEU": 0.527
+    },
+    "Duration": {
+        "Duration_accuracy": 76.6242,
+        "Duration_perplexity": 1.8836,
+        "Duration_test-loss": 0.6332,
+        "Duration_BLEU": 0.8787
+    }
+}

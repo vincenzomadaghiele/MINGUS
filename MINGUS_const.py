@@ -14,12 +14,12 @@ EVAL_BATCH_SIZE = 10
 # length of one note sequence
 BPTT = 35
 AUGMENTATION = False
-SEGMENTATION = True
+SEGMENTATION = False
 augmentation_const = 2
 
 DATASET = 'CustomDB'
 
-EPOCHS = 100
+EPOCHS = 30
 
 COND_TYPE_PITCH = 'I-C-NC-B-BE-O'
 COND_TYPE_DURATION = 'I-C-NC-B-BE-O'
