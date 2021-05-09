@@ -1714,7 +1714,7 @@ class CustomDB():
         # I have added one beat but the two songs could be removed 
         # or the beat substituted
         vocabBeat = {} 
-        for i in range(0,10): 
+        for i in range(0,4): 
             vocabBeat[i] = i+1
         vocabBeat[4] = '<pad>'
         # inverse dictionary
