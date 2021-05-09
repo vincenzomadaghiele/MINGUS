@@ -8,7 +8,6 @@ Created on Tue Mar 16 08:56:16 2021
 ToDo:    
     Paper:
         - Check if segmentation is indeed useful
-        - Check SeqAttn sustain in accuracy
         - Check true perplexity in BebopNet
         
     Tables and figures on paper:

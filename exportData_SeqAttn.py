@@ -182,8 +182,8 @@ if __name__ == '__main__':
             #performer = song['performer']
             print('Converting: ', title)
             pm = structuredSongsToPM(song, WjazzToMidiChords, isJazz, onlyChords=True)
-            pm.write('data/02_SeqAttn_data/chords/'+ title + '.mid')
+            pm.write('data/02_SeqAttn_data/NottinghamDB/chords/'+ title + '.mid')
             pm = structuredSongsToPM(song, WjazzToMidiChords, isJazz, onlyChords=False)
-            pm.write('data/02_SeqAttn_data/melody/'+ title + '.mid')
+            pm.write('data/02_SeqAttn_data/NottinghamDB/melody/'+ title + '.mid')
 
 
