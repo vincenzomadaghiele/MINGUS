@@ -17,7 +17,7 @@ AUGMENTATION = True
 SEGMENTATION = True
 augmentation_const = 2
 
-DATASET = 'WjazzDB'
+DATASET = 'CustomDB'
 
 EPOCHS = 30
 
