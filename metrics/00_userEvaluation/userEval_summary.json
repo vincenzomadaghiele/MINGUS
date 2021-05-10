@@ -1,0 +1,17 @@
+{
+    "original": {
+        "Music lover": 2.8,
+        "Music student": 3.575,
+        "Professional musician": 3.7142857142857144
+    },
+    "MINGUS": {
+        "Music lover": 3.3333333333333335,
+        "Music student": 2.7,
+        "Professional musician": 2.5428571428571427
+    },
+    "BebopNet": {
+        "Music lover": 2.466666666666667,
+        "Music student": 2.15,
+        "Professional musician": 2.1142857142857143
+    }
+}

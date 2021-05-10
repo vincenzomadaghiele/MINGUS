@@ -193,7 +193,7 @@ if __name__ == '__main__':
     original_structuredSongs = original_structuredSongs['structured for generation']
         
     path = gen_common_path + generated_subpath + con.DATASET + '_generated.json'
-    path = 'output/00_MINGUS_gens_NottinghamDB/CustomDB_generated.json'
+    path = 'output/02_SeqAttn_gens_NottinghamDB/CustomDB_generated.json'
     with open(path) as f:
         generated_structuredSongs = json.load(f)
         
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     # Make directory to save metrics file
     parent_directory = f'metrics/{con.DATASET}/'
     model_id = f'MINGUS PITCH_COND {con.COND_TYPE_PITCH} DUR_COND {con.COND_TYPE_DURATION} Epochs {con.EPOCHS}'
-    model_id = 'MINGUSnottingham'
+    model_id = 'SeqAttnNottingham'
     path = os.path.join(parent_directory, model_id + '/')
     if not os.path.isdir(path):
         os.mkdir(path)
@@ -228,7 +228,7 @@ if __name__ == '__main__':
     #original_path = 'output/gen4eval_' + con.DATASET + '/original/*.mid'
     original_path = 'output/reference_NottinghamDB/*.mid'
     #generated_path = 'output/gen4eval_' + con.DATASET + '/generated/*.mid'
-    generated_path = 'output/00_MINGUS_gens_NottinghamDB/*.mid'
+    generated_path = 'output/02_SeqAttn_gens_NottinghamDB/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
     
@@ -255,7 +255,7 @@ if __name__ == '__main__':
         generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
                                                                                     WjazzToMusic21, 
                                                                                     WjazzToMidiChords)
-
+    '''
     metrics_result['Harmonic coherence']['Original scale coherence'] = np.round_(original_scale_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Original chord coherence'] = np.round_(original_chord_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Generated scale coherence'] = np.round_(generated_scale_coherence, decimals=4)
@@ -292,7 +292,7 @@ if __name__ == '__main__':
     metrics_result['Duration']['Duration_perplexity'] = np.round_(math.exp(testLoss_results_duration), decimals=4)
     metrics_result['Duration']['Duration_accuracy'] = np.round_(accuracy_results_duration * 100, decimals=4)
     metrics_result['Duration']['Duration_BLEU'] = np.round_(bleu_duration, decimals=4)
-    
+    '''
     
     # Convert metrics dict to JSON and SAVE IT
     with open(path + 'metrics' + model_id + '.json', 'w') as fp:
