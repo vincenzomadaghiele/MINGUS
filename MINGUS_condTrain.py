@@ -5,14 +5,9 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
-ToDo:    
-    Paper:
-        - Check if segmentation is indeed useful
-        - Check true perplexity in BebopNet
-        
+ToDo:        
     Tables and figures on paper:
         - Data representation
-        - Melody segmentation
         - Model figure with conditionings
         - Perplexity / Accuracy of the three models
         - MGEval on WjazzDB of the three models (reference VS generated)

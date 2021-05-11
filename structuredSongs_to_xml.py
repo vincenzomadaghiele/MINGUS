@@ -15,6 +15,7 @@ import torch.nn as nn
 import loadDBs as dataset
 import MINGUS_condModel as mod
 import MINGUS_const as con
+import WjazzDB_csv_to_xml as wj
 
 # Device configuration
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
@@ -105,10 +106,11 @@ if __name__ == '__main__':
     # DATA LOADING
     print('Loading data from the Nottingham Database...')
     songs_path = 'data/NottinghamDB.json'
+    songs_path = 'output/gen4eval_WjazzDB/original/WjazzDB_original.json'
     with open(songs_path) as f:
         songs = json.load(f)
 
-    structuredSongs = songs['structured for generation']
+    structuredSongs = songs #['structured for generation']
 
     # Convert to musicXML
     previousID = ''
@@ -132,6 +134,7 @@ if __name__ == '__main__':
         duration_to_m21['dot 8th'] = 1/2 + 1/4
         duration_to_m21['dot 16th'] = 1/4 + 1/8
         duration_to_m21['half note triplet'] = 1/6
+        duration_to_m21['quarter note triplet'] = 1/12
     
         # create a new m21 stream
         m = m21.stream.Measure()
@@ -143,21 +146,26 @@ if __name__ == '__main__':
         offset = 0
         for bar in structuredSong['bars']:
             for beat in bar['beats']:
-                if beat['chord'] != 'NC':
+                #if beat['chord'] != previous_chord and beat['chord'] != 'NC':
                     # append chord to the bar
-                    #if beat['chord'] != previous_chord and beat['chord'] != 'NC':
-                        #m21chord = WjazzToMusic21[beat['chord']]
-                    m21chord = NottinghamChordToM21(beat['chord'])
-                    h = m21.harmony.ChordSymbol(m21chord)
-                    m.insert(beat['num beat']-1, h)
-                    previous_chord = beat['chord']
-                    # append notes to the bar
-                    for i in range(len(beat['pitch'])):
-                        if beat['pitch'][i] == 'R':
-                            new_note = m21.note.Rest(quarterLength=duration_to_m21[beat['duration'][i]])
-                        else:  
-                            new_note = m21.note.Note(midi=beat['pitch'][i], quarterLength=duration_to_m21[beat['duration'][i]])
-                        m.append(new_note)
+                if beat['chord'] != previous_chord and beat['chord'] != 'NC':
+                    #m21chord = WjazzToMusic21[beat['chord']]
+                    #m21chord = NottinghamChordToM21(beat['chord'])
+                    
+                    m21chord = wj.WjazzChordToM21(beat['chord'])
+                    try:
+                        h = m21.harmony.ChordSymbol(m21chord)
+                        m.insert(beat['num beat']-1, h)
+                        previous_chord = beat['chord']
+                    except:
+                        print('not recognized chord', m21chord)
+                # append notes to the bar
+                for i in range(len(beat['pitch'])):
+                    if beat['pitch'][i] == 'R':
+                        new_note = m21.note.Rest(quarterLength=duration_to_m21[beat['duration'][i]])
+                    else:  
+                        new_note = m21.note.Note(midi=beat['pitch'][i], quarterLength=duration_to_m21[beat['duration'][i]])
+                    m.append(new_note)
             m.number = bar['num bar']
             l = 0
             for note in m.notesAndRests:
@@ -169,7 +177,7 @@ if __name__ == '__main__':
         # convert to xml
         #try:
         xml_converter = m21.converter.subConverters.ConverterMusicXML()
-        xml_converter.write(stream, 'musicxml', 'data/NottinghamDBxml/' + songID + '.xml')
+        xml_converter.write(stream, 'musicxml', 'output/gen4eval_WjazzDB/original/xml/' + songID + '.xml')
         #except:
             #pass
         previousID = songID

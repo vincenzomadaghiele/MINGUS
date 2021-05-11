@@ -231,7 +231,7 @@ if __name__ == '__main__':
     generated_path = 'output/02_SeqAttn_gens_NottinghamDB/*.mid'
     MGEresults = ev.MGEval(original_path, generated_path, path, num_of_generations)
     metrics_result['MGEval'] = MGEresults
-    
+    '''
     # Harmonic coherence of generated samples
     if con.DATASET == 'WjazzDB':
         original_scale_coherence, original_chord_coherence = ev.HarmonicCoherence(original_structuredSongs, 
@@ -255,7 +255,7 @@ if __name__ == '__main__':
         generated_scale_coherence, generated_chord_coherence = ev.HarmonicCoherence(generated_structuredSongs, 
                                                                                     WjazzToMusic21, 
                                                                                     WjazzToMidiChords)
-    '''
+    
     metrics_result['Harmonic coherence']['Original scale coherence'] = np.round_(original_scale_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Original chord coherence'] = np.round_(original_chord_coherence, decimals=4)
     metrics_result['Harmonic coherence']['Generated scale coherence'] = np.round_(generated_scale_coherence, decimals=4)

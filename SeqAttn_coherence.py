@@ -12,7 +12,7 @@ import glob
 
 if __name__ == '__main__':
 
-    source_path = 'output/02_SeqAttn_gens/*.mid'
+    source_path = 'output/02_SeqAttn_gens_NottinghamDB/*.mid'
     source_songs = glob.glob(source_path)
     scale_coherence = 0
     chord_coherence = 0
