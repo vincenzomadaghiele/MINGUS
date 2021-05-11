@@ -26,6 +26,7 @@ ToDo:
         - Model parameters
         - Training times
         - MGEval comparison on NottinghamDB for the three models
+        - Train with condition on style, instrument, rhythm feel
         - Style-dependent generation results (?)
     
     Future steps:
