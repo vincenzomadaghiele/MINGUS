@@ -25,6 +25,10 @@ if __name__ == '__main__':
     OriginalStudent = []
     OriginalProf = []
     
+    countLovers = 0
+    countStudents = 0
+    countProfessionals = 0
+        
     for tune in userEval:
         if tune['origin'] == 'original':
             for rate in tune['ratings']:
@@ -50,6 +54,15 @@ if __name__ == '__main__':
                     BebopStudent.append(rate['rate'])
                 if rate['experience'] == 'Professional musician':
                     BebopProf.append(rate['rate'])
+
+    for rate in tune['ratings']:
+        if rate['experience'] == 'Music lover':
+            countLovers += 1
+        if rate['experience'] == 'Music student':
+            countStudents += 1
+        if rate['experience'] == 'Professional musician':
+            countProfessionals += 1
+
 
     userEvalSummary = {}
     userEvalSummary['original'] = {}

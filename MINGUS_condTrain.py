@@ -5,34 +5,11 @@ Created on Tue Mar 16 08:56:16 2021
 
 @author: vincenzomadaghiele
 
-ToDo:        
-    Tables and figures on paper:
-        - Data representation
-        - Model figure with conditionings
-        - Perplexity / Accuracy of the three models
-        - MGEval on WjazzDB of the three models (reference VS generated)
-        - Harmonic coherence (all dataset VS generated)
-        - User evaluation 
-        - Musical analysis
-    
-    Tables and figures on appendix:
-        - Conditionings accuracy / perplexity (first 20)
-        - BLEU
-        - Model parameters
-        - Training times
-        - MGEval comparison on NottinghamDB for the three models
-        - Train with condition on style, instrument, rhythm feel
-        - Style-dependent generation results (?)
-    
-    Future steps:
-        - bass line generation on WjazzDB (given only chord and given melody)
-        - parallel conditional generation (melody + bass)
-        - consider note_seq pipeline with quantization to obtain better results on WjazzDB
-        - evaluate implementation of Transformer-XL / Relative attention (and comparison)
-        - live interface (chord recognition in max from audio or midi), 
-            note generation in python (communication via osc)
-            might require training with different bass embedding layer
-        - melody harmonization
+ToDo:
+    - find papers to cite
+    - describe tables in supplementary
+    - order code
+    - try to make all MGEval work
     
 Procedure to train with custom data:
     1. Put data in the folder data/customXML

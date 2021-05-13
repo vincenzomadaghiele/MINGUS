@@ -1,0 +1,10 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: osx-64
+
+numpy==1.18.5
+torch==1.7.0
+tensorboard==2.4.1
+music21==6.7.1
+pretty_midi==0.2.9
+mido==1.2.9
