@@ -2,7 +2,6 @@
 
 ##### Authors: Vincenzo Madaghiele, Pasquale Lisena, Raphaël Troncy
 
-## Project Description
 Sequence to Sequence (Seq2Seq) approaches have shown good performances in automatic music generation. We introduce MINGUS, a Transformer-based Seq2Seq architecture for modelling and generating monophonic jazz melodic lines.
 MINGUS relies on two dedicated embedding models (respectively for pitch and duration) and exploits in prediction features such as chords (current and following), bass line, position inside the measure. The obtained results are comparable with the state of the art, with particularly good performances on jazz music.
 
@@ -34,7 +33,7 @@ The saved model will be in B_train/models. It is possible to visualize training 
 ```
 $ tensorboard --logdir=B_train/runs
 ```
-The results are showed at http://localhost:6006/.
+The results are showed in your browser at http://localhost:6006/.
 
 ## Generate music
 To generate music with MINGUS you can run the following command. Please ensure that the arguments correspond to an already trained model. 
