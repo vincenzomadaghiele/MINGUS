@@ -105,6 +105,7 @@ def WjazzChordToM21(chord):
 
 if __name__ == '__main__':
     
+    '''
     # LOAD DATA
     WjazzDB = dataset.WjazzDB(device, con.TRAIN_BATCH_SIZE, con.EVAL_BATCH_SIZE,
                  con.BPTT, con.AUGMENTATION, con.SEGMENTATION, con.augmentation_const)
@@ -118,7 +119,7 @@ if __name__ == '__main__':
     vocabPitch, vocabDuration, vocabBeat, vocabOffset = WjazzDB.getVocabs()
     pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix = WjazzDB.getInverseVocabs()
     WjazzChords, WjazzToMusic21, WjazzToChordComposition, WjazzToMidiChords = WjazzDB.getChordDicts()
-
+    '''
     
     possible_durations = [4, 2, 1, 1/2, 1/4, 1/8, 1/16, 
                           3, 3/2, 3/4, 3/8, 
@@ -191,10 +192,10 @@ if __name__ == '__main__':
                     # check for bar end
                     if row['bar'] != current_bar:
                         if chord_counter == 0 and last_chord != 'NC':
-                            if last_chord in WjazzToMusic21.keys():
-                                m21chord = WjazzToMusic21[last_chord]
-                            else:
-                                m21chord = WjazzChordToM21(last_chord)
+                            #if last_chord in WjazzToMusic21.keys():
+                            #    m21chord = WjazzToMusic21[last_chord]
+                            #else:
+                            m21chord = WjazzChordToM21(last_chord)
                             # Handle exceptions
                             chord_components = [char for char in m21chord]
                             m21chord = ''
@@ -338,11 +339,11 @@ if __name__ == '__main__':
                             
                     # append chords
                     if row['chord'] != 'NC':
-                        if row['chord'] in WjazzToMusic21.keys():
-                            m21chord = WjazzToMusic21[row['chord']]
+                        #if row['chord'] in WjazzToMusic21.keys():
+                        #    m21chord = WjazzToMusic21[row['chord']]
                             #print(row['chord'], m21chord)
-                        else:
-                            m21chord = WjazzChordToM21(row['chord'])
+                        #else:
+                        m21chord = WjazzChordToM21(row['chord'])
                         # Handle exceptions
                         chord_components = [char for char in m21chord]
                         m21chord = ''

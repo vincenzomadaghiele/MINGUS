@@ -252,7 +252,7 @@ def arraysFromStructuredSong(structuredTune):
                 chord.append(bea['chord'])
                 next_chord.append(bea['next chord'])
                 bass.append(bea['bass'])
-                beat.append(bea['num beat'])
+                beat.append(min(bea['num beat'],4))
             for d in bea['duration']:
                 duration.append(d)
             for o in bea['offset']:
@@ -291,7 +291,7 @@ if __name__ == '__main__':
             songs.append(tune)
 
     elif args.format == 'abc':
-        print('abc')
+        print('abc input will be available soon, please retry with musicXML files')
     
     
     # split into train, validation and test
