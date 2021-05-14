@@ -7,7 +7,6 @@ Created on Fri Mar 19 18:01:13 2021
 
 ToDO:
     - COMPUTE ALL MGEVAL METRICS AND UPDATE PAPER
-    - finish to write paper
     - explain tables in supplementary material
     - move params to yml
     - substitute chord dicts with extractChord function with m21
