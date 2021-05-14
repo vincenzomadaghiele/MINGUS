@@ -291,7 +291,7 @@ if __name__ == '__main__':
             songs.append(tune)
 
     elif args.format == 'abc':
-        print('abc input will be available soon, please retry with musicXML files')
+        print('abc')
     
     
     # split into train, validation and test

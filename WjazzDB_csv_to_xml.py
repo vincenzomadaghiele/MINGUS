@@ -335,7 +335,7 @@ if __name__ == '__main__':
                             m.insert(bar_offset, new_note)
                             mm.insert(bar_offset, new_note)
                             bar_offset = 0
-                            
+                           
                     # append chords
                     if row['chord'] != 'NC':
                         if row['chord'] in WjazzToMusic21.keys():

@@ -1,0 +1,112 @@
+{
+    "MGEval": {
+        "total_used_pitch": {
+            "ref_mean": 22.2857,
+            "ref_std": 1.8295,
+            "gen_mean": 24.5,
+            "gen_std": 5.641,
+            "ref_KL-div": 0.0952,
+            "ref_overlap-area": 0.5444,
+            "gen_KL-div": 0.0448,
+            "gen_overlap-area": 0.7438
+        },
+        "avg_IOI": {
+            "ref_mean": 0.1942,
+            "ref_std": 0.0594,
+            "gen_mean": 0.277,
+            "gen_std": 0.0665,
+            "ref_KL-div": 0.0417,
+            "ref_overlap-area": 0.7535,
+            "gen_KL-div": 0.029,
+            "gen_overlap-area": 0.7842
+        },
+        "avg_pitch_shift": {
+            "ref_mean": 2.9929,
+            "ref_std": 0.252,
+            "gen_mean": 2.8817,
+            "gen_std": 0.2254,
+            "ref_KL-div": 0.187,
+            "ref_overlap-area": 0.8492,
+            "gen_KL-div": 0.0489,
+            "gen_overlap-area": 0.8497
+        },
+        "note_length_hist": {
+            "ref_mean": 0.0833,
+            "ref_std": 0.1606,
+            "gen_mean": 0.0833,
+            "gen_std": 0.1074,
+            "ref_KL-div": 0.5081,
+            "ref_overlap-area": 0.5619,
+            "gen_KL-div": 0.3975,
+            "gen_overlap-area": 0.5033
+        },
+        "total_pitch_class_histogram": {
+            "ref_mean": 0.0833,
+            "ref_std": 0.0591,
+            "gen_mean": 0.0833,
+            "gen_std": 0.0611,
+            "ref_KL-div": 0.0214,
+            "ref_overlap-area": 0.8949,
+            "gen_KL-div": 0.0544,
+            "gen_overlap-area": 0.8814
+        },
+        "note_length_transition_matrix": {
+            "ref_mean": 1.6677,
+            "ref_std": 7.9959,
+            "gen_mean": 1.746,
+            "gen_std": 6.612,
+            "ref_KL-div": 0.1448,
+            "ref_overlap-area": 0.7204,
+            "gen_KL-div": 0.4171,
+            "gen_overlap-area": 0.5873
+        },
+        "pitch_class_transition_matrix": {
+            "ref_mean": 3.8566,
+            "ref_std": 5.3704,
+            "gen_mean": 8.6493,
+            "gen_std": 11.0868,
+            "ref_KL-div": 0.2586,
+            "ref_overlap-area": 0.5339,
+            "gen_KL-div": 0.0476,
+            "gen_overlap-area": 0.8078
+        },
+        "pitch_range": {
+            "ref_mean": 24.0714,
+            "ref_std": 2.0165,
+            "gen_mean": 27.2143,
+            "gen_std": 7.0425,
+            "ref_KL-div": 0.3097,
+            "ref_overlap-area": 0.5283,
+            "gen_KL-div": 0.0807,
+            "gen_overlap-area": 0.7676
+        },
+        "total_used_note": {
+            "ref_mean": 241.1429,
+            "ref_std": 103.6339,
+            "gen_mean": 252.4286,
+            "gen_std": 93.0228,
+            "ref_KL-div": 0.0937,
+            "ref_overlap-area": 0.8594,
+            "gen_KL-div": 0.0684,
+            "gen_overlap-area": 0.829
+        }
+    },
+    "Harmonic coherence": {
+        "Original scale coherence": 0.7216,
+        "Original chord coherence": 0.4917,
+        "Generated scale coherence": 0.7897,
+        "Generated chord coherence": 0.5714
+    },
+    "Pitch": {
+        "Pitch_accuracy": 13.3738,
+        "Pitch_perplexity": 12.5616,
+        "Pitch_test-loss": 2.5306,
+        "Pitch_BLEU": 0.4218
+    },
+    "Duration": {
+        "Duration_accuracy": 31.6685,
+        "Duration_perplexity": 4.2598,
+        "Duration_test-loss": 1.4492,
+        "Duration_BLEU": 0.5558
+    }
+}

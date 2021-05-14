@@ -309,8 +309,8 @@ if __name__=="__main__":
                         # find remaining time from last played note
                         # put rest in the beat
                         # if there is no note remaining add quarter rest
-                        
-                        
+                    
+                    
                     
                     new_beat = {}
                     new_beat['num beat'] = beat 
