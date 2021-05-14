@@ -1,0 +1,2 @@
+MusicXML files to be used as input for generation go here. All these files will be used to create a corpus of generated midi if the following command is run:
+$ python3 C_generate/generate.py --GENERATE_CORPUS
