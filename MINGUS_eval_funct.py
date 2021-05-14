@@ -97,14 +97,15 @@ def MGEval(training_midi_path, generated_midi_path, fig_savePath, num_samples = 
     # Dictionary of metrics
     set1_eval = {'total_used_pitch':np.zeros((num_samples,1))}
     # Add metrics to the dictionary
-    set1_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
-    #set1_eval['total_used_note'] = np.zeros((num_samples,1))
-    set1_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
-    #set1_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12))
-    set1_eval['pitch_range'] = np.zeros((num_samples,1))
-    #set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
     set1_eval['avg_IOI'] = np.zeros((num_samples,1))
-    #set1_eval['note_length_hist'] = np.zeros((num_samples,12))
+    set1_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
+    set1_eval['note_length_hist'] = np.zeros((num_samples,12))
+    set1_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
+    set1_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12))
+    set1_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
+    set1_eval['pitch_range'] = np.zeros((num_samples,1))
+    set1_eval['total_used_note'] = np.zeros((num_samples,1))
+    set1_eval['total_used_pitch'] = np.zeros((num_samples,1))
     
     # Calculate metrics
     metrics_list = list(set1_eval.keys())
@@ -122,14 +123,15 @@ def MGEval(training_midi_path, generated_midi_path, fig_savePath, num_samples = 
     # Dictionary of metrics
     set2_eval = {'total_used_pitch':np.zeros((num_samples,1))}
     # Add metrics to the dictionary
-    set2_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
-    #set2_eval['total_used_note'] = np.zeros((num_samples,1))
-    set2_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
-    #set2_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12)) # problem: note enough generation make the mean 0
-    set2_eval['pitch_range'] = np.zeros((num_samples,1))
-    #set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
     set2_eval['avg_IOI'] = np.zeros((num_samples,1))
-    #set2_eval['note_length_hist'] = np.zeros((num_samples,12))
+    set2_eval['avg_pitch_shift'] = np.zeros((num_samples,1))
+    set2_eval['note_length_hist'] = np.zeros((num_samples,12))
+    set2_eval['total_pitch_class_histogram'] = np.zeros((num_samples,12))
+    set2_eval['note_length_transition_matrix'] = np.zeros((num_samples,12,12))
+    set2_eval['pitch_class_transition_matrix'] = np.zeros((num_samples,12,12))
+    set2_eval['pitch_range'] = np.zeros((num_samples,1))
+    set2_eval['total_used_note'] = np.zeros((num_samples,1))
+    set2_eval['total_used_pitch'] = np.zeros((num_samples,1))
     
     # Calculate metrics
     for j in range(0, len(metrics_list)):
@@ -206,24 +208,26 @@ def MGEval(training_midi_path, generated_midi_path, fig_savePath, num_samples = 
         
     # Calculate divergence between measures
     for i in range(0, len(metrics_list)):
-        
-        # mean and std of the reference set
-        results[metrics_list[i]]['ref_KL-div'] = np.round_(utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i]), decimals=4)
-        results[metrics_list[i]]['ref_overlap-area'] = np.round_(utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i]), decimals=4)
-        # mean and std of the generated set
-        results[metrics_list[i]]['gen_KL-div'] = np.round_(utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i]), decimals=4)
-        results[metrics_list[i]]['gen_overlap-area'] = np.round_(utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]), decimals=4)
+        try:
+            # mean and std of the reference set
+            results[metrics_list[i]]['ref_KL-div'] = np.round_(utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i]), decimals=4)
+            results[metrics_list[i]]['ref_overlap-area'] = np.round_(utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i]), decimals=4)
+            # mean and std of the generated set
+            results[metrics_list[i]]['gen_KL-div'] = np.round_(utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i]), decimals=4)
+            results[metrics_list[i]]['gen_overlap-area'] = np.round_(utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]), decimals=4)
+                
+            print(metrics_list[i] + ':')
+            print('------------------------')
+            print(' Reference set')
+            print('  Kullback–Leibler divergence:',utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i]))
+            print('  Overlap area:', utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i]))
             
-        print(metrics_list[i] + ':')
-        print('------------------------')
-        print(' Reference set')
-        print('  Kullback–Leibler divergence:',utils.kl_dist(plot_set1_intra[i], plot_sets_inter[i]))
-        print('  Overlap area:', utils.overlap_area(plot_set1_intra[i], plot_sets_inter[i]))
-        
-        print(' Generated set')
-        print('  Kullback–Leibler divergence:',utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i]))
-        print('  Overlap area:', utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]))
-        print()
+            print(' Generated set')
+            print('  Kullback–Leibler divergence:',utils.kl_dist(plot_set2_intra[i], plot_sets_inter[i]))
+            print('  Overlap area:', utils.overlap_area(plot_set2_intra[i], plot_sets_inter[i]))
+            print()
+        except:
+            print('Could not compute metric', metrics_list[i])
         
     return results
 

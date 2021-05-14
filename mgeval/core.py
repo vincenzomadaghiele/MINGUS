@@ -41,7 +41,7 @@ class metrics(object):
         used_pitch = np.sum(sum_notes > 0)
         return used_pitch
 
-    def bar_used_pitch(self, feature, track_num=0, num_bar=None):
+    def bar_used_pitch(self, feature, track_num=1, num_bar=None):
         """
         bar_used_pitch (Pitch count per bar)
 
@@ -98,7 +98,7 @@ class metrics(object):
 
         return used_pitch
 
-    def total_used_note(self, feature, track_num=0):
+    def total_used_note(self, feature, track_num=1):
         """
         total_used_note (Note count): The number of used notes.
         As opposed to the pitch count, the note count does not contain pitch information but is a rhythm-related feature.
@@ -271,7 +271,7 @@ class metrics(object):
         p_range = np.max(pitch_index) - np.min(pitch_index)
         return p_range
 
-    def avg_pitch_shift(self, feature, track_num=0):
+    def avg_pitch_shift(self, feature, track_num=1):
         """
         avg_pitch_shift (Average pitch interval):
         Average value of the interval between two consecutive pitches in semitones.
@@ -316,7 +316,7 @@ class metrics(object):
         avg_ioi = np.mean(ioi)
         return avg_ioi
 
-    def note_length_hist(self, feature, track_num=0, normalize=True, pause_event=False):
+    def note_length_hist(self, feature, track_num=1, normalize=True, pause_event=False):
         """
         note_length_hist (Note length histogram):
         To extract the note length histogram, we first define a set of allowable beat length classes:
@@ -417,7 +417,7 @@ class metrics(object):
             np.seterr(divide='ignore', invalid='ignore')
             return note_length_hist / np.sum(note_length_hist)
 
-    def note_length_transition_matrix(self, feature, track_num=0, normalize=0, pause_event=False):
+    def note_length_transition_matrix(self, feature, track_num=1, normalize=0, pause_event=False):
         """
         note_length_transition_matrix (Note length transition matrix):
         Similar to the pitch class transition matrix, the note length tran- sition matrix provides useful information for rhythm description.
