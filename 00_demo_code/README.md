@@ -22,7 +22,11 @@ Place your musicXML data in 00_preprocessData/data/xml.
 ```
 $ python3 A_preprocessData/data_preprocessing.py --format xml
 ```
-This will generate the file 00_preprocessData/data/DATA.json which will be used for training.
+This will generate the file 00_preprocessData/data/DATA.json which will be used for training. This file should be the same for all the following (even generation and evaluation).
+WjazzDB requires specific pre-processing from the [csv files](http://mir.audiolabs.uni-erlangen.de/jazztube/downloads) provided by its authors.
+```
+$ python3 A_preprocessData/wjazzDB_preprocessing.py 
+```
 
 ## Train MINGUS
 To train MINGUS with your dataset run:

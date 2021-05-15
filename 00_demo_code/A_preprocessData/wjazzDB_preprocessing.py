@@ -482,7 +482,6 @@ if __name__ == '__main__':
                         beat['next chord'] = next_chords2[next_chord_pointer]
     
                 new_structured_song['bars'] = bars
-                
                 tune = prep.arraysFromStructuredSong(new_structured_song)
                 structuredSongs.append(new_structured_song)
                 songs.append(tune)
