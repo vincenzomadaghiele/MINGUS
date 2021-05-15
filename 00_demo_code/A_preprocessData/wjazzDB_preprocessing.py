@@ -5,11 +5,13 @@ Created on Fri May 14 18:37:11 2021
 
 @author: vincenzomadaghiele
 """
-import music21 as m21
 import pandas as pd
 import numpy as np
 import glob
+import json
 import torch
+
+import A_preprocessData.data_preprocessing as prep 
 
 # Device configuration
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
@@ -98,7 +100,7 @@ def WjazzChordToM21(chord):
         new_chord_name = 'B-m7'
     
     return new_chord_name
-
+    
 
 if __name__ == '__main__':
     
@@ -125,15 +127,19 @@ if __name__ == '__main__':
     dur_dict[possible_durations[10]] = 'quarter note triplet'
 
     
-    source_path = 'data/WjazzDBcsv/csv_beats/*.csv'
+    source_path = 'A_preprocessData/data/WjazzDBcsv/csv_beats/*.csv'
     source_songs = glob.glob(source_path)
-    source_songs = ["data/WjazzDBcsv/csv_beats/ArtPepper_Anthropology_Solo.csv"]
+    #source_songs = ["data/WjazzDBcsv/csv_beats/DonEllis_YouSteppedOutOfADream-2_Solo.csv"]
+    #source_songs = ["A_preprocessData/data/WjazzDBcsv/csv_beats/DonEllis_YouSteppedOutOfADream-2_Solo.csv"]
     
+    structuredSongs = []
+    songs = []
     for csv_path in source_songs:
         
         beat_df = pd.read_csv(csv_path)
-        song_name = csv_path[26:-4]
-        melody_path = 'data/WjazzDBcsv/csv_melody/' + song_name + '.csv'
+        song_name = '.'.join(csv_path.split('/')[-1].split('.')[:-1])
+        melody_path = 'A_preprocessData/data/WjazzDBcsv/csv_melody/' + song_name + '.csv'
+        #melody_path = 'data/WjazzDBcsv/csv_melody/' + song_name + '.csv'
         meldoy_df = pd.read_csv(melody_path)
         print('converting ', song_name)
         
@@ -178,12 +184,12 @@ if __name__ == '__main__':
             counter96 = 0
             bar_offset = 0
             chord_counter = 0 
-            if not beat_df['chord'][(beat_df.chord != 'NC')].empty:
+            if not beat_df['chord'][(beat_df.chord != 'NC')].empty and not beat_df['bass_pitch'].empty:
                 last_chord = beat_df['chord'][(beat_df.chord != 'NC')].iloc[0]
                 for i, row in beat_df.iterrows():
                     
                     # find all notes in the bar
-                    if row['beat'] == 1:
+                    if row['beat'] == beat_df.iloc[0]['beat']:
                         
                         beats = []
                         new_beat = {}
@@ -192,6 +198,9 @@ if __name__ == '__main__':
                         new_beat['scale'] = []
                         #new_beat['bass'] = bass
                         new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
+                        beat_pitch = []
+                        beat_duration = []
+                        beat_offset = []
 
                         
                         if i+4 <= beat_df.shape[0] - 1:
@@ -225,10 +234,23 @@ if __name__ == '__main__':
                             for j, note in _thisBarNotes.iterrows():
                                 # check if beat has ended
                                 if note['beat'] != new_beat['num beat']:
+                                    
                                     new_beat['pitch'] = beat_pitch 
                                     new_beat['duration'] = beat_duration 
                                     new_beat['offset'] = beat_offset
                                     beats.append(new_beat)
+
+                                    bt_num = new_beat['num beat'] + 1
+                                    while bt_num < note['beat']:
+                                        new_beat = {}
+                                        new_beat['num beat'] = bt_num
+                                        new_beat['scale'] = []
+                                        new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
+                                        new_beat['pitch'] = [] 
+                                        new_beat['duration'] = [] 
+                                        new_beat['offset'] = []
+                                        beats.append(new_beat)
+                                        bt_num += 1
                                     
                                     new_beat = {}
                                     new_beat['num beat'] = note['beat']
@@ -301,7 +323,7 @@ if __name__ == '__main__':
                                         nextRest = ['R', duration, offset, quarterDuration]
                                     else:
                                         # if no rest sum duration to the note 
-                                        note['duration'] = _thisBarNotes.iloc[j+1]['onset'] - note['onset']
+                                        note['duration'] = next_bar_onset - note['onset']
                                     
                                     
                                     # this is the last note in the bar
@@ -341,32 +363,30 @@ if __name__ == '__main__':
                             beat_pitch.append(pitch)
                             beat_duration.append(duration)
                             beat_offset.append(offset)
-
+        
                             bar_offset = 0
-                        
+                    
                         # append last beat
                         new_beat['pitch'] = beat_pitch 
                         new_beat['duration'] = beat_duration 
                         new_beat['offset'] = beat_offset
                         beats.append(new_beat)
                     
-                    # ensure there are no missing beats
-                    bt_num = 1
-                    new_beats = []
-                    for b in beats:
-                        if b['num beat'] != bt_num:
-                            new_beat = {}
-                            new_beat['num beat'] = bt_num
-                            new_beat['scale'] = []
-                            new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
-                            new_beat['pitch'] = [] 
-                            new_beat['duration'] = [] 
-                            new_beat['offset'] = []
-                            beats.append(new_beat)
-                            bt_num += 1
-                        else:
-                            new_beats.append(b)
-                    beats = new_beats
+                    # add last beats 
+                    bt = len(beats) + 1
+                    while len(beats) < 4:
+                        new_beat = {}
+                        new_beat['num beat'] = bt
+                        new_beat['scale'] = []
+                        new_beat['this beat duration [sec]'] = new_structured_song['beat duration [sec]']
+                        new_beat['pitch'] = [] 
+                        new_beat['duration'] = [] 
+                        new_beat['offset'] = []
+                        beats.append(new_beat)
+                        bt += 1
+                        
+                    if len(beats) > 4:
+                        beats = beats[:4]
                     
                     # append chords
                     if row['chord'] != 'NC':
@@ -382,15 +402,23 @@ if __name__ == '__main__':
                                 if chord_components[kk] == '6' and (chord_components[kk+1] != 'b' or chord_components[kk+1] != '#'):
                                     m21chord = m21chord[:-1]
                                     break
-                                
-                        beats[row['beat']-1]['chord'] = row['chord']
-                        last_chord = row['chord']
+                        
+                        if row['beat']-1 < 4 :
+                            #beats[row['beat']-1]['chord'] = row['chord']
+                            beats[row['beat']-1]['chord'] = m21chord
+                            last_chord = row['chord']
+                            last_chord = m21chord
                     else:
-                        beats[row['beat']-1]['chord'] = last_chord
+                        if row['beat']-1 < 4 :
+                            beats[row['beat']-1]['chord'] = last_chord
 
-                    # append bass
-                    beats[row['beat']-1]['bass'] = row['bass_pitch']
-
+                    if row['beat']-1 < 4 :
+                        # append bass
+                        if row['bass_pitch']:
+                            beats[row['beat']-1]['bass'] = row['bass_pitch']
+                        else:
+                            beats[row['beat']-1]['bass'] = 'R'
+                    
                     if row['beat'] == 4:
                         # append bar
                         new_bar = {}
@@ -399,9 +427,80 @@ if __name__ == '__main__':
                         bars.append(new_bar)
                         beats = []
                         bar_num += 1
-                        if bar_num == 2:
-                            break
-                        
+                        current_bar_start_time = row['onset']
+                        #if bar_num == 4:
+                        #    break
+            
+                # compute chords array
+                chord_array = []
+                for bar in bars:
+                    for beat in bar['beats']:
+                        if 'chord' not in beat.keys():
+                            beat['chord'] = 'NC'
+                        if 'bass' not in beat.keys():
+                            beat['bass'] = 'R'
+                        chord_array.append(beat['chord'])
+                
+                # compute next chord 
+                last_chord = chord_array[0]
+                next_chords = []
+                for i in range(len(chord_array)):
+                    if chord_array[i] != last_chord:
+                        next_chords.append(chord_array[i])
+                        last_chord = chord_array[i]
+                
+                # compute array of next chords
+                next_chords.append('NC')
+                next_chord_array = []
+                next_chord_pointer = 0
+                last_chord = chord_array[0]
+                for i in range(len(chord_array)):
+                    if chord_array[i] != last_chord:
+                        last_chord = chord_array[i]
+                        next_chord_pointer += 1
+                    next_chord_array.append(next_chords[next_chord_pointer])
+                
+                
+                # compute next chord 
+                last_chord = bars[0]['beats'][0]['chord']
+                next_chords2 = []
+                for bar in bars:
+                    for beat in bar['beats']:
+                        if beat['chord'] != last_chord:
+                            next_chords2.append(beat['chord'])
+                            last_chord = beat['chord']
+                
+                # add next chord to the beats
+                last_chord = bars[0]['beats'][0]['chord']
+                next_chords2.append('NC')
+                next_chord_pointer = 0
+                for bar in bars:
+                    for beat in bar['beats']:
+                        if beat['chord'] != last_chord:
+                            last_chord = beat['chord']
+                            next_chord_pointer += 1
+                        beat['next chord'] = next_chords2[next_chord_pointer]
+    
+                new_structured_song['bars'] = bars
+                
+                tune = prep.arraysFromStructuredSong(new_structured_song)
+                structuredSongs.append(new_structured_song)
+                songs.append(tune)
+            
+    # split into train, validation and test
+    songs_split = {}
+    # train: 70% 
+    songs_split['train'] = songs[:int(len(songs)*0.7)]
+    # train: 10% 
+    songs_split['validation'] = songs[int(len(songs)*0.7)+1:int(len(songs)*0.7)+1+int(len(songs)*0.1)]
+    # train: 20%
+    songs_split['test'] = songs[int(len(songs)*0.7)+1+int(len(songs)*0.1):]
+    # structured songs (ordered by bar and beats)
+    songs_split['structured for generation'] = structuredSongs
+    
+    # Convert dict to JSON and SAVE IT
+    with open('A_preprocessData/data/DATA.json', 'w') as fp:
+        json.dump(songs_split, fp, indent=4)
 
 
 

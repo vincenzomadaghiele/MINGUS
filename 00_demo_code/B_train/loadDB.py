@@ -586,75 +586,88 @@ class MusicDB():
                 midiChord = ['R','R','R','R']
                 multi_hot = np.zeros(12)
             else:
-                h = m21.harmony.ChordSymbol(new_chord_name)
-                pitchNames = [str(p) for p in h.pitches]
-                # The following bit is added 
-                # just for parameter modeling purposes
-                if len(pitchNames) < 4:
-                    hd = m21.harmony.ChordStepModification('add', 7)
-                    h.addChordStepModification(hd, updatePitches=True)
-                    #chord = m21.chord.Chord(pitchNames)
-                    pitchNames = [str(p) for p in h.pitches]                
-                    
-                midiChord = []
-                multi_hot = np.zeros(12)
-                for p in pitchNames:
-                    
-                    # midi conversion
-                    c = m21.pitch.Pitch(p)
-                    midiChord.append(c.midi)
-                    
-                    # multi-hot
-                    # C C#/D- D D#/E- E E#/F F#/G- G G#/A- A A#/B- B 
-                    # 0   1   2   3   4   5    6   7   8   9  10   11
-                    if p[0] == 'C' and p[1] == '-':
-                        multi_hot[11] = 1
-                    elif p[0] == 'C' and p[1] == '#':
-                        multi_hot[1] = 1
-                    elif p[0] == 'C' :
-                        multi_hot[0] = 1
-                    
-                    elif p[0] == 'D' and p[1] == '-':
-                        multi_hot[1] = 1
-                    elif p[0] == 'D' and p[1] == '#':
-                        multi_hot[3] = 1
-                    elif p[0] == 'D' :
-                        multi_hot[2] = 1
-                    
-                    elif p[0] == 'E' and p[1] == '-':
-                        multi_hot[3] = 1
-                    elif p[0] == 'E' and p[1] == '#':
-                        multi_hot[5] = 1
-                    elif p[0] == 'E' :
-                        multi_hot[4] = 1
-                    
-                    elif p[0] == 'F' and p[1] == '-':
-                        multi_hot[4] = 1
-                    elif p[0] == 'F' and p[1] == '#':
-                        multi_hot[6] = 1
-                    elif p[0] == 'F' :
-                        multi_hot[7] = 1
-                    
-                    elif p[0] == 'G' and p[1] == '-':
-                        multi_hot[6] = 1
-                    elif p[0] == 'G' and p[1] == '#':
-                        multi_hot[8] = 1
-                    elif p[0] == 'G' :
-                        multi_hot[7] = 1
-                    
-                    elif p[0] == 'A' and p[1] == '-':
-                        multi_hot[8] = 1
-                    elif p[0] == 'A' and p[1] == '#':
-                        multi_hot[10] = 1
-                    elif p[0] == 'A' :
-                        multi_hot[9] = 1
-                    
-                    elif p[0] == 'B' and p[1] == '-':
-                        multi_hot[10] = 1
-                    elif p[0] == 'B' and p[1] == '#':
-                        multi_hot[0] = 1
-                    elif p[0] == 'B' :
-                        multi_hot[11] = 1
+                try:
+                    h = m21.harmony.ChordSymbol(new_chord_name)
+                    pitchNames = [str(p) for p in h.pitches]
+                    # The following bit is added 
+                    # just for parameter modeling purposes
+                    if len(pitchNames) < 4:
+                        hd = m21.harmony.ChordStepModification('add', 7)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        #chord = m21.chord.Chord(pitchNames)
+                        pitchNames = [str(p) for p in h.pitches]    
+                    if len(pitchNames) < 4:
+                        hd = m21.harmony.ChordStepModification('add', 8)
+                        h.addChordStepModification(hd, updatePitches=True)
+                        #chord = m21.chord.Chord(pitchNames)
+                        pitchNames = [str(p) for p in h.pitches]                
+
+                        
+                    midiChord = []
+                    multi_hot = np.zeros(12)
+                    for p in pitchNames:
+                        
+                        # midi conversion
+                        c = m21.pitch.Pitch(p)
+                        midiChord.append(c.midi)
+                        
+                        # multi-hot
+                        # C C#/D- D D#/E- E E#/F F#/G- G G#/A- A A#/B- B 
+                        # 0   1   2   3   4   5    6   7   8   9  10   11
+                        if p[0] == 'C' and p[1] == '-':
+                            multi_hot[11] = 1
+                        elif p[0] == 'C' and p[1] == '#':
+                            multi_hot[1] = 1
+                        elif p[0] == 'C' :
+                            multi_hot[0] = 1
+                        
+                        elif p[0] == 'D' and p[1] == '-':
+                            multi_hot[1] = 1
+                        elif p[0] == 'D' and p[1] == '#':
+                            multi_hot[3] = 1
+                        elif p[0] == 'D' :
+                            multi_hot[2] = 1
+                        
+                        elif p[0] == 'E' and p[1] == '-':
+                            multi_hot[3] = 1
+                        elif p[0] == 'E' and p[1] == '#':
+                            multi_hot[5] = 1
+                        elif p[0] == 'E' :
+                            multi_hot[4] = 1
+                        
+                        elif p[0] == 'F' and p[1] == '-':
+                            multi_hot[4] = 1
+                        elif p[0] == 'F' and p[1] == '#':
+                            multi_hot[6] = 1
+                        elif p[0] == 'F' :
+                            multi_hot[7] = 1
+                        
+                        elif p[0] == 'G' and p[1] == '-':
+                            multi_hot[6] = 1
+                        elif p[0] == 'G' and p[1] == '#':
+                            multi_hot[8] = 1
+                        elif p[0] == 'G' :
+                            multi_hot[7] = 1
+                        
+                        elif p[0] == 'A' and p[1] == '-':
+                            multi_hot[8] = 1
+                        elif p[0] == 'A' and p[1] == '#':
+                            multi_hot[10] = 1
+                        elif p[0] == 'A' :
+                            multi_hot[9] = 1
+                        
+                        elif p[0] == 'B' and p[1] == '-':
+                            multi_hot[10] = 1
+                        elif p[0] == 'B' and p[1] == '#':
+                            multi_hot[0] = 1
+                        elif p[0] == 'B' :
+                            multi_hot[11] = 1
+                except:
+                    print('Could not convert chord', new_chord_name)
+                    pitchNames = ['R','R','R','R']
+                    midiChord = ['R','R','R','R']
+                    multi_hot = np.zeros(12)
+
 
             # Update dictionaries
             new_unique_chords.append(new_chord_name)
@@ -685,6 +698,10 @@ class MusicDB():
         self.CustomToChordComposition = CustomToChordComposition
         self.CustomToMidiChords = CustomToMidiChords
 
+        #for chord in self.CustomToMidiChords:
+        #    if len(self.CustomToMidiChords[chord]) != 4:
+        #        print(chord)
+        #        print(self.CustomToMidiChords[chord])
                 
         # PRE-PROCESSING
         print('Pre-processing...')

@@ -251,12 +251,17 @@ def arraysFromStructuredSong(structuredTune):
                     pitch.append(int(p))
                 chord.append(bea['chord'])
                 next_chord.append(bea['next chord'])
+                if not bea['bass']:
+                    bea['bass'] = 'R'
+                if bea['bass'] != 'R':
+                    if np.isnan(bea['bass']):
+                        bea['bass'] = 'R'
                 bass.append(bea['bass'])
                 beat.append(min(bea['num beat'],4))
             for d in bea['duration']:
                 duration.append(d)
             for o in bea['offset']:
-                offset.append(o)
+                offset.append(min(o,96))
     
     song['pitch'] = pitch
     song['duration'] = duration
