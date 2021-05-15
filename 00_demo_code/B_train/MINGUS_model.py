@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Mar 15 15:37:30 2021
-
-@author: vincenzomadaghiele
+This script contains the MINGUS model architecture, 
+training and evaluation functions
 """
 
 import numpy as np

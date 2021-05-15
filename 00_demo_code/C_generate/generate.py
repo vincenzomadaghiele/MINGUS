@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 13 12:00:14 2021
-
-@author: vincenzomadaghiele
+This script generates a melodic improvisation
+on a standard using a MINGUS trained model
 """
 
 import sys
@@ -12,7 +11,6 @@ import glob
 import json
 import torch
 
-#import A_preprocessData.data_preprocessing as cus
 import B_train.loadDB as dataset
 import B_train.MINGUS_model as mod
 import C_generate.gen_funct as gen

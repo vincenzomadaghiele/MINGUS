@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec 10 09:35:11 2020
-
-@author: vincenzomadaghiele
+This script contains the functions for MINGUS
+evaluation with different metrics
 """
 import music21 as m21
 import numpy as np

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 14 11:40:35 2021
-
-@author: vincenzomadaghiele
+This script contains the function for generation
+from a standard with a MINGUS trained model
 """
 import torch
 import pretty_midi

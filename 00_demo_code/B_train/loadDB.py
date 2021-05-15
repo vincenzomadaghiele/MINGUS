@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 13 10:48:02 2021
-
-@author: vincenzomadaghiele
+This script loads and pre-processes
+the dataset from the DATA.json file
 """
 
 import json

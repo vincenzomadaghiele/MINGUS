@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 13 11:05:28 2021
-
-@author: vincenzomadaghiele
+This script loads the database from the DATA.json file
+and then trains MINGUS with the data
 """
 import sys
 import argparse

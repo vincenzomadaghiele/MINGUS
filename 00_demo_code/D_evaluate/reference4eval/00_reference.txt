@@ -1,1 +1,1 @@
-Reference midi files for evaluation comparison go here. The melodic line must be in the first track.
+Reference midi files for evaluation comparison go here. The melodic line must be in the first track of the midi. You can put some randomly selected files from your dataset in the xml folder.

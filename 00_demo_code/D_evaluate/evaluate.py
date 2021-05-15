@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 13 19:59:22 2021
-
-@author: vincenzomadaghiele
+This script evaluates a MINGUS model 
+and a corpus of generated midi files
 """
 import os
 import sys

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 26 20:05:59 2021
 
-@author: vincenzomadaghiele
+This script exports the 
+Weimar Jazz DB to musicXML files
 """
 import music21 as m21
 import pandas as pd
@@ -313,7 +313,7 @@ if __name__ == '__main__':
                             m.insert(bar_offset, new_note)
                             mm.insert(bar_offset, new_note)
                             bar_offset = 0
-                           
+                            
                     # append chords
                     if row['chord'] != 'NC':
                         m21chord = WjazzChordToM21(row['chord'])

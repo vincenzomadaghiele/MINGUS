@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 13 10:16:31 2021
-
-@author: vincenzomadaghiele
 
 This scripts pre-processes the input 
 musical files in xml or abc formats
