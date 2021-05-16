@@ -6,21 +6,14 @@ Created on Tue Mar 16 08:56:16 2021
 @author: vincenzomadaghiele
 
 ToDo:
-    - find papers to cite
-    - describe tables in supplementary
-    - order code
-    - try to make all MGEval work
+    - ablation in demo code
+    - user eval in demo code
+    - midi interface
+    - abc interface
+    - load model from path and remove useless args
+    - model params to yml
+    - select model from different wjazz versions
     
-Procedure to train with custom data:
-    1. Put data in the folder data/customXML
-    2. Run CustomDB_dataPrep.py
-        --> results in data/CustomDB.json
-    3. Run MINGUS_condTrain.py to train
-        --> results in models/CustomDB and runs/CustomDB
-    4. Run generate_over_standards.py to generate
-        --> results in output/00_MINGUS_gens
-    5. Run MINGUS_condEval.py to evaluate songs
-        --> results in metrics/CustomDB
 """
 
 import torch

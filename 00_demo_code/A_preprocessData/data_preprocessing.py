@@ -13,6 +13,14 @@ import glob
 import numpy as np
 import music21 as m21
 
+def midiToStructuredSong(midi_path):
+    # to complete
+    return new_structured_song
+
+def abcToStructuredSong(abc_path):
+    # to complete
+    return new_structured_song
+
 def xmlToStructuredSong(xml_path):
     
     print('Loading song: ', xml_path)
