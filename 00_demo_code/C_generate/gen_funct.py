@@ -296,9 +296,6 @@ def generateOverStandard(tune, num_chorus, temperature,
     '''
     # sampling of the measure
     unit = beat_duration_sec * 4 / 192.
-    # possible note durations in seconds 
-    # (it is possible to add representations - include 32nds, quintuplets...):
-    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
     possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
                           unit * 144, unit * 72, unit * 36, unit * 18, 
                           unit * 32, unit * 16]
@@ -325,7 +322,8 @@ def generateOverStandard(tune, num_chorus, temperature,
     unit = beat_duration_sec * 4 / 96.
     # possible note durations in seconds 
     # (it is possible to add representations - include 32nds, quintuplets...):
-    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, 
+    # dot 16th, half note triplet, quarter note triplet, 8th note triplet]
     possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
                           unit * 72, unit * 36, unit * 18, 
                           unit * 16, unit * 8]
@@ -440,7 +438,6 @@ def generateOverStandard(tune, num_chorus, temperature,
         word_idx = torch.multinomial(word_weights, 1)[0].item()
         new_duration = vocabDuration[word_idx]
         
-        
         # if any padding is generated jump the step and re-try (it is rare!)
         if new_pitch != '<pad>' and new_duration != '<pad>':
             # append note to new arrays
@@ -550,17 +547,12 @@ def generateOverStandard(tune, num_chorus, temperature,
 def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
     
     # input : a structured song json
-    #structured_song = structuredSongs[0]
-    #structured_song = new_structured_song
     beat_duration_sec = structured_song['beat duration [sec]']
     tempo = structured_song['tempo']
     
     
     # sampling of the measure
     unit = beat_duration_sec * 4 / 192.
-    # possible note durations in seconds 
-    # (it is possible to add representations - include 32nds, quintuplets...):
-    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
     possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
                           unit * 144, unit * 72, unit * 36, unit * 18, 
                           unit * 32, unit * 16]

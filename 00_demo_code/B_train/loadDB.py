@@ -24,7 +24,7 @@ def pad(data, isChord=False):
         list of padded sequences.
 
     '''
-    # from: https://pytorch.org/text/_modules/torchtext/data/field.html
+
     data = list(data)
     # calculate max lenght
     max_len = max(len(x) for x in data)
@@ -82,22 +82,17 @@ def batchify(data, bsz, dict_to_ix, device, SEGMENTATION=True, isChord=False):
         else:
             padded_num = [[dict_to_ix[x] for x in ex] for ex in data]
     
-    
     data = torch.tensor(padded_num, dtype=torch.long)
     data = data.contiguous()
     
-    
     # Divide the dataset into bsz parts.
     nbatch = data.size(0) // bsz
-    # Trim off any extra elements that wouldn't cleanly fit (remainders).
     data = data.narrow(0, 0, nbatch * bsz)
     # Evenly divide the data across the bsz batches.
     if isChord:
         data = data.view(bsz, -1, 4).transpose(0,1).contiguous()
     else:
         data = data.view(bsz, -1).t().contiguous()
-    
-    
     return data.to(device)
 
 def separateSeqs(seq_pitch, seq_duration,
@@ -106,7 +101,7 @@ def separateSeqs(seq_pitch, seq_duration,
                  segment_length = 35):
     # Separate the songs into single melodies in order to avoid 
     # full batches of pad tokens
-        
+    
     tot_pitch = []
     tot_duration = []
     tot_chord = []
@@ -310,7 +305,7 @@ def WjazzChordToM21(chord):
     if chord == 'C-/Bb':
         new_chord_name = 'Cm/B-'
     if chord == 'Eb/Bb':
-        new_chord_name = 'E-/B-' # MAKE THIS GENERAL 
+        new_chord_name = 'E-/B-'
     if chord == 'C-69':
         new_chord_name = 'Cm9'
     if chord == 'Gbj79':
@@ -489,9 +484,6 @@ class MusicDB():
         vocabDuration = {v: k for k, v in duration_to_ix.items()}
         
         # Beat dictionary
-        # some songs have 5 beats, it is probably an error
-        # I have added one beat but the two songs could be removed 
-        # or the beat substituted
         vocabBeat = {} 
         for i in range(0,4): 
             vocabBeat[i] = i+1
@@ -500,9 +492,6 @@ class MusicDB():
         beat_to_ix = {v: k for k, v in vocabBeat.items()}
         
         # Offset dictionary
-        # some songs have 5 beats, it is probably an error
-        # I have added one beat but the two songs could be removed 
-        # or the beat substituted
         vocabOffset = {} 
         for i in range(0,97): 
             vocabOffset[i] = i
@@ -579,7 +568,6 @@ class MusicDB():
             for component in chord_components:
                 new_chord_name += component
 
-        
             if new_chord_name == 'NC':
                 pitchNames = ['R','R','R','R']
                 midiChord = ['R','R','R','R']
@@ -667,7 +655,6 @@ class MusicDB():
                     midiChord = ['R','R','R','R']
                     multi_hot = np.zeros(12)
 
-
             # Update dictionaries
             new_unique_chords.append(new_chord_name)
             CustomToMusic21[chord] = new_chord_name
@@ -701,7 +688,7 @@ class MusicDB():
         #    if len(self.CustomToMidiChords[chord]) != 4:
         #        print(chord)
         #        print(self.CustomToMidiChords[chord])
-                
+        
         # PRE-PROCESSING
         print('Pre-processing...')
         # Convert lists to array 
@@ -893,12 +880,11 @@ class MusicDB():
             offset_test = np.array(new_offset)
             next_chord_test = np.array(new_next_chord)
         
-        
         # Reshape according to sequence length
         # At the end of this step the datasets should be composed 
         # of equal length melodies
         # SEGMENTATION --> padded segmented melodies
-        # !SEGMENTATION --> equal length not padded note sequences
+        # not SEGMENTATION --> equal length not padded note sequences
         
         if SEGMENTATION:
             print('Melody segmentation...')
@@ -1009,9 +995,7 @@ class MusicDB():
         
         
         # TOKENIZE AND BATCHIFY
-        
         print('Batching...')
-        
         
         train_pitch_batched = batchify(pitch_train, TRAIN_BATCH_SIZE, pitch_to_ix, device, SEGMENTATION)
         val_pitch_batched = batchify(pitch_validation, EVAL_BATCH_SIZE, pitch_to_ix, device, SEGMENTATION)
@@ -1094,8 +1078,4 @@ class MusicDB():
     
     def getStructuredSongs(self):
         return self.songs['structured for generation']
-
-
-
-
 

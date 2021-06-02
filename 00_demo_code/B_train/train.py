@@ -118,7 +118,6 @@ if __name__ == '__main__':
     lr = 0.5 # learning rate
     optimizer = torch.optim.SGD(modelPitch.parameters(), lr=lr, momentum=0.9,  nesterov=True)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
-
     
     # TRAIN AND EVALUATE LOSS
     best_val_loss = float("inf")
@@ -133,8 +132,8 @@ if __name__ == '__main__':
     writer = SummaryWriter(path)
     step = 0
 
-    pitch_start_time = time.time()
     # TRAINING LOOP
+    pitch_start_time = time.time()
     print('Starting pitch model training...')
     for epoch in range(1, epochs + 1):
         
@@ -169,7 +168,6 @@ if __name__ == '__main__':
     
     pitch_end_time = time.time()
     
-    
     # TEST THE MODEL
     test_loss, test_acc = mod.evaluate(best_model_pitch, pitch_to_ix, 
                                 test_pitch_batched, test_duration_batched, 
@@ -185,11 +183,10 @@ if __name__ == '__main__':
     model_name = "MINGUSpitch"
     num_epochs = str(epochs) + "epochs"
     segm_len = "seqLen" + str(args.BPTT)
-    savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
-                     + '_'+ segm_len + '_' + '.pt')
+    #savePATHpitch = (models_folder + '/' + model_name + '_' + num_epochs 
+    #                 + '_'+ segm_len + '_' + '.pt')
     
     savePATHpitch = f'B_train/models/pitchModel/MINGUS COND {args.COND_TYPE_PITCH} Epochs {args.EPOCHS}.pt'
-    
     state_dictPitch = best_model_pitch.state_dict()
     torch.save(state_dictPitch, savePATHpitch)
     writer.close()
@@ -255,8 +252,8 @@ if __name__ == '__main__':
     writer = SummaryWriter(path)
     step = 0
 
-    duration_start_time = time.time()
     # TRAINING LOOP
+    duration_start_time = time.time()
     print('Starting duration model training...')
     for epoch in range(1, epochs + 1):
         
@@ -307,8 +304,8 @@ if __name__ == '__main__':
     model_name = "MINGUSduration"
     num_epochs = str(epochs) + "epochs"
     segm_len = "seqLen" + str(args.BPTT)
-    savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
-                     + '_'+ segm_len + '_' + '.pt')
+    #savePATHduration = (models_folder + '/' + model_name + '_' + num_epochs 
+    #                 + '_'+ segm_len + '_' + '.pt')
     
     savePATHduration = f'B_train/models/durationModel/MINGUS COND {args.COND_TYPE_DURATION} Epochs {args.EPOCHS}.pt'
     

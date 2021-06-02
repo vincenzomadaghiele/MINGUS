@@ -1,0 +1,152 @@
+[
+    {
+        "id": "All_the_things_BebopNet",
+        "title": "All the things you are",
+        "author": "Lee Konitz",
+        "sample": "Sample I",
+        "origin": "BebopNet",
+        "url": "./BebopNet_All_the_Things.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "All_the_things_original",
+        "title": "All the things you are",
+        "author": "Lee Konitz",
+        "sample": "Sample II",
+        "origin": "original",
+        "url": "./LeeKonitz_All_the_Things.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "All_the_things_MINGUS",
+        "title": "All the things you are",
+        "author": "Lee Konitz",
+        "sample": "Sample III",
+        "origin": "MINGUS",
+        "url": "./MINGUS_All_the_Things.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "Donna_lee_original",
+        "title": "Donna Lee",
+        "author": "Charlie Parker",
+        "sample": "Sample I",
+        "origin": "original",
+        "url": "./CharlieParker_DonnaLee.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "Donna_lee_MINGUS",
+        "title": "Donna Lee",
+        "author": "Charlie Parker",
+        "sample": "Sample II",
+        "origin": "MINGUS",
+        "url": "./MINGUS_DonnaLee.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "Donna_lee_BebopNet",
+        "title": "Donna Lee",
+        "author": "Charlie Parker",
+        "sample": "Sample III",
+        "origin": "BebopNet",
+        "url": "./BebopNet_DonnaLee.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "How_high_MINGUS",
+        "title": "How High the Moon",
+        "author": "Pepper Adams",
+        "sample": "Sample I",
+        "origin": "MINGUS",
+        "url": "./MINGUS_How_high.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "How_high_BebopNet",
+        "title": "How High the Moon",
+        "author": "Pepper Adams",
+        "sample": "Sample II",
+        "origin": "BebopNet",
+        "url": "./BebopNet_How_high.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "How_high_original",
+        "title": "How High the Moon",
+        "author": "Pepper Adams",
+        "sample": "Sample III",
+        "origin": "original",
+        "url": "./PepperAdams_How_high.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "Summertime_MINGUS",
+        "title": "Summertime",
+        "author": "Sidney Bechet",
+        "sample": "Sample I",
+        "origin": "MINGUS",
+        "url": "./MINGUS_Summertime.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "Summertime_original",
+        "title": "Summertime",
+        "author": "Sidney Bechet",
+        "sample": "Sample II",
+        "origin": "original",
+        "url": "./SidneyBechet_Summertime.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "Summertime_BebopNet",
+        "title": "Summertime",
+        "author": "Sidney Bechet",
+        "sample": "Sample III",
+        "origin": "BebopNet",
+        "url": "./BebopNet_Summertime.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "There_will_never_original",
+        "title": "There Will Never Be Another You",
+        "author": "Chet Baker",
+        "sample": "Sample I",
+        "origin": "original",
+        "url": "./ChetBaker_There_will_never.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "There_will_never_BebopNet",
+        "title": "There Will Never Be Another You",
+        "author": "Chet Baker",
+        "sample": "Sample II",
+        "origin": "BebopNet",
+        "url": "./BebopNet_There_will_never.mp3",
+        "ratings": [],
+        "comments": []
+    },
+    {
+        "id": "There_will_never_MINGUS",
+        "title": "There Will Never Be Another You",
+        "author": "Chet Baker",
+        "sample": "Sample III",
+        "origin": "MINGUS",
+        "url": "./MINGUS_There_will_never.mp3",
+        "ratings": [],
+        "comments": []
+    }
+]

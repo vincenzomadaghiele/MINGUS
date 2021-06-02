@@ -48,16 +48,8 @@ class TransformerModel(nn.Module):
         self.beat_embedding = nn.Embedding(beat_vocab_size, beat_embed_dim, padding_idx=self.beat_pad_idx) # beat
         self.offset_embedding = nn.Embedding(offset_vocab_size, offset_embed_dim, padding_idx=self.offset_pad_idx) # beat
         
-        
         self.chord_encoder = nn.Linear(4 * pitch_embed_dim, chord_encod_dim)
-        
-        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim #+ beat_embed_dim
         self.next_chord_encoder = nn.Linear(4 * pitch_embed_dim, next_chord_encod_dim)
-        
-        # Try out chord embeds
-        # chord embeds require a new chord dictionary or a linear layer!
-        #chord_embed_dim = 64
-        #self.chord_emedding = nn.Embedding(pitch_vocab_size, chord_embed_dim, padding_idx=self.pitch_pad_idx) 
         
         if self.isPitch:
             encoder_input_dim = pitch_embed_dim
@@ -78,13 +70,8 @@ class TransformerModel(nn.Module):
             encoder_input_dim += beat_embed_dim
         if 'O' in self.COND:
             encoder_input_dim += offset_embed_dim
-
-        
-        #encoder_input_dim = 2 * pitch_embed_dim + duration_embed_dim + chord_encod_dim + next_chord_encod_dim + beat_embed_dim + offset_embed_dim 
-        #print(encoder_input_dim)
         
         # Start the transformer structure with multidimensional data
-        #encoder_input_dim = 6 * pitch_embed_dim + duration_embed_dim #+ beat_embed_dim
         self.encoder = nn.Linear(encoder_input_dim, ninp)
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
@@ -142,7 +129,6 @@ class TransformerModel(nn.Module):
         beat_embeds = self.beat_embedding(beat)
         offset_embeds = self.offset_embedding(offset)
 
-        #chord_embeds = self.chord_emedding(chord).view(chord.shape[0], chord.shape[1], -1).contiguous()
         chord_embeds = self.chord_encoder(chord_embeds)
         next_chord_embeds = self.next_chord_encoder(next_chord_embeds)
 
@@ -167,16 +153,6 @@ class TransformerModel(nn.Module):
             src = (torch.cat([src, offset_embeds], 2))
             
         src = self.encoder(src) * math.sqrt(self.ninp)
-
-
-        # Concatenate along 3rd dimension
-        #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, bass_embeds, chord_embeds], 2)) * math.sqrt(self.ninp)
-        #src = self.encoder(torch.cat([pitch_embeds, duration_embeds, 
-        #                              bass_embeds, chord_embeds, 
-        #                              next_chord_embeds, beat_embeds, 
-        #                              offset_embeds], 2)) * math.sqrt(self.ninp)
-        
-        
         #src_padding_mask = self.make_src_pad_mask(src) # PROBLEM
         
         # Positional encoding
@@ -221,7 +197,6 @@ def train(model, vocabTarget,
           train_data_bass, train_data_beat, train_data_offset, 
           criterion, optimizer, scheduler, epoch, bptt, device, 
           writer, step, isPitch=True):
-    
     '''
 
     Parameters
