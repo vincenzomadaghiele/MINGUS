@@ -47,7 +47,7 @@ if __name__ == '__main__':
     args = parser.parse_args(sys.argv[1:])
     
     # Constants for MINGUS training
-    print('Model summary:')
+    print('Ablation evaluator summary:')
     print('-' * 80)
     print('TRAIN_BATCH_SIZE:', args.TRAIN_BATCH_SIZE)
     print('EVAL_BATCH_SIZE:', args.EVAL_BATCH_SIZE)
