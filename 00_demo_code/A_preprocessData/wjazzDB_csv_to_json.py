@@ -485,7 +485,7 @@ if __name__ == '__main__':
                 tune = prep.arraysFromStructuredSong(new_structured_song)
                 structuredSongs.append(new_structured_song)
                 songs.append(tune)
-            
+
     # split into train, validation and test
     songs_split = {}
     # train: 70% 
