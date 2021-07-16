@@ -93,8 +93,12 @@ if __name__=="__main__":
                 # (it is possible to add representations - include 32nds, quintuplets...):
                 # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, dot 16th, half note triplet, quarter note triplet, 8th note triplet]
                 possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3,
-                                      unit * 72, unit * 36, unit * 18, unit * 9, 
-                                      unit * 32]
+                                      unit * 72, unit * 36, unit * 18, 
+                                      unit * 32, unit * 16]
+                
+                quarter_durations = [4, 2, 1, 1/2, 1/4, 1/8,
+                                      3, 3/2, 3/4,
+                                      1/6, 1/12]
 
                 # Define durations dictionary
                 dur_dict = {}
@@ -107,8 +111,8 @@ if __name__=="__main__":
                 dur_dict[possible_durations[6]] = 'dot half'
                 dur_dict[possible_durations[7]] = 'dot quarter'
                 dur_dict[possible_durations[8]] = 'dot 8th'
-                dur_dict[possible_durations[9]] = 'dot 16th'
-                dur_dict[possible_durations[10]] = 'half note triplet'
+                dur_dict[possible_durations[9]] = 'half note triplet'
+                dur_dict[possible_durations[10]] = 'quarter note triplet'
                 inv_dur_dict = {v: k for k, v in dur_dict.items()}
                         
         
@@ -137,13 +141,16 @@ if __name__=="__main__":
                     bars = []
                     bar_num = 0 # bar count starts from 0 
                     beats = []
-                    # trick: only works for this particular dataset
+                    # trick: only works for NottinghamDB
                     if chords_times[0][1] != 0:
                         beat_num = 3
+                        bar_duration = 3
                     else:
                         beat_num = 0 # beat count is [0,3]
+                        bar_duration = 0
                     beat_pitch = []
                     beat_duration = []
+                    beat_offset = []
                     offset_sec = 0
                     beat_counter = 0
                     
@@ -164,6 +171,9 @@ if __name__=="__main__":
                         idx = distance.argmin()
                         duration_array.append(dur_dict[possible_durations[idx]])
                         beat_duration.append(dur_dict[possible_durations[idx]])
+                        offset = int(bar_duration * 96 / 4)
+                        beat_offset.append(offset)
+                        bar_duration += quarter_durations[idx]
                         offset_sec += duration_sec
                         beat_array.append(beat_num + 1)
                         
@@ -207,12 +217,13 @@ if __name__=="__main__":
                                 beat['chord'] = chord 
                                 beat['pitch'] = beat_pitch 
                                 beat['duration'] = beat_duration 
-                                beat['offset'] = []
+                                beat['offset'] = beat_offset
                                 beat['scale'] = []
                                 beat['bass'] = []
                                 beats.append(beat)
                                 beat_pitch = []
                                 beat_duration = []
+                                beat_offset = []
                                 # append bar
                                 bar = {}
                                 bar['num bar'] = bar_num + 1 # over all song
@@ -222,7 +233,8 @@ if __name__=="__main__":
                                 beat_num = 0
                                 bar_num += 1
                                 beat_counter += 1
-                                next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                                next_beat_sec = (beat_counter + 1) * beat_duration_sec
+                                bar_duration = 0
                             else:
                                 # end of beat
                                 beat = {}
@@ -247,7 +259,7 @@ if __name__=="__main__":
                                 # duration of notes which START in this beat
                                 beat['duration'] = beat_duration 
                                 # offset of notes which START in this beat wrt the start of the bar
-                                beat['offset'] = []
+                                beat['offset'] = beat_offset
                                 # get from chord with m21
                                 beat['scale'] = []
                                 beat['bass'] = []
@@ -255,6 +267,7 @@ if __name__=="__main__":
                                 beats.append(beat)
                                 beat_pitch = []
                                 beat_duration = []
+                                beat_offset = []
                                 beat_num += 1
                                 beat_counter += 1
                                 next_beat_sec = (beat_counter + 1) * beat_duration_sec 
@@ -278,6 +291,10 @@ if __name__=="__main__":
                                     idx = distance.argmin()
                                     duration_array.append(dur_dict[possible_durations[idx]])
                                     beat_duration.append(dur_dict[possible_durations[idx]])
+                                    offset = int(bar_duration * 96 / 4)
+                                    beat_offset.append(offset)
+                                    bar_duration += quarter_durations[idx]
+
                                     offset_sec += duration_sec
                                     beat_array.append(beat_num + 1)
                                     intra_note_time -= possible_durations[idx]
@@ -322,12 +339,13 @@ if __name__=="__main__":
                                             beat['chord'] = chord 
                                             beat['pitch'] = beat_pitch 
                                             beat['duration'] = beat_duration 
-                                            beat['offset'] = []
+                                            beat['offset'] = beat_offset
                                             beat['scale'] = []
                                             beat['bass'] = []
                                             beats.append(beat)
                                             beat_pitch = []
                                             beat_duration = []
+                                            beat_offset = []
                                             # append bar
                                             bar = {}
                                             bar['num bar'] = bar_num + 1 # over all song
@@ -362,7 +380,7 @@ if __name__=="__main__":
                                             # duration of notes which START in this beat
                                             beat['duration'] = beat_duration 
                                             # offset of notes which START in this beat wrt the start of the bar
-                                            beat['offset'] = []
+                                            beat['offset'] = beat_offset
                                             # get from chord with m21
                                             beat['scale'] = []
                                             beat['bass'] = []
@@ -370,6 +388,7 @@ if __name__=="__main__":
                                             beats.append(beat)
                                             beat_pitch = []
                                             beat_duration = []
+                                            beat_offset = []
                                             beat_num += 1
                                             beat_counter += 1
                                             next_beat_sec = (beat_counter + 1) * beat_duration_sec 
@@ -381,6 +400,9 @@ if __name__=="__main__":
                                 idx = distance.argmin()
                                 duration_array.append(dur_dict[possible_durations[idx]])
                                 beat_duration.append(dur_dict[possible_durations[idx]])
+                                offset = int(bar_duration * 96 / 4)
+                                beat_offset.append(offset)
+                                bar_duration += quarter_durations[idx]
                                 offset_sec += duration_sec
                                 beat_array.append(beat_num + 1)
                                 # check for chords
@@ -423,12 +445,13 @@ if __name__=="__main__":
                                         beat['chord'] = chord 
                                         beat['pitch'] = beat_pitch 
                                         beat['duration'] = beat_duration 
-                                        beat['offset'] = []
+                                        beat['offset'] = beat_offset
                                         beat['scale'] = []
                                         beat['bass'] = []
                                         beats.append(beat)
                                         beat_pitch = []
                                         beat_duration = []
+                                        beat_offset = []
                                         # append bar
                                         bar = {}
                                         bar['num bar'] = bar_num + 1 # over all song
@@ -463,7 +486,7 @@ if __name__=="__main__":
                                         # duration of notes which START in this beat
                                         beat['duration'] = beat_duration 
                                         # offset of notes which START in this beat wrt the start of the bar
-                                        beat['offset'] = []
+                                        beat['offset'] = beat_offset
                                         # get from chord with m21
                                         beat['scale'] = []
                                         beat['bass'] = []
@@ -471,12 +494,13 @@ if __name__=="__main__":
                                         beats.append(beat)
                                         beat_pitch = []
                                         beat_duration = []
+                                        beat_offset = []
                                         beat_num += 1
                                         beat_counter += 1
                                         next_beat_sec = (beat_counter + 1) * beat_duration_sec 
                                 
                                 
-                    # append last bar in case it has not 4 beats
+                    # append last bar in case it doesn't have 4 beats
                     if beats:
                         # end of bar
                         # append beat
@@ -497,12 +521,13 @@ if __name__=="__main__":
                         beat['chord'] = chord 
                         beat['pitch'] = beat_pitch 
                         beat['duration'] = beat_duration 
-                        beat['offset'] = []
+                        beat['offset'] = beat_offset
                         beat['scale'] = []
                         beat['bass'] = []
                         beats.append(beat)
                         beat_pitch = []
                         beat_duration = []
+                        beat_offset = []
                         # append bar
                         bar = {}
                         bar['num bar'] = bar_num + 1 # over all song
@@ -533,6 +558,9 @@ if __name__=="__main__":
                     
                     songs.append(song)
                     structured_songs.append(structured_song)
+                    
+    
+    
     
     # split into train, validation and test
     songs_split = {}
