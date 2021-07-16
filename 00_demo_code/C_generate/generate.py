@@ -188,7 +188,7 @@ if __name__ == '__main__':
     
     #tuneFromXML = cus.xmlToStructuredSong(xml_path)
 
-    # GENERATE ON A TUNE    
+    # GENERATE ON A TUNE
     isJazz = False
     new_structured_song = gen.generateOverStandard(tuneFromXML, args.NUM_CHORUS, args.TEMPERATURE, 
                                                modelPitch, modelDuration, dbToMidiChords, 

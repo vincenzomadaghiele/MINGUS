@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
 This scripts pre-processes the input 
 musical files in xml or abc formats
 for training in MINGUS
@@ -338,6 +337,11 @@ if __name__ == '__main__':
             songs.append(tune)
 
     elif args.format == 'abc':
+        print('Loading dataset from xml: ')
+        print('-' * 80)
+        source_path = 'A_preprocessData/data/abc/*.abc'
+        source_songs = glob.glob(source_path)
+        
         print('abc')
     
     
