@@ -1,3 +1,0 @@
-curl -X POST http://localhost:5000/tunes -d \
-'{"musicExperience": "Professional","ratings": {"Anthropology_MINGUS": 5,"Anthropology_BebopNet": 2,"Anthropology_original": 4,"Avalon_MINGUS": 5,"Avalon_BebopNet": 1,"Avalon_original": 3},"comments": {"Anthropology_MINGUS": "","Anthropology_BebopNet": "aweful","Anthropology_original": "great!","Avalon_MINGUS": "","Avalon_BebopNet": "","Avalon_original": ""}}' \
--H 'Content-Type: application/json'
