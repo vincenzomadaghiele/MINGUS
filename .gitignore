@@ -1,5 +1,6 @@
 #data/
 DATA.json
+xml/*.xml
 .DS_Store
 .idea/
 
