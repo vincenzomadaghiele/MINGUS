@@ -1,4 +1,3 @@
-#data/
 DATA.json
 data/xml/*.xml
 .DS_Store
