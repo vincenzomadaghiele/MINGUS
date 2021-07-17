@@ -236,7 +236,6 @@ def xmlToStructuredSong(xml_path, datasetToMusic21,
 
     return new_structured_song, datasetToMusic21, datasetToMidiChords, datasetToChordComposition, datasetChords
 
-
 # This is used in the generate() function
 def batch4gen(data, bsz, dict_to_ix, device, isChord=False):
     '''
@@ -273,7 +272,6 @@ def batch4gen(data, bsz, dict_to_ix, device, isChord=False):
     data = data.view(bsz, -1).t().contiguous()
     return data.to(device)
 
-
 def generateOverStandard(tune, num_chorus, temperature,
                          modelPitch, modelDuration, 
                          datasetToMidiChords, 
@@ -292,32 +290,7 @@ def generateOverStandard(tune, num_chorus, temperature,
     beats = []
     
     print('Generating over song %s' % (tune['title']))
-    
-    '''
-    # sampling of the measure
-    unit = beat_duration_sec * 4 / 192.
-    possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
-                          unit * 144, unit * 72, unit * 36, unit * 18, 
-                          unit * 32, unit * 16]
-
-    # Define durations dictionary
-    dur_dict = {}
-    dur_dict[possible_durations[0]] = 'full'
-    dur_dict[possible_durations[1]] = 'half'
-    dur_dict[possible_durations[2]] = 'quarter'
-    dur_dict[possible_durations[3]] = '8th'
-    dur_dict[possible_durations[4]] = '16th'
-    dur_dict[possible_durations[5]] = '32th'
-    dur_dict[possible_durations[6]] = '64th'
-    dur_dict[possible_durations[7]] = 'dot half'
-    dur_dict[possible_durations[8]] = 'dot quarter'
-    dur_dict[possible_durations[9]] = 'dot 8th'
-    dur_dict[possible_durations[10]] = 'dot 16th'
-    dur_dict[possible_durations[11]] = 'half note triplet'
-    dur_dict[possible_durations[12]] = 'quarter note triplet'
-    inv_dur_dict = {v: k for k, v in dur_dict.items()}
-    '''
-    
+        
     # sampling of the measure
     unit = beat_duration_sec * 4 / 96.
     # possible note durations in seconds 
@@ -544,18 +517,43 @@ def generateOverStandard(tune, num_chorus, temperature,
     new_structured_song['bars'] = bars
     return new_structured_song
 
-def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
+def generateCond(tune, num_bars, temperature, 
+                 modelPitch, modelDuration, 
+                 datasetToMidiChords, 
+                 pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                 vocabPitch, vocabDuration, 
+                 BPTT, device,
+                 isJazz = False):
+        
+    # select a tune
+    #tune = structuredSongs[0]
+    # choose how many starting bars
+    #num_bars = 4
+    # define temperature
+    #temperature = 1   
     
-    # input : a structured song json
-    beat_duration_sec = structured_song['beat duration [sec]']
-    tempo = structured_song['tempo']
+    # copy bars into a new_structured_song
+    new_structured_song = {}
+    new_structured_song['title'] = tune['title'] + '_gen'
+    new_structured_song['tempo'] = tune['tempo']
+    new_structured_song['beat duration [sec]'] = tune['beat duration [sec]']
+    beat_duration_sec = new_structured_song['beat duration [sec]'] 
+    #if isJazz:
+    #    new_structured_song['chord changes'] = tune['chord changes']
+    bars = []
+    beats = []
     
-    
+    print('Generating over song %s' % (tune['title']))
+        
     # sampling of the measure
-    unit = beat_duration_sec * 4 / 192.
-    possible_durations = [unit * 192, unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
-                          unit * 144, unit * 72, unit * 36, unit * 18, 
-                          unit * 32, unit * 16]
+    unit = beat_duration_sec * 4 / 96.
+    # possible note durations in seconds 
+    # (it is possible to add representations - include 32nds, quintuplets...):
+    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, 
+    # dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
+                          unit * 72, unit * 36, unit * 18, 
+                          unit * 16, unit * 8]
 
     # Define durations dictionary
     dur_dict = {}
@@ -565,13 +563,240 @@ def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
     dur_dict[possible_durations[3]] = '8th'
     dur_dict[possible_durations[4]] = '16th'
     dur_dict[possible_durations[5]] = '32th'
-    dur_dict[possible_durations[6]] = '64th'
-    dur_dict[possible_durations[7]] = 'dot half'
-    dur_dict[possible_durations[8]] = 'dot quarter'
-    dur_dict[possible_durations[9]] = 'dot 8th'
-    dur_dict[possible_durations[10]] = 'dot 16th'
-    dur_dict[possible_durations[11]] = 'half note triplet'
-    dur_dict[possible_durations[12]] = 'quarter note triplet'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'half note triplet'
+    dur_dict[possible_durations[10]] = 'quarter note triplet'
+    inv_dur_dict = {v: k for k, v in dur_dict.items()}
+    
+    
+    # initialize counters
+    bar_num = num_bars
+    beat_counter = 0
+    offset_sec = 0
+    beat_num = 0
+    bar_onset = 0
+    for bar in tune['bars'][:num_bars]:
+        bars.append(bar)
+        for beat in bar['beats']:
+            beat_counter += 1
+            #beat_num = beat['num beat'] - 1
+            for duration in beat['duration']:
+                duration_sec = inv_dur_dict[duration]
+                offset_sec += duration_sec
+    
+    beat_pitch = []
+    beat_duration = []
+    beat_offset = []
+    next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+    
+    # extract starting bars pitch, duration, chord, bass and put into array
+    pitch = []
+    duration = []
+    chord = []
+    next_chord = []
+    bass = []
+    beat_ar = []
+    offset = []
+    for bar in bars:
+        for beat in bar['beats']:
+            for i in range(len(beat['pitch'])):
+                pitch.append(beat['pitch'][i])
+                duration.append(beat['duration'][i])
+                chord.append(datasetToMidiChords[beat['chord']][:4])
+                next_chord.append(datasetToMidiChords[beat['next chord']][:4])
+                if isJazz:
+                    bass.append(beat['bass'])
+                else:
+                    bass.append(datasetToMidiChords[beat['chord']][0])
+                beat_ar.append(beat['num beat'])
+                offset.append(beat['offset'][i])
+        
+    new_chord = beat['chord']
+    new_next_chord = beat['next chord']
+    if isJazz:
+        new_bass = beat['bass']
+    while len(bars) < len(tune['bars']):
+        
+        # only give last 128 characters to speed up generation
+        last_char = -128
+        #print(len(pitch[last_char:]))
+        
+        # batchify
+        pitch4gen = batch4gen(pitch[last_char:], len(pitch[last_char:]), pitch_to_ix, device)
+        duration4gen = batch4gen(duration[last_char:], len(duration[last_char:]), duration_to_ix, device)
+        chord4gen = batch4gen(chord[last_char:], len(chord[last_char:]), pitch_to_ix, device, isChord=True)
+        next_chord4gen = batch4gen(chord[last_char:], len(next_chord[last_char:]), pitch_to_ix, device, isChord=True)
+        bass4gen = batch4gen(bass[last_char:], len(bass[last_char:]), pitch_to_ix, device)
+        beat4gen = batch4gen(beat_ar[last_char:], len(beat_ar[last_char:]), beat_to_ix, device)
+        offset4gen = batch4gen(offset[last_char:], len(offset[last_char:]), offset_to_ix, device)
+        # reshape to column vectors
+        pitch4gen = pitch4gen.t()
+        duration4gen = duration4gen.t()
+        chord4gen = chord4gen.t()
+        chord4gen = chord4gen.reshape(chord4gen.shape[0], 1, chord4gen.shape[1])
+        next_chord4gen = next_chord4gen.t()
+        next_chord4gen = next_chord4gen.reshape(next_chord4gen.shape[0], 1, next_chord4gen.shape[1])
+        bass4gen = bass4gen.t()
+        beat4gen = beat4gen.t()
+        offset4gen = offset4gen.t()
+        
+        # generate new note conditioning on old arrays
+        modelPitch.eval()
+        modelDuration.eval()
+        src_mask_pitch = modelPitch.generate_square_subsequent_mask(BPTT).to(device)
+        src_mask_duration = modelDuration.generate_square_subsequent_mask(BPTT).to(device)
+        if pitch4gen.size(0) != BPTT:
+            src_mask_pitch = modelPitch.generate_square_subsequent_mask(pitch4gen.size(0)).to(device)
+            src_mask_duration = modelDuration.generate_square_subsequent_mask(duration4gen.size(0)).to(device)
+        
+        # generate new pitch note
+        pitch_pred = modelPitch(pitch4gen, duration4gen, chord4gen, next_chord4gen,
+                                bass4gen, beat4gen, offset4gen, src_mask_pitch)
+        word_weights = pitch_pred[-1].squeeze().div(temperature).exp().cpu()
+        word_idx = torch.multinomial(word_weights, 1)[0].item()
+        new_pitch = vocabPitch[word_idx]
+        # generate new duration note
+        duration_pred = modelDuration(pitch4gen, duration4gen, chord4gen, next_chord4gen,
+                                   bass4gen, beat4gen, offset4gen, src_mask_duration)
+        word_weights = duration_pred[-1].squeeze().div(temperature).exp().cpu()
+        word_idx = torch.multinomial(word_weights, 1)[0].item()
+        new_duration = vocabDuration[word_idx]
+        
+        
+        # if any padding is generated jump the step and re-try (it is rare!)
+        if new_pitch != '<pad>' and new_duration != '<pad>':
+            # append note to new arrays
+            beat_pitch.append(new_pitch)
+            beat_duration.append(new_duration)
+            
+            duration_sec = inv_dur_dict[new_duration] # problem: might generate padding here
+            offset_sec += duration_sec
+            
+            new_offset = min(int(bar_onset / (beat_duration_sec * 4) * 96),96)
+            bar_onset += duration_sec
+            
+            beat_offset.append(new_offset)
+            
+            # check if the note is in a new beat / bar
+            while offset_sec >= next_beat_sec:
+                if beat_num >= 3:
+                    # end of bar
+                    # append beat
+                    beat = {}
+                    beat['num beat'] = beat_num + 1
+                    # check for chords
+                    if len(tune['bars']) > bar_num:
+                        new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                        new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
+                    beat['chord'] = new_chord
+                    beat['pitch'] = beat_pitch 
+                    beat['duration'] = beat_duration 
+                    beat['offset'] = beat_offset
+                    beat['scale'] = []
+                    if isJazz:
+                        if len(tune['bars']) > bar_num:
+                            new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
+                        beat['bass'] = new_bass
+                    else:
+                        beat['bass'] = []
+                    beats.append(beat)
+                    beat_pitch = []
+                    beat_duration = []
+                    beat_offset = []
+                    # append bar
+                    bar = {}
+                    bar['num bar'] = bar_num + 1 # over all song
+                    bar['beats'] = beats # beats 1,2,3,4
+                    bars.append(bar)
+                    beats = []
+                    beat_num = 0
+                    bar_num += 1
+                    beat_counter += 1
+                    next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+                    bar_onset = 0
+                else:
+                    # end of beat
+                    beat = {}
+                    # number of beat in the bar [1,4]
+                    beat['num beat'] = beat_num + 1
+                    # at most one chord per beat
+                    # check for chords
+                    if len(tune['bars']) > bar_num:
+                        new_chord = tune['bars'][bar_num]['beats'][beat_num]['chord']
+                        new_next_chord = tune['bars'][bar_num]['beats'][beat_num]['next chord']
+                    beat['chord'] = new_chord
+                    # pitch of notes which START in this beat
+                    beat['pitch'] = beat_pitch 
+                    # duration of notes which START in this beat
+                    beat['duration'] = beat_duration 
+                    # offset of notes which START in this beat wrt the start of the bar
+                    beat['offset'] = beat_offset
+                    # get from chord with m21
+                    beat['scale'] = []
+                    if isJazz:
+                        if len(tune['bars']) > bar_num:
+                            new_bass = tune['bars'][bar_num]['beats'][beat_num]['bass']
+                        beat['bass'] = new_bass
+                    else:
+                        beat['bass'] = []
+                    # append beat
+                    beats.append(beat)
+                    beat_pitch = []
+                    beat_duration = []
+                    beat_offset = []
+                    beat_num += 1
+                    beat_counter += 1
+                    next_beat_sec = (beat_counter + 1) * beat_duration_sec 
+            
+            # add note pitch and duration into new_structured_song
+            # change chord conditioning from tune based on beat
+            # add note to pitch, duration, chord, bass array
+            pitch.append(new_pitch)
+            duration.append(new_duration)
+            chord.append(datasetToMidiChords[new_chord][:4])
+            next_chord.append(datasetToMidiChords[new_next_chord][:4])
+            beat_ar.append(beat_num + 1)
+            if isJazz:
+                bass.append(new_bass)
+            else:
+                bass.append(datasetToMidiChords[new_chord][0])
+            offset.append(new_offset)
+    
+    new_structured_song['bars'] = bars
+    return new_structured_song
+
+def structuredSongsToPM(structured_song, datasetToMidiChords, isJazz = False):
+    
+    # input : a structured song json
+    beat_duration_sec = structured_song['beat duration [sec]']
+    tempo = structured_song['tempo']
+    
+            
+    # sampling of the measure
+    unit = beat_duration_sec * 4 / 96.
+    # possible note durations in seconds 
+    # (it is possible to add representations - include 32nds, quintuplets...):
+    # [full, half, quarter, 8th, 16th, dot half, dot quarter, dot 8th, 
+    # dot 16th, half note triplet, quarter note triplet, 8th note triplet]
+    possible_durations = [unit * 96, unit * 48, unit * 24, unit * 12, unit * 6, unit * 3, 
+                          unit * 72, unit * 36, unit * 18, 
+                          unit * 16, unit * 8]
+
+    # Define durations dictionary
+    dur_dict = {}
+    dur_dict[possible_durations[0]] = 'full'
+    dur_dict[possible_durations[1]] = 'half'
+    dur_dict[possible_durations[2]] = 'quarter'
+    dur_dict[possible_durations[3]] = '8th'
+    dur_dict[possible_durations[4]] = '16th'
+    dur_dict[possible_durations[5]] = '32th'
+    dur_dict[possible_durations[6]] = 'dot half'
+    dur_dict[possible_durations[7]] = 'dot quarter'
+    dur_dict[possible_durations[8]] = 'dot 8th'
+    dur_dict[possible_durations[9]] = 'half note triplet'
+    dur_dict[possible_durations[10]] = 'quarter note triplet'
     inv_dur_dict = {v: k for k, v in dur_dict.items()}
 
 

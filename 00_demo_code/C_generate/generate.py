@@ -45,12 +45,18 @@ if __name__ == '__main__':
     parser.add_argument('--augmentation_const', type=int, default=3,
                         help='how many times to augment the data')
     # args for generation
+    parser.add_argument('--FROM_TRAIN', action='store_true', default=False,
+                        help='generate on a tune from the training dataset')
+    parser.add_argument('--TRAIN_TITLE', type=str, default='ArtPepper_Anthropology_Solo',
+                        help='title of the training tune to generate on')
+    parser.add_argument('--IS_JAZZ', action='store_true', default=False,
+                    help='generate from the WjazzDB (include bass)')
+    parser.add_argument('--xmlSTANDARD', type=str, default='C_generate/xml4gen/All_The_Things_You_Are_short.xml',
+                        help='path to the xml standard to generate notes on')
     parser.add_argument('--NUM_CHORUS', type=int, default=3,
                         help='number of chorus of the improvisation')
     parser.add_argument('--TEMPERATURE', type=int, default=1,
                         help='amount of randomness of the generation [0,1]')
-    parser.add_argument('--xmlSTANDARD', type=str, default='C_generate/xml4gen/All_The_Things_You_Are_short.xml',
-                        help='path to the xml standard to generate notes on')
     parser.add_argument('--GENERATE_CORPUS', action='store_true', default=False,
                         help='create a corpus of generated tunes')
     args = parser.parse_args(sys.argv[1:])
@@ -69,9 +75,12 @@ if __name__ == '__main__':
     print('duration model conditionings:', args.COND_TYPE_DURATION)
     print('-' * 80)
     print('Generation summary:')
+    print('FROM_TRAIN:', args.FROM_TRAIN)
+    print('TRAIN_TITLE:', args.TRAIN_TITLE)
+    print('IS_JAZZ:', args.IS_JAZZ)
+    print('xmlSTANDARD:', args.xmlSTANDARD)
     print('NUM_CHORUS:', args.NUM_CHORUS)
     print('TEMPERATURE:', args.TEMPERATURE)
-    print('xmlSTANDARD:', args.xmlSTANDARD)
     print('GENERATE_CORPUS:', args.GENERATE_CORPUS)
     print('-' * 80)
 
@@ -179,23 +188,35 @@ if __name__ == '__main__':
 
     #%% Import xml file
     
-    #xml_path = 'C_generate/xml4gen/All_The_Things_You_Are_short.xml'    
-    tuneFromXML, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = gen.xmlToStructuredSong(args.xmlSTANDARD, 
-                                                                                                               dbToMusic21,
-                                                                                                               dbToMidiChords, 
-                                                                                                               dbToChordComposition, 
-                                                                                                               dbChords)
-    
-    #tuneFromXML = cus.xmlToStructuredSong(xml_path)
+    if args.FROM_TRAIN:
+        # find the tune in the dataset
+        for tune in structuredSongs:
+            if tune['title'] == args.TRAIN_TITLE:
+                # GENERATE ON A TUNE FROM TRAINING DATASET
+                isJazz = args.IS_JAZZ
+                new_structured_song = gen.generateCond(tune, args.NUM_CHORUS, args.TEMPERATURE, 
+                                                        modelPitch, modelDuration, dbToMidiChords, 
+                                                        pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                        vocabPitch, vocabDuration,
+                                                        args.BPTT, device,
+                                                        isJazz)
+                break
+    else:
+        tuneFromXML, WjazzToMusic21, WjazzToMidiChords, WjazzToChordComposition, WjazzChords = gen.xmlToStructuredSong(args.xmlSTANDARD, 
+                                                                                                                   dbToMusic21,
+                                                                                                                   dbToMidiChords, 
+                                                                                                                   dbToChordComposition, 
+                                                                                                                   dbChords)
 
-    # GENERATE ON A TUNE
-    isJazz = False
-    new_structured_song = gen.generateOverStandard(tuneFromXML, args.NUM_CHORUS, args.TEMPERATURE, 
-                                               modelPitch, modelDuration, dbToMidiChords, 
-                                               pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
-                                               vocabPitch, vocabDuration,
-                                               args.BPTT, device,
-                                               isJazz)
+        # GENERATE ON A TUNE
+        isJazz = False
+        new_structured_song = gen.generateOverStandard(tuneFromXML, args.NUM_CHORUS, args.TEMPERATURE, 
+                                                   modelPitch, modelDuration, dbToMidiChords, 
+                                                   pitch_to_ix, duration_to_ix, beat_to_ix, offset_to_ix,
+                                                   vocabPitch, vocabDuration,
+                                                   args.BPTT, device,
+                                                   isJazz)
+    
     title = new_structured_song['title']
     pm = gen.structuredSongsToPM(new_structured_song, dbToMidiChords, isJazz)
     pm.write('C_generate/generated_tunes/' + title + '.mid')
