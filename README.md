@@ -1,42 +1,66 @@
 # MINGUS - Melodic Improvisation Neural Generator Using Seq2seq
 
-##### Author: Vincenzo Madaghiele
-##### Supervisors: Pasquale Lisena, Raphaël Troncy 
+Sequence to Sequence (Seq2Seq) approaches have shown good performances in automatic music generation. We introduce MINGUS, a Transformer-based Seq2Seq architecture for modelling and generating monophonic jazz melodic lines.
+MINGUS relies on two dedicated embedding models (respectively for pitch and duration) and exploits in prediction features such as chords (current and following), bass line, position inside the measure. The obtained results are comparable with the state of the art, with particularly good performances on jazz music.
 
-
-## Project Description
-
-MINGUS is a transformer network for modeling and generation of monophonic jazz melodic lines, named in honour of Charles Mingus (1922 – 1979), American jazz double bassist, composer and pianist.
-
-MINGUS is structured as two parallel transformer encoder models, one predicting pitch and another one predicting duration. This structure was chosen because it allows to capture the rhythmic variation by allowing the model have a lot of different rhythmic values in the dictionary of the duration network.
-
-The purpose of this experiment is to explore the capability of the transformer to model and generate realistic melodic lines in the style of a jazz improvisation. It is also an opportunity to compare the performances of RNN-based models and transformers on musical data.
-
-## Code description
-
-* MINGUS_dataset_funct.py : functions for data processing
-* MINGUS_model.py : functions for model definition, training and validation evaluation 
-* MINGUS_train.py : code used for training
-* MINGUS_grid_search.py : code for grid search
-* MINGUS_eval.py : code for evaluation of the model
-* MINGUS_eval_funct.py : functions for model evaluation
-* MINGUS_const.py : constants needed for model training
-* MINGUS_generate.py : generate over a single sample
-
-## Running the code
-
-The libraries necessary to running this code are listed in the requirement.txt file. 
-After downloading this repository, run the following code in the terminal to install the dependencies in a conda environment:
+## 0. Install dependencies
+To use the model run the following code from the main project directory.
+After downloading this repository, run the following code in the terminal to install the required libraries in a new conda environment named MINGUS and activate it:
 ```
-$ conda create --name <env> --file requirements.txt
+$ conda env create -f environment.yml
+$ conda activate MINGUS
+```
+If this installation does not work correctly you can install the dependencies listed in the file requirement.txt individually.
+It will probably be necessary to run the following command:
+```
+$ export PYTHONPATH="$PWD"
 ```
 
-### Training
-To re-train the model run the script MINGUS_train.py. Choose the dataset by typing the name of the folder containing the midi files in line 35. The trained models will be saved in the [models](https://github.com/vincenzomadaghiele/MINGUS/tree/master/models) folder.
+## 1. Pre-process data
+To train MINGUS with a custom dataset place your musicXML data in 00_preprocessData/data/xml and run the following command in your terminal:
+```
+$ python3 A_preprocessData/data_preprocessing.py --format xml
+```
+This will generate the file 00_preprocessData/data/DATA.json which will be used for training. This file should be the same for all the following commands (even generation and evaluation).
+WjazzDB requires specific pre-processing from the [csv files](http://mir.audiolabs.uni-erlangen.de/jazztube/downloads) provided by its authors. To train with WjazzDB run:
+```
+$ python3 A_preprocessData/wjazzDB_csv_to_xml.py
+$ python3 A_preprocessData/data_preprocessing.py --format xml
+```
 
-### Evaluation
-To evaluate the model run the script MINGUS_eval.py. Choose the dataset by typing the name of the folder containing the midi files in line 52. Choose the trained pitch and duration models from the [models](https://github.com/vincenzomadaghiele/MINGUS/tree/master/models) folder and type their name in line 106 and 122. The metrics results will be saved as a json file in the [metrics](https://github.com/vincenzomadaghiele/MINGUS/tree/master/metrics) folder.
+## 2. Train MINGUS
+To train MINGUS from scratch run:
+```
+$ python3 B_train/train.py 
+```
+The saved model will be in B_train/models. It is possible to visualize training details with tensorboard by running:
+```
+$ tensorboard --logdir=B_train/runs
+```
+The results are showed in your browser at http://localhost:6006/.
 
-### Generation
-To generate on a song run the script MINGUS_generate. Choose the dataset by typing the name of the folder containing the midi files in line 210. Choose the trained pitch and duration models from the [models](https://github.com/vincenzomadaghiele/MINGUS/tree/master/models) folder and type their name in line 260 and 276. Set the number of notes to generate at line 290. The generated midi file will be saved in the [output](https://github.com/vincenzomadaghiele/MINGUS/tree/master/output) folder. To generate on multiple songs set line 313 as True and select the dataset in line 316.
+## 3. Generate music
+To generate music with MINGUS you can run the following command. Please ensure that the arguments correspond to an already trained model. You can use the files in C_generate/xml4gen as a starting point. These files are also used for evaluation.
+```
+$ python3 C_generate/generate.py --xmlSTANDARD <path_to_xml_standard>
+```
+Output midi files will be in C_generate/generated_tunes.
 
+To generate with our pre-trained model run:
+```
+$ python3 C_generate/generate.py --EPOCHS 100 --xmlSTANDARD <path_to_xml_standard>
+```
+
+## 4. Evaluate results
+The evaluation metrics are computed by comparing the melodies generated by MINGUS and a corpus of generated samples, so to evaluate the model you should first choose some reference xml files and put them in D_eval/reference (you can randomly select some files from your original dataset). Then you should generate a corpus of melodies with MINGUS and evaluate the results:
+```
+$ python3 C_generate/generate.py --GENERATE_CORPUS
+$ python3 D_evaluate/evaluate.py 
+```
+The evaluation metrics are available in D_evaluate/metrics.
+
+To evaluate our pre-trained model run:
+```
+$ python3 C_generate/generate.py --GENERATE_CORPUS --EPOCHS 100
+$ python3 D_evaluate/evaluate.py --EPOCHS 100
+```
