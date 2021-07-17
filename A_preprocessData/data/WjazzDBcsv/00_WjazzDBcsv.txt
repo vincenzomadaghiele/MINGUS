@@ -1,0 +1,3 @@
+You can download the csv files of the Weimar Jazz DB from their website:
+http://mir.audiolabs.uni-erlangen.de/jazztube/downloads
+after downloading them please put them here in the appropriate folders.
