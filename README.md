@@ -4,6 +4,7 @@ This is the official repository of the MINGUS project. It contains all the code 
 > MINGUS: Melodic Improvisation Neural Generator Using Seq2Seq
 >
 > Vincenzo Madaghiele, Pasquale Lisena, Raphaël Troncy
+>
 > EURECOM, Sophia Antipolis, France  
 >
 > Published in Proceedings of 22nd International Society of Music Information Retrieval Conference, ISMIR 2021
