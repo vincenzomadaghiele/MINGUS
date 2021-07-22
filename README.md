@@ -9,7 +9,7 @@ This is the official repository of the MINGUS project. It contains all the code 
 >
 > Published in Proceedings of 22nd International Society of Music Information Retrieval Conference, ISMIR 2021
 
-The web application for user evaluation tests is available at [mingus.tools.eurecom.fr](https://mingus.tools.eurecom.fr/).
+The web application for user evaluation is available at [mingus.tools.eurecom.fr](https://mingus.tools.eurecom.fr/).
 
 ### Abstract:
 Sequence to Sequence (Seq2Seq) approaches have shown good performances in automatic music generation. We introduce MINGUS, a Transformer-based Seq2Seq architecture for modelling and generating monophonic jazz melodic lines. MINGUS relies on two dedicated embedding models (respectively for pitch and duration) and exploits in prediction features such as chords (current and following), bass line, position inside the measure. The obtained results are comparable with the state of the art, with particularly good performances on jazz music.
