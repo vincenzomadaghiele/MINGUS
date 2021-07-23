@@ -1,7 +1,7 @@
 # MINGUS - Melodic Improvisation Neural Generator Using Seq2seq
 
 This is the official repository of the MINGUS project. It contains all the code for the paper:
-> MINGUS: Melodic Improvisation Neural Generator Using Seq2Seq
+> [MINGUS: Melodic Improvisation Neural Generator Using Seq2Seq]()
 >
 > Vincenzo Madaghiele, Pasquale Lisena, Raphaël Troncy  
 > EURECOM, Sophia Antipolis, France  
