@@ -5,7 +5,7 @@ This is the official repository of the MINGUS project.
 It contains all the code for the paper ([bib](./mingus.bib)):
 
 > Vincenzo Madaghiele, Pasquale Lisena, Raphaël Troncy.
-> [**MINGUS: Melodic Improvisation Neural Generator Using Seq2Seq**](https://github.com/vincenzomadaghiele/MINGUS/blob/master/E_docs/MINGUS_ISMIR21.pdf).
+> [**MINGUS: Melodic Improvisation Neural Generator Using Seq2Seq**](https://archives.ismir.net/ismir2021/paper/000051.pdf).
 > In _Proceedings of 22nd International Society of Music Information Retrieval Conference (ISMIR)_, 8-12 November 2021, Online.
 
 The web application for user evaluation is available at [mingus.tools.eurecom.fr](https://mingus.tools.eurecom.fr/).  
