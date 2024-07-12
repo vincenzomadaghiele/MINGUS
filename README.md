@@ -76,3 +76,15 @@ To evaluate our pre-trained model run:
 $ python3 C_generate/generate.py --GENERATE_CORPUS --EPOCHS 100
 $ python3 D_evaluate/evaluate.py --EPOCHS 100
 ```
+
+## Cite
+```
+@inproceedings{madaghiele2021mingus,
+  author    = {Madaghiele, Vincenzo and Lisena, Pasquale and Troncy, Raphael},
+  title     = {{MINGUS: Melodic Improvisation Neural Generator Using Seq2Seq}},
+  booktitle = {22$^{nd}$ International Society for Music Information Retrieval Conference (ISMIR)},
+  year      = {2021},
+  month     = {11},
+  address   = {Online}
+}
+```
